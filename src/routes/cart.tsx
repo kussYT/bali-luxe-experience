@@ -46,7 +46,14 @@ function CartPage() {
                   </div>
                   <div className="flex items-center justify-between mt-8">
                     <div className="flex items-center border border-border">
-                      <button onClick={() => qty > 1 ? remove(product.slug) || Array.from({ length: qty - 1 }).forEach(() => add(product.slug)) : null} className="size-10 flex items-center justify-center"><Minus className="size-3" /></button>
+                      <button
+                        onClick={() => {
+                          if (qty <= 1) return;
+                          remove(product.slug);
+                          for (let i = 0; i < qty - 1; i++) add(product.slug);
+                        }}
+                        className="size-10 flex items-center justify-center"
+                      ><Minus className="size-3" /></button>
                       <span className="w-10 text-center font-mono text-sm">{qty}</span>
                       <button onClick={() => add(product.slug)} className="size-10 flex items-center justify-center"><Plus className="size-3" /></button>
                     </div>

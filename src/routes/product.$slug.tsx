@@ -103,7 +103,7 @@ function ProductPage() {
           <div className="mt-12 border-t border-border pt-8">
             <p className="text-eyebrow mb-4">The detail</p>
             <ul className="space-y-2 text-sm">
-              {product.details.map((d) => (
+              {product.details.map((d: string) => (
                 <li key={d} className="flex items-start gap-3">
                   <span className="text-clay mt-2 block size-1 rounded-full bg-clay" />
                   {d}
