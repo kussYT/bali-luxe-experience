@@ -9,6 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TravelDiariesRouteImport } from './routes/travel-diaries'
+import { Route as StockistsRouteImport } from './routes/stockists'
+import { Route as ShippingRouteImport } from './routes/shipping'
+import { Route as ReturnsRouteImport } from './routes/returns'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CollectionRouteImport } from './routes/collection'
 import { Route as CartRouteImport } from './routes/cart'
@@ -17,6 +21,26 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 
+const TravelDiariesRoute = TravelDiariesRouteImport.update({
+  id: '/travel-diaries',
+  path: '/travel-diaries',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StockistsRoute = StockistsRouteImport.update({
+  id: '/stockists',
+  path: '/stockists',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShippingRoute = ShippingRouteImport.update({
+  id: '/shipping',
+  path: '/shipping',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReturnsRoute = ReturnsRouteImport.update({
+  id: '/returns',
+  path: '/returns',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
@@ -60,6 +84,10 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/collection': typeof CollectionRoute
   '/contact': typeof ContactRoute
+  '/returns': typeof ReturnsRoute
+  '/shipping': typeof ShippingRoute
+  '/stockists': typeof StockistsRoute
+  '/travel-diaries': typeof TravelDiariesRoute
   '/product/$slug': typeof ProductSlugRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +97,10 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/collection': typeof CollectionRoute
   '/contact': typeof ContactRoute
+  '/returns': typeof ReturnsRoute
+  '/shipping': typeof ShippingRoute
+  '/stockists': typeof StockistsRoute
+  '/travel-diaries': typeof TravelDiariesRoute
   '/product/$slug': typeof ProductSlugRoute
 }
 export interface FileRoutesById {
@@ -79,6 +111,10 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/collection': typeof CollectionRoute
   '/contact': typeof ContactRoute
+  '/returns': typeof ReturnsRoute
+  '/shipping': typeof ShippingRoute
+  '/stockists': typeof StockistsRoute
+  '/travel-diaries': typeof TravelDiariesRoute
   '/product/$slug': typeof ProductSlugRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +126,10 @@ export interface FileRouteTypes {
     | '/cart'
     | '/collection'
     | '/contact'
+    | '/returns'
+    | '/shipping'
+    | '/stockists'
+    | '/travel-diaries'
     | '/product/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +139,10 @@ export interface FileRouteTypes {
     | '/cart'
     | '/collection'
     | '/contact'
+    | '/returns'
+    | '/shipping'
+    | '/stockists'
+    | '/travel-diaries'
     | '/product/$slug'
   id:
     | '__root__'
@@ -108,6 +152,10 @@ export interface FileRouteTypes {
     | '/cart'
     | '/collection'
     | '/contact'
+    | '/returns'
+    | '/shipping'
+    | '/stockists'
+    | '/travel-diaries'
     | '/product/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -118,11 +166,43 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   CollectionRoute: typeof CollectionRoute
   ContactRoute: typeof ContactRoute
+  ReturnsRoute: typeof ReturnsRoute
+  ShippingRoute: typeof ShippingRoute
+  StockistsRoute: typeof StockistsRoute
+  TravelDiariesRoute: typeof TravelDiariesRoute
   ProductSlugRoute: typeof ProductSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/travel-diaries': {
+      id: '/travel-diaries'
+      path: '/travel-diaries'
+      fullPath: '/travel-diaries'
+      preLoaderRoute: typeof TravelDiariesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stockists': {
+      id: '/stockists'
+      path: '/stockists'
+      fullPath: '/stockists'
+      preLoaderRoute: typeof StockistsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shipping': {
+      id: '/shipping'
+      path: '/shipping'
+      fullPath: '/shipping'
+      preLoaderRoute: typeof ShippingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/returns': {
+      id: '/returns'
+      path: '/returns'
+      fullPath: '/returns'
+      preLoaderRoute: typeof ReturnsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contact': {
       id: '/contact'
       path: '/contact'
@@ -182,6 +262,10 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   CollectionRoute: CollectionRoute,
   ContactRoute: ContactRoute,
+  ReturnsRoute: ReturnsRoute,
+  ShippingRoute: ShippingRoute,
+  StockistsRoute: StockistsRoute,
+  TravelDiariesRoute: TravelDiariesRoute,
   ProductSlugRoute: ProductSlugRoute,
 }
 export const routeTree = rootRouteImport
