@@ -87,7 +87,7 @@ export const products: Product[] = [
 ];
 
 export const collections = [
-  { slug: "sunburn", name: "Sunburn", season: "Fall / Winter 2025" },
+  { slug: "sunburn", name: "Sunburn", season: "Fall/Winter 2025" },
   { slug: "juicy-record", name: "Juicy Record", season: "Capsule" },
   { slug: "endless-summer", name: "Endless Summer", season: "Permanent" },
 ];

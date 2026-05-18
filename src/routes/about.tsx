@@ -5,7 +5,7 @@ import collection2 from "@/assets/collection-2.jpg";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "Atelier — Bing in Diaries" },
+      { title: "Atelier — Bingin Diaries" },
       { name: "description", content: "A small house woven between Bali and France." },
       { property: "og:image", content: about },
     ],
@@ -31,7 +31,7 @@ function About() {
             Born from a long, slow ride between Canggu and the South of France.
           </h2>
           <p className="mt-6 text-muted-foreground leading-relaxed">
-            Bing in Diaries is a small house of hand-woven hats — designed in France, made in Bali, finished by hand. We work with a few artisans we know by name, in a rhythm that lets each piece breathe.
+            Bingin Diaries is a small house of hand-woven hats — designed in France, made in Bali, finished by hand. We work with a few artisans we know by name, in a rhythm that lets each piece breathe.
           </p>
           <p className="mt-4 text-muted-foreground leading-relaxed">
             We believe in a quieter kind of fashion. One that travels well, that ages well, and that carries the memory of the place it came from.

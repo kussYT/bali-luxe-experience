@@ -26,8 +26,8 @@ export function Header() {
           <Link to="/about" className="hidden md:inline link-underline">Atelier</Link>
         </nav>
 
-        <Link to="/" className="text-center font-display text-xl md:text-2xl tracking-tight">
-          Bing in Diaries
+        <Link to="/" aria-label="Bingin Diaries" className="flex items-center justify-center font-display text-sm md:text-base tracking-[0.08em] uppercase">
+          Bingin Diaries
         </Link>
 
         <div className="flex items-center justify-end gap-4 md:gap-5 text-sm">

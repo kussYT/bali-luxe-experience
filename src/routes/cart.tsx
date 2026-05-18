@@ -4,7 +4,7 @@ import { useCurrency } from "@/lib/currency";
 import { Minus, Plus, X } from "lucide-react";
 
 export const Route = createFileRoute("/cart")({
-  head: () => ({ meta: [{ title: "Cart — Bing in Diaries" }] }),
+  head: () => ({ meta: [{ title: "Cart — Bingin Diaries" }] }),
   component: CartPage,
 });
 

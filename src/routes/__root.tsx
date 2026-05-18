@@ -26,9 +26,9 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Bing in Diaries — Hats from Bali & France" },
+      { title: "Bingin Diaries — Hats from Bali & France" },
       { name: "description", content: "Hand-woven hats crafted between Bali and France. A boutique house of slow, sun-soaked design." },
-      { property: "og:title", content: "Bing in Diaries" },
+      { property: "og:title", content: "Bingin Diaries" },
       { property: "og:description", content: "Hand-woven hats from Bali & France." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

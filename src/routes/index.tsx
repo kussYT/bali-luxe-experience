@@ -9,7 +9,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Bing in Diaries — Hand-woven hats from Bali & France" },
+      { title: "Bingin Diaries — Hand-woven hats from Bali & France" },
       { name: "description", content: "A boutique house of sun-soaked hats, hand-woven between Canggu and Paris." },
     ],
   }),
@@ -28,15 +28,15 @@ function Home() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-ink/50" />
         <div className="relative h-full flex flex-col justify-end p-6 md:p-14 text-bone animate-fade-up">
-          <p className="text-eyebrow opacity-80 mb-5">Fall / Winter 2025 — The Sunburn</p>
+          <p className="text-eyebrow opacity-80 mb-5">Fall/Winter 2025 — The sunburn effect</p>
           <h1 className="font-display text-[14vw] md:text-[8.5vw] leading-[0.9] max-w-[14ch]">
-            For salt-kissed<br />days.
+            For the endless<br />summer days.
           </h1>
           <div className="mt-8 flex flex-col md:flex-row items-start md:items-center gap-5">
             <Link to="/collection" className="bg-bone text-ink px-8 py-3.5 text-eyebrow hover:bg-clay hover:text-bone transition-colors">
-              Discover the collection
+              Order now
             </Link>
-            <Link to="/about" className="text-eyebrow link-underline opacity-90">Read the story</Link>
+            <Link to="/collection" className="text-eyebrow link-underline opacity-90">Shop all</Link>
           </div>
         </div>
       </section>

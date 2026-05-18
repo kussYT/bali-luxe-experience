@@ -6,7 +6,7 @@ export function Footer() {
     <footer className="bg-ink text-bone mt-32">
       <div className="px-5 md:px-10 py-20 grid md:grid-cols-4 gap-12">
         <div className="md:col-span-2">
-          <p className="text-eyebrow opacity-60">Newsletter</p>
+          <p className="text-eyebrow opacity-60">Bingin Club</p>
           <h2 className="font-display text-3xl md:text-5xl mt-3 mb-6 leading-tight">
             Diaries from<br />Bali & France.
           </h2>
@@ -30,13 +30,15 @@ export function Footer() {
           <p className="text-eyebrow opacity-60 mb-4">House</p>
           <Link to="/about" className="block link-underline">Atelier</Link>
           <Link to="/contact" className="block link-underline">Contact</Link>
-          <a className="block link-underline" href="#">Shipping</a>
+          <a className="block link-underline" href="#">Shipping & returns</a>
+          <a className="block link-underline" href="#">Return portal</a>
           <a className="block link-underline" href="#">Care guide</a>
+          <a className="block link-underline" href="#">Size guide</a>
         </div>
       </div>
 
-      <div className="px-5 md:px-10 py-6 border-t border-bone/15 flex flex-col md:flex-row items-center justify-between gap-4">
-        <p className="text-eyebrow opacity-60">© 2026 Bing in Diaries — Canggu / Paris</p>
+        <div className="px-5 md:px-10 py-6 border-t border-bone/15 flex flex-col md:flex-row items-center justify-between gap-4">
+        <p className="text-eyebrow opacity-60">© 2026 Bingin Diaries — Canggu / Paris</p>
         <a href="https://instagram.com" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-eyebrow link-underline">
           <Instagram className="size-4" /> @bingindiaries
         </a>

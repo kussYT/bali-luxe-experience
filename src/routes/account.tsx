@@ -5,7 +5,7 @@ import { products } from "@/lib/products";
 import { ProductCard } from "@/components/site/ProductCard";
 
 export const Route = createFileRoute("/account")({
-  head: () => ({ meta: [{ title: "Account — Bing in Diaries" }] }),
+  head: () => ({ meta: [{ title: "Account — Bingin Diaries" }] }),
   component: Account,
 });
 

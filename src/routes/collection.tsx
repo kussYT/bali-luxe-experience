@@ -6,7 +6,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 export const Route = createFileRoute("/collection")({
   head: () => ({
     meta: [
-      { title: "The Collection — Bing in Diaries" },
+      { title: "The Collection — Bingin Diaries" },
       { name: "description", content: "Browse all hats — Sunburn, Juicy Record and Endless Summer." },
     ],
   }),
