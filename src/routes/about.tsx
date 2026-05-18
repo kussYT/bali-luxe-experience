@@ -23,7 +23,7 @@ function About() {
         </h1>
       </section>
 
-      <section className="grid md:grid-cols-2 gap-px bg-border">
+      <section id="atelier" className="grid md:grid-cols-2 gap-px bg-border scroll-mt-24">
         <img src={about} alt="Hand weaving" className="size-full object-cover aspect-[4/5]" loading="lazy" />
         <div className="bg-background p-8 md:p-16 flex flex-col justify-center">
           <p className="text-eyebrow text-muted-foreground">Origin</p>
