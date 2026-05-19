@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useCart } from "@/lib/cart";
-import { products } from "@/lib/products";
+import { useCatalog } from "@/lib/catalog-context";
 import { ProductCard } from "@/components/site/ProductCard";
 
 export const Route = createFileRoute("/account")({
@@ -12,7 +12,8 @@ export const Route = createFileRoute("/account")({
 function Account() {
   const [tab, setTab] = useState<"login" | "wishlist" | "orders">("login");
   const { wishlist } = useCart();
-  const wished = products.filter((p) => wishlist.includes(p.slug));
+  const { publishedProducts } = useCatalog();
+  const wished = publishedProducts.filter((p) => wishlist.includes(p.slug));
 
   return (
     <section className="px-6 md:px-14 py-20 max-w-6xl">

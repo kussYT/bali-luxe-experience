@@ -1,57 +1,46 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Heart, Plus, Minus } from "lucide-react";
-import { getProduct, products } from "@/lib/products";
+import { useCatalog } from "@/lib/catalog-context";
 import { useCart } from "@/lib/cart";
 import { useCurrency } from "@/lib/currency";
 import { ProductCard } from "@/components/site/ProductCard";
 
 export const Route = createFileRoute("/product/$slug")({
-  loader: ({ params }) => {
-    const product = getProduct(params.slug);
-    if (!product) throw notFound();
-    return { product };
-  },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `${loaderData.product.name} — Bingin Diaries` },
-          { name: "description", content: loaderData.product.story },
-          { property: "og:image", content: loaderData.product.image },
-        ]
-      : [],
+  head: ({ params }) => ({
+    meta: [{ title: `${params.slug} — Bingin Diaries` }],
   }),
-  notFoundComponent: () => (
-    <div className="px-6 md:px-14 py-32 text-center">
-      <h1 className="font-display text-5xl">Piece not found</h1>
-      <Link to="/collection" className="mt-6 inline-block text-eyebrow link-underline">
-        Back to collection
-      </Link>
-    </div>
-  ),
-  errorComponent: ({ error }) => (
-    <div className="px-6 md:px-14 py-32 text-center">
-      <h1 className="font-display text-5xl">Something went wrong</h1>
-      <p className="text-muted-foreground mt-4">{error.message}</p>
-    </div>
-  ),
   component: ProductPage,
 });
 
 function ProductPage() {
-  const { product } = Route.useLoaderData();
+  const { slug } = Route.useParams();
+  const { publishedProducts } = useCatalog();
+  const product = publishedProducts.find((p) => p.slug === slug);
   const { add, toggleWish, wishlist } = useCart();
   const { format } = useCurrency();
   const [qty, setQty] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
-  const wished = wishlist.includes(product.slug);
+  const wished = wishlist.includes(slug);
 
-  const related = products
+  if (!product) {
+    return (
+      <div className="px-6 md:px-14 py-32 text-center">
+        <h1 className="font-display text-5xl">Piece not found</h1>
+        <Link to="/collection" className="mt-6 inline-block text-eyebrow link-underline">
+          Back to collection
+        </Link>
+      </div>
+    );
+  }
+
+  const related = publishedProducts
     .filter((p) => p.slug !== product.slug && p.collectionSlug === product.collectionSlug)
     .slice(0, 3);
-
-  const fallbackRelated = products.filter((p) => p.slug !== product.slug).slice(0, 3);
-  const suggestions = related.length > 0 ? related : fallbackRelated;
+  const suggestions =
+    related.length > 0 ?
+      related
+    : publishedProducts.filter((p) => p.slug !== product.slug).slice(0, 3);
 
   const gallery = product.images.length > 0 ? product.images : [product.image];
 
@@ -83,37 +72,43 @@ function ProductPage() {
         <div className="p-8 md:p-14 flex flex-col justify-center bg-background animate-fade-up">
           <p className="text-eyebrow text-muted-foreground">
             {product.collection}
-            {product.productType ? ` — ${product.productType}` : ""}
+            {product.subcategory ? ` — ${product.subcategory}` : ""}
           </p>
           <h1 className="font-display text-4xl md:text-6xl mt-4 leading-[1]">{product.name}</h1>
           <p className="mt-6 text-lg text-muted-foreground max-w-md leading-relaxed">{product.story}</p>
 
           <div className="mt-8 flex items-baseline gap-3">
             <p className="font-mono text-2xl">{format(product)}</p>
+            {product.onSale && product.compareAtEUR != null && (
+              <p className="font-mono text-lg text-muted-foreground line-through">€{product.priceEUR}</p>
+            )}
             {product.onSale && <span className="text-eyebrow text-clay">Sale</span>}
           </div>
 
           <div className="mt-8 flex items-center gap-4">
             <div className="flex items-center border border-border">
               <button
+                type="button"
                 onClick={() => setQty(Math.max(1, qty - 1))}
                 className="size-12 flex items-center justify-center"
               >
                 <Minus className="size-3.5" />
               </button>
               <span className="w-10 text-center font-mono text-sm">{qty}</span>
-              <button onClick={() => setQty(qty + 1)} className="size-12 flex items-center justify-center">
+              <button type="button" onClick={() => setQty(qty + 1)} className="size-12 flex items-center justify-center">
                 <Plus className="size-3.5" />
               </button>
             </div>
             <button
+              type="button"
               onClick={() => Array.from({ length: qty }).forEach(() => add(product.slug))}
-              disabled={!product.available}
+              disabled={!product.available || product.stock <= 0}
               className="flex-1 bg-ink text-bone py-4 text-eyebrow hover:bg-clay transition-colors disabled:opacity-50"
             >
               {product.available ? "Add to cart" : "Sold out"}
             </button>
             <button
+              type="button"
               onClick={() => toggleWish(product.slug)}
               className="size-12 border border-border flex items-center justify-center hover:border-ink"
               aria-label="Wishlist"
@@ -122,19 +117,9 @@ function ProductPage() {
             </button>
           </div>
 
-          {product.details.length > 0 && (
-            <div className="mt-12 border-t border-border pt-8">
-              <p className="text-eyebrow mb-4">The detail</p>
-              <ul className="space-y-2 text-sm">
-                {product.details.map((d) => (
-                  <li key={d} className="flex items-start gap-3">
-                    <span className="text-clay mt-2 block size-1 rounded-full bg-clay" />
-                    {d}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          <p className="mt-4 text-sm text-muted-foreground">
+            {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
+          </p>
         </div>
       </section>
 

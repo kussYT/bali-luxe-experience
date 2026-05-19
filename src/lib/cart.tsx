@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, ReactNode } from "react";
-import { products, type Product } from "./products";
+import { createContext, useContext, useState, type ReactNode } from "react";
+import type { Product } from "@/lib/catalog-types";
+import { useCatalog } from "@/lib/catalog-context";
 
 export type CartItem = { slug: string; qty: number };
 
@@ -18,6 +19,7 @@ type Ctx = {
 const CartContext = createContext<Ctx | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { products } = useCatalog();
   const [items, setItems] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [open, setOpen] = useState(false);

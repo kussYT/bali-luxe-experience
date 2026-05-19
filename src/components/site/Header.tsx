@@ -3,7 +3,8 @@ import { useState } from "react";
 import { Menu } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useCurrency, COUNTRIES } from "@/lib/currency";
-import { NAV_MAIN } from "@/lib/navigation";
+import { useCatalog } from "@/lib/catalog-context";
+import { buildNavMain } from "@/lib/navigation";
 import { NavMenu } from "@/components/site/NavMenu";
 import { NavDropdown } from "@/components/site/NavDropdown";
 import { SearchDrawer } from "@/components/site/SearchDrawer";
@@ -14,6 +15,8 @@ const textLink =
 export function Header() {
   const { count, setOpen } = useCart();
   const { country, setCountry } = useCurrency();
+  const { collections } = useCatalog();
+  const navMain = buildNavMain(collections);
   const [navOpen, setNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [geo, setGeo] = useState(false);
@@ -37,7 +40,6 @@ export function Header() {
     <>
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/60">
         <div className="grid grid-cols-[1fr_auto_1fr] items-center px-5 md:px-10 h-16 md:h-20 gap-4">
-          {/* Left — mobile burger + desktop main nav */}
           <div className="flex items-center gap-4 md:gap-7 min-w-0">
             <button
               type="button"
@@ -52,13 +54,12 @@ export function Header() {
             </button>
 
             <nav className="hidden md:flex items-center gap-6 lg:gap-8" aria-label="Main">
-              {NAV_MAIN.map((section) => (
+              {navMain.map((section) => (
                 <NavDropdown key={section.label} label={section.label} items={[...section.items]} />
               ))}
             </nav>
           </div>
 
-          {/* Center — logo */}
           <Link
             to="/"
             aria-label="Bingin Diaries"
@@ -67,32 +68,19 @@ export function Header() {
             Bingin Diaries
           </Link>
 
-          {/* Right — text actions */}
           <div className="flex items-center justify-end gap-3 sm:gap-4 md:gap-5 text-sm min-w-0">
-            <button
-              type="button"
-              onClick={() => setGeo((v) => !v)}
-              className={`hidden lg:inline ${textLink}`}
-            >
+            <button type="button" onClick={() => setGeo((v) => !v)} className={`hidden lg:inline ${textLink}`}>
               {country.code} / {country.currency}
             </button>
-
             <Link to="/account" className={`hidden sm:inline ${textLink}`}>
               Account
             </Link>
-
-            <Link
-              to="/account"
-              search={{ tab: "wishlist" } as never}
-              className={`hidden md:inline ${textLink}`}
-            >
+            <Link to="/account" search={{ tab: "wishlist" } as never} className={`hidden md:inline ${textLink}`}>
               Wishlist
             </Link>
-
             <button type="button" onClick={openSearch} className={textLink}>
               Search
             </button>
-
             <button type="button" onClick={openCart} className={`relative ${textLink}`}>
               Cart
               {count > 0 && (
@@ -130,7 +118,7 @@ export function Header() {
         )}
       </header>
 
-      <NavMenu open={navOpen} onClose={() => setNavOpen(false)} />
+      <NavMenu open={navOpen} onClose={() => setNavOpen(false)} sections={navMain} />
       <SearchDrawer open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );

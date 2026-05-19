@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from "react";
-import type { Product } from "./products";
+import type { Product } from "@/lib/catalog-types";
 
 export type Currency = "EUR" | "USD" | "IDR";
 export type Country = { code: string; name: string; currency: Currency; flag: string };
@@ -23,8 +23,13 @@ const CurrencyContext = createContext<Ctx | null>(null);
 export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [country, setCountry] = useState<Country>(COUNTRIES[0]);
   const format = (p: Product) => {
+    const eur = p.onSale && p.compareAtEUR != null ? p.compareAtEUR : p.priceEUR;
     const value =
-      country.currency === "EUR" ? p.priceEUR : country.currency === "USD" ? p.priceUSD : p.priceIDR;
+      country.currency === "EUR"
+        ? eur
+        : country.currency === "USD"
+          ? Math.round(eur * 1.1)
+          : Math.round(eur * 17_000);
     const symbol = country.currency === "EUR" ? "€" : country.currency === "USD" ? "$" : "Rp ";
     return `${symbol}${value.toLocaleString("en-US")}`;
   };

@@ -1,4 +1,4 @@
-import { collections } from "@/lib/products";
+import type { Collection } from "@/lib/catalog-types";
 
 export const POPULAR_SEARCHES = [
   "bob",
@@ -16,24 +16,23 @@ export type NavLink = {
   hash?: string;
 };
 
-/** Shop dropdown — collections + category filters. */
-export const NAV_SHOP: NavLink[] = [
-  { label: "View all", to: "/collection" },
-  ...collections.map((c) => ({
-    label: c.name,
-    to: "/collection",
-    search: { c: c.slug },
-  })),
-  { label: "Accessories", to: "/collection", search: { cat: "accessories" } },
-  { label: "Bags", to: "/collection", search: { cat: "bags" } },
-];
+export function buildNavShop(collections: Collection[]): NavLink[] {
+  return [
+    { label: "View all", to: "/collection" },
+    ...collections.map((c) => ({
+      label: c.name,
+      to: "/collection",
+      search: { c: c.slug },
+    })),
+    { label: "Accessories", to: "/collection", search: { cat: "accessories" } },
+    { label: "Bags", to: "/collection", search: { cat: "bags" } },
+  ];
+}
 
-/** Sales dropdown. */
 export const NAV_SALES: NavLink[] = [
   { label: "View all sale", to: "/collection", search: { sale: "true" } },
 ];
 
-/** About dropdown — brand & info pages. */
 export const NAV_ABOUT: NavLink[] = [
   { label: "About us", to: "/about" },
   { label: "Atelier", to: "/about", hash: "atelier" },
@@ -44,8 +43,10 @@ export const NAV_ABOUT: NavLink[] = [
   { label: "Contact", to: "/contact" },
 ];
 
-export const NAV_MAIN = [
-  { label: "Shop", items: NAV_SHOP },
-  { label: "Sales", items: NAV_SALES },
-  { label: "About us", items: NAV_ABOUT },
-] as const;
+export function buildNavMain(collections: Collection[]) {
+  return [
+    { label: "Shop", items: buildNavShop(collections) },
+    { label: "Sales", items: NAV_SALES },
+    { label: "About us", items: NAV_ABOUT },
+  ] as const;
+}

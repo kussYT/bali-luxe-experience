@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { products, collections } from "@/lib/products";
+import { useCatalog } from "@/lib/catalog-context";
 import { productInCollection, productMatchesQuery } from "@/lib/search";
 import { ProductCard } from "@/components/site/ProductCard";
 
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/collection")({
   head: () => ({
     meta: [
       { title: "The Collection — Bingin Diaries" },
-      { name: "description", content: "Browse all hats — Sunburn, Mi Paradisio, Juicy Record and more." },
+      { name: "description", content: "Browse all hats — collections and accessories." },
     ],
   }),
   component: Collection,
@@ -28,26 +28,19 @@ export const Route = createFileRoute("/collection")({
 
 function Collection() {
   const { c, cat, sale, q } = Route.useSearch();
+  const { publishedProducts, collections, loading } = useCatalog();
 
-  let filtered = products;
+  let filtered = publishedProducts;
 
-  if (c) {
-    filtered = filtered.filter((p) => productInCollection(p, c));
-  }
-  if (cat) {
-    filtered = filtered.filter((p) => p.category === cat);
-  }
-  if (sale === "true") {
-    filtered = filtered.filter((p) => p.onSale);
-  }
-  if (q) {
-    filtered = filtered.filter((p) => productMatchesQuery(p, q));
-  }
+  if (c) filtered = filtered.filter((p) => productInCollection(p, c));
+  if (cat) filtered = filtered.filter((p) => p.category === cat);
+  if (sale === "true") filtered = filtered.filter((p) => p.onSale);
+  if (q) filtered = filtered.filter((p) => productMatchesQuery(p, q));
 
   const title =
     q ? `Search: ${q}` :
     sale === "true" ? "Sale" :
-    c ? collections.find((col) => col.slug === c)?.name ?? "Collection" :
+    c ? (collections.find((col) => col.slug === c)?.name ?? "Collection") :
     cat === "accessories" ? "Accessories" :
     cat === "bags" ? "Bags" :
     "The Collection";
@@ -56,7 +49,7 @@ function Collection() {
     <>
       <section className="px-6 md:px-14 pt-20 pb-12 border-b border-border">
         <p className="text-eyebrow text-muted-foreground">
-          {filtered.length} {filtered.length === 1 ? "piece" : "pieces"}
+          {loading ? "Loading…" : `${filtered.length} ${filtered.length === 1 ? "piece" : "pieces"}`}
         </p>
         <h1 className="font-display text-5xl md:text-7xl mt-4 leading-[1]">{title}</h1>
         <p className="mt-6 max-w-xl text-muted-foreground">

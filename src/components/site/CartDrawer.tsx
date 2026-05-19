@@ -1,12 +1,12 @@
 import { useCart } from "@/lib/cart";
 import { useCurrency } from "@/lib/currency";
-import { products } from "@/lib/products";
+import { useCatalog } from "@/lib/catalog-context";
 import { X, Minus } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
-const SUGGESTED = products.slice(0, 3);
-
 export function CartDrawer() {
+  const { publishedProducts } = useCatalog();
+  const suggested = publishedProducts.slice(0, 3);
   const { open, setOpen, resolved, remove } = useCart();
   const { format, country } = useCurrency();
 
@@ -53,7 +53,7 @@ export function CartDrawer() {
                 </Link>
               </div>
               <ul className="space-y-4">
-                {SUGGESTED.map(({ slug, name, image, collection }) => (
+                {suggested.map(({ slug, name, image, collection }) => (
                   <li key={slug}>
                     <Link to="/product/$slug" params={{ slug }} onClick={close} className="flex gap-3 group">
                       <img src={image} alt={name} className="size-20 object-cover bg-sand" />

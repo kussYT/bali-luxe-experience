@@ -1,4 +1,4 @@
-import type { Product } from "./products";
+import type { Product } from "@/lib/catalog-types";
 
 export function productMatchesQuery(product: Product, q: string) {
   const needle = q.trim().toLowerCase();

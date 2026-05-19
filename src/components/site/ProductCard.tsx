@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Heart } from "lucide-react";
-import type { Product } from "@/lib/products";
+import type { Product } from "@/lib/catalog-types";
 import { useCurrency } from "@/lib/currency";
 import { useCart } from "@/lib/cart";
 

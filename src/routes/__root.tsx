@@ -1,7 +1,8 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouterState } from "@tanstack/react-router";
 import appCss from "../styles.css?url";
 import { CurrencyProvider } from "@/lib/currency";
 import { CartProvider } from "@/lib/cart";
+import { CatalogProvider } from "@/lib/catalog-context";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { Marquee } from "@/components/site/Marquee";
@@ -27,7 +28,10 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Bingin Diaries — Hats from Bali & France" },
-      { name: "description", content: "Hand-woven hats crafted between Bali and France. A boutique house of slow, sun-soaked design." },
+      {
+        name: "description",
+        content: "Hand-woven hats crafted between Bali and France. A boutique house of slow, sun-soaked design.",
+      },
       { property: "og:title", content: "Bingin Diaries" },
       { property: "og:description", content: "Hand-woven hats from Bali & France." },
       { property: "og:type", content: "website" },
@@ -51,7 +55,9 @@ export const Route = createRootRoute({
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <head><HeadContent /></head>
+      <head>
+        <HeadContent />
+      </head>
       <body>
         {children}
         <Scripts />
@@ -61,15 +67,22 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isAdmin = pathname.startsWith("/admin");
+
   return (
-    <CurrencyProvider>
-      <CartProvider>
-        <Marquee />
-        <Header />
-        <main><Outlet /></main>
-        <Footer />
-        <CartDrawer />
-      </CartProvider>
-    </CurrencyProvider>
+    <CatalogProvider>
+      <CurrencyProvider>
+        <CartProvider>
+          {!isAdmin && <Marquee />}
+          {!isAdmin && <Header />}
+          <main>
+            <Outlet />
+          </main>
+          {!isAdmin && <Footer />}
+          {!isAdmin && <CartDrawer />}
+        </CartProvider>
+      </CurrencyProvider>
+    </CatalogProvider>
   );
 }
