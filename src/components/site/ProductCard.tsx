@@ -14,34 +14,33 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
       to="/product/$slug"
       params={{ slug: product.slug }}
       className="group block animate-fade-up"
-      style={{ animationDelay: `${index * 80}ms` }}
+      style={{ animationDelay: `${index * 70}ms` }}
     >
-      <div className="relative overflow-hidden bg-sand aspect-[4/5]">
-        <img
-          src={product.image}
-          alt={product.name}
-          loading="lazy"
-          className="size-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105"
-        />
+      <div className="product-image-wrap relative mb-4 md:mb-5">
+        <img src={product.image} alt={product.name} loading="lazy" className="image-editorial" />
         <button
-          onClick={(e) => { e.preventDefault(); toggleWish(product.slug); }}
-          className="absolute top-4 right-4 size-9 rounded-full bg-bone/90 backdrop-blur flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+          onClick={(e) => {
+            e.preventDefault();
+            toggleWish(product.slug);
+          }}
+          className="absolute top-3 right-3 size-8 flex items-center justify-center bg-surface/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500"
           aria-label="Wishlist"
         >
-          <Heart className={`size-4 ${wished ? "fill-clay text-clay" : ""}`} />
+          <Heart
+            className={`size-3 stroke-[1.2] ${wished ? "fill-accent text-accent" : "text-foreground/80"}`}
+          />
         </button>
         {product.onSale && (
-          <span className="absolute top-4 left-4 text-eyebrow bg-clay text-bone px-2.5 py-1">
+          <span className="absolute top-3 left-3 text-eyebrow !text-surface bg-accent px-2.5 py-1 rounded-sm">
             Sale
           </span>
         )}
       </div>
-      <div className="pt-4 flex items-baseline justify-between">
-        <div>
-          <p className="font-display text-lg leading-tight">{product.name}</p>
-          <p className="text-eyebrow text-muted-foreground mt-1">{product.collection}</p>
-        </div>
-        <p className="text-sm font-mono">{format(product)}</p>
+      <div className="space-y-1">
+        <p className="text-[0.8125rem] md:text-sm leading-snug text-foreground group-hover:text-accent transition-colors duration-500">
+          {product.name}
+        </p>
+        <p className="text-sm text-foreground/90 tracking-wide">{format(product)}</p>
       </div>
     </Link>
   );

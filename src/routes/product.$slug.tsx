@@ -25,9 +25,9 @@ function ProductPage() {
 
   if (!product) {
     return (
-      <div className="px-6 md:px-14 py-32 text-center">
+      <div className="page-wrap section-pad py-32 text-center">
         <h1 className="font-display text-5xl">Piece not found</h1>
-        <Link to="/collection" className="mt-6 inline-block text-eyebrow link-underline">
+        <Link to="/collection" className="mt-6 inline-block text-eyebrow link-underline !text-foreground">
           Back to collection
         </Link>
       </div>
@@ -46,86 +46,93 @@ function ProductPage() {
 
   return (
     <>
-      <section className="grid md:grid-cols-2 gap-px bg-border">
-        <div className="bg-sand md:sticky md:top-20 md:self-start">
+      <section className="grid md:grid-cols-[1.1fr_0.9fr] min-h-[calc(100vh-5.25rem)]">
+        <div className="bg-secondary md:sticky md:top-[5.25rem] md:self-start md:max-h-[calc(100vh-5.25rem)] overflow-hidden">
           <img
             src={gallery[activeImage]}
             alt={product.name}
-            className="size-full object-cover aspect-square md:aspect-auto md:max-h-[90vh] animate-fade-in"
+            className="w-full h-full object-cover aspect-[4/5] md:aspect-auto md:min-h-[calc(100vh-5.25rem)] image-editorial animate-fade-in"
           />
           {gallery.length > 1 && (
-            <div className="flex gap-2 p-4 overflow-x-auto border-t border-border/40 bg-background/80">
+            <div className="flex gap-2 p-4 overflow-x-auto border-t border-border bg-surface/90">
               {gallery.map((src, i) => (
                 <button
                   key={src}
                   type="button"
                   onClick={() => setActiveImage(i)}
-                  className={`shrink-0 size-16 overflow-hidden border-2 transition ${activeImage === i ? "border-ink" : "border-transparent opacity-70 hover:opacity-100"}`}
+                  className={`shrink-0 size-14 overflow-hidden rounded-sm border transition-colors duration-300 ${activeImage === i ? "border-foreground" : "border-transparent opacity-60 hover:opacity-100"}`}
                 >
-                  <img src={src} alt="" className="size-full object-cover" />
+                  <img src={src} alt="" className="size-full object-cover image-editorial" />
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        <div className="p-8 md:p-14 flex flex-col justify-center bg-background animate-fade-up">
-          <p className="text-eyebrow text-muted-foreground">
+        <div className="page-wrap section-pad py-12 md:py-20 flex flex-col justify-center bg-surface animate-fade-up">
+          <p className="text-eyebrow">
             {product.collection}
             {product.subcategory ? ` — ${product.subcategory}` : ""}
           </p>
-          <h1 className="font-display text-4xl md:text-6xl mt-4 leading-[1]">{product.name}</h1>
-          <p className="mt-6 text-lg text-muted-foreground max-w-md leading-relaxed">{product.story}</p>
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl mt-3 leading-[1.02]">{product.name}</h1>
+          <p className="mt-6 text-caption max-w-md leading-relaxed">{product.story}</p>
 
-          <div className="mt-8 flex items-baseline gap-3">
-            <p className="font-mono text-2xl">{format(product)}</p>
+          <div className="mt-8 flex items-baseline gap-4">
+            <p className="text-xl tracking-wide">{format(product)}</p>
             {product.onSale && product.compareAtEUR != null && (
-              <p className="font-mono text-lg text-muted-foreground line-through">€{product.priceEUR}</p>
+              <p className="text-sm text-muted line-through">€{product.priceEUR}</p>
             )}
-            {product.onSale && <span className="text-eyebrow text-clay">Sale</span>}
+            {product.onSale && (
+              <span className="text-eyebrow !text-accent">Sale</span>
+            )}
           </div>
 
-          <div className="mt-8 flex items-center gap-4">
-            <div className="flex items-center border border-border">
+          <div className="mt-10 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-center border border-border rounded-sm w-fit">
               <button
                 type="button"
                 onClick={() => setQty(Math.max(1, qty - 1))}
-                className="size-12 flex items-center justify-center"
+                className="size-11 flex items-center justify-center hover:bg-secondary transition-colors"
               >
-                <Minus className="size-3.5" />
+                <Minus className="size-3 stroke-[1.25]" />
               </button>
-              <span className="w-10 text-center font-mono text-sm">{qty}</span>
-              <button type="button" onClick={() => setQty(qty + 1)} className="size-12 flex items-center justify-center">
-                <Plus className="size-3.5" />
+              <span className="w-10 text-center text-sm">{qty}</span>
+              <button
+                type="button"
+                onClick={() => setQty(qty + 1)}
+                className="size-11 flex items-center justify-center hover:bg-secondary transition-colors"
+              >
+                <Plus className="size-3 stroke-[1.25]" />
               </button>
             </div>
             <button
               type="button"
               onClick={() => Array.from({ length: qty }).forEach(() => add(product.slug))}
               disabled={!product.available || product.stock <= 0}
-              className="flex-1 bg-ink text-bone py-4 text-eyebrow hover:bg-clay transition-colors disabled:opacity-50"
+              className="btn-primary flex-1 sm:flex-none disabled:opacity-45"
             >
-              {product.available ? "Add to cart" : "Sold out"}
+              {product.available ? "Add to bag" : "Sold out"}
             </button>
             <button
               type="button"
               onClick={() => toggleWish(product.slug)}
-              className="size-12 border border-border flex items-center justify-center hover:border-ink"
+              className="size-11 border border-border rounded-sm flex items-center justify-center hover:border-foreground transition-colors"
               aria-label="Wishlist"
             >
-              <Heart className={`size-4 ${wished ? "fill-clay text-clay" : ""}`} />
+              <Heart className={`size-3.5 stroke-[1.25] ${wished ? "fill-accent text-accent" : ""}`} />
             </button>
           </div>
 
-          <p className="mt-4 text-sm text-muted-foreground">
-            {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
+          <p className="mt-5 text-caption">
+            {product.stock > 0 ? `${product.stock} in stock — ships from Paris & Bali` : "Out of stock"}
           </p>
         </div>
       </section>
 
-      <section className="px-6 md:px-14 py-24">
-        <h2 className="font-display text-3xl md:text-4xl mb-10">You may also like</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-5 md:gap-8">
+      <section className="page-wrap section-pad section-gap editorial-rule">
+        <p className="text-eyebrow mb-3">Complete the look</p>
+        <h2 className="font-display text-3xl md:text-4xl mb-10 md:mb-14">You may also like</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-10 md:gap-x-8 md:gap-y-14">
           {suggestions.map((p, i) => (
             <ProductCard key={p.slug} product={p} index={i} />
           ))}

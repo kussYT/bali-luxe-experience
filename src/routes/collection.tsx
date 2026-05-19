@@ -47,21 +47,21 @@ function Collection() {
 
   return (
     <>
-      <section className="px-6 md:px-14 pt-20 pb-12 border-b border-border">
-        <p className="text-eyebrow text-muted-foreground">
+      <section className="page-wrap section-pad pt-20 md:pt-28 pb-12 md:pb-16 border-b border-border">
+        <p className="text-eyebrow">
           {loading ? "Loading…" : `${filtered.length} ${filtered.length === 1 ? "piece" : "pieces"}`}
         </p>
-        <h1 className="font-display text-5xl md:text-7xl mt-4 leading-[1]">{title}</h1>
-        <p className="mt-6 max-w-xl text-muted-foreground">
+        <h1 className="font-display text-5xl md:text-7xl lg:text-[5.5rem] mt-4 leading-[0.94]">{title}</h1>
+        <p className="text-caption mt-6 max-w-lg">
           Hand-woven, slow-finished, and shipped from our two ateliers in Canggu and Paris.
         </p>
       </section>
 
-      <div className="px-6 md:px-14 py-6 flex items-center gap-6 text-eyebrow border-b border-border overflow-x-auto">
+      <div className="page-wrap section-pad py-6 flex items-center gap-6 md:gap-8 text-eyebrow border-b border-border overflow-x-auto">
         <Route.Link
           to="/collection"
           search={{}}
-          className={`whitespace-nowrap ${!c && !cat && !sale && !q ? "text-ink" : "text-muted-foreground"} link-underline`}
+          className={`whitespace-nowrap link-underline ${!c && !cat && !sale && !q ? "!text-foreground" : ""}`}
         >
           All
         </Route.Link>
@@ -70,18 +70,18 @@ function Collection() {
             key={col.slug}
             to="/collection"
             search={{ c: col.slug }}
-            className={`whitespace-nowrap ${c === col.slug ? "text-ink" : "text-muted-foreground"} link-underline`}
+            className={`whitespace-nowrap link-underline ${c === col.slug ? "!text-foreground" : ""}`}
           >
             {col.name}
           </Route.Link>
         ))}
       </div>
 
-      <section className="px-6 md:px-14 py-14">
+      <section className="page-wrap section-pad section-gap">
         {filtered.length === 0 ? (
-          <p className="text-muted-foreground font-display text-2xl">No pieces found for this selection yet.</p>
+          <p className="font-display text-2xl md:text-3xl text-muted">No pieces found for this selection yet.</p>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-5 md:gap-10">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-12 md:gap-x-8 md:gap-y-16">
             {filtered.map((p, i) => (
               <ProductCard key={p.slug} product={p} index={i} />
             ))}

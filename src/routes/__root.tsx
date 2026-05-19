@@ -14,7 +14,7 @@ function NotFoundComponent() {
       <div className="max-w-md text-center">
         <h1 className="font-display text-7xl">404</h1>
         <p className="mt-4 text-muted-foreground">This page drifted out to sea.</p>
-        <Link to="/" className="mt-8 inline-block bg-ink text-bone px-8 py-3 text-eyebrow">
+        <Link to="/" className="mt-8 inline-block btn-primary">
           Return home
         </Link>
       </div>
@@ -43,7 +43,7 @@ export const Route = createRootRoute({
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap",
       },
     ],
   }),

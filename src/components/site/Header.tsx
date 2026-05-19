@@ -9,8 +9,8 @@ import { NavMenu } from "@/components/site/NavMenu";
 import { NavDropdown } from "@/components/site/NavDropdown";
 import { SearchDrawer } from "@/components/site/SearchDrawer";
 
-const textLink =
-  "text-sm py-2 link-underline whitespace-nowrap hover:text-ink text-foreground/90 transition-colors";
+const navLink =
+  "text-[0.6875rem] font-medium tracking-[0.22em] uppercase py-2 link-underline text-foreground/80 hover:text-foreground transition-colors duration-[450ms]";
 
 export function Header() {
   const { count, setOpen } = useCart();
@@ -26,65 +26,57 @@ export function Header() {
     setSearchOpen(false);
   };
 
-  const openSearch = () => {
-    closePanels();
-    setSearchOpen(true);
-  };
-
-  const openCart = () => {
-    closePanels();
-    setOpen(true);
-  };
-
   return (
     <>
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/60">
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center px-5 md:px-10 h-16 md:h-20 gap-4">
-          <div className="flex items-center gap-4 md:gap-7 min-w-0">
+      <header className="sticky top-0 z-40 bg-surface/85 backdrop-blur-[12px] border-b border-border/80">
+        <div className="page-wrap section-pad grid grid-cols-[1fr_auto_1fr] items-center h-[4.25rem] md:h-[5.25rem] gap-4">
+          <div className="flex items-center gap-5 md:gap-10 min-w-0">
             <button
               type="button"
               onClick={() => {
                 setSearchOpen(false);
                 setNavOpen(true);
               }}
-              className="md:hidden flex items-center gap-2"
+              className="md:hidden flex items-center text-foreground/80"
               aria-label="Open menu"
             >
-              <Menu className="size-5 shrink-0" />
+              <Menu className="size-[1.125rem] stroke-[1.15]" />
             </button>
 
-            <nav className="hidden md:flex items-center gap-6 lg:gap-8" aria-label="Main">
+            <nav className="hidden md:flex items-center gap-7 lg:gap-9" aria-label="Main">
               {navMain.map((section) => (
                 <NavDropdown key={section.label} label={section.label} items={[...section.items]} />
               ))}
             </nav>
           </div>
 
-          <Link
-            to="/"
-            aria-label="Bingin Diaries"
-            className="flex items-center justify-center font-display text-sm md:text-base tracking-[0.08em] uppercase shrink-0"
-          >
-            Bingin Diaries
+          <Link to="/" aria-label="Bingin Diaries" className="flex flex-col items-center shrink-0 text-center">
+            <span className="font-display text-[1.35rem] md:text-[1.65rem] tracking-[0.04em] leading-none">
+              Bingin Diaries
+            </span>
           </Link>
 
-          <div className="flex items-center justify-end gap-3 sm:gap-4 md:gap-5 text-sm min-w-0">
-            <button type="button" onClick={() => setGeo((v) => !v)} className={`hidden lg:inline ${textLink}`}>
-              {country.code} / {country.currency}
+          <div className="flex items-center justify-end gap-5 md:gap-7 min-w-0">
+            <button type="button" onClick={() => setGeo((v) => !v)} className={`hidden xl:inline ${navLink}`}>
+              {country.code}
             </button>
-            <Link to="/account" className={`hidden sm:inline ${textLink}`}>
+            <Link to="/account" className={`hidden sm:inline ${navLink}`}>
               Account
             </Link>
-            <Link to="/account" search={{ tab: "wishlist" } as never} className={`hidden md:inline ${textLink}`}>
+            <Link to="/account" search={{ tab: "wishlist" } as never} className={`hidden lg:inline ${navLink}`}>
               Wishlist
             </Link>
-            <button type="button" onClick={openSearch} className={textLink}>
+            <button type="button" onClick={() => { closePanels(); setSearchOpen(true); }} className={navLink}>
               Search
             </button>
-            <button type="button" onClick={openCart} className={`relative ${textLink}`}>
-              Cart
+            <button
+              type="button"
+              onClick={() => { closePanels(); setOpen(true); }}
+              className={`relative ${navLink}`}
+            >
+              Bag
               {count > 0 && (
-                <span className="absolute -top-2 -right-3 bg-ink text-bone text-[10px] rounded-full min-w-4 h-4 px-1 flex items-center justify-center font-mono">
+                <span className="absolute -top-1 -right-2.5 min-w-[1rem] h-4 px-1 flex items-center justify-center bg-accent text-surface text-[8px] tracking-[0.15em] rounded-sm">
                   {count}
                 </span>
               )}
@@ -93,9 +85,9 @@ export function Header() {
         </div>
 
         {geo && (
-          <div className="absolute right-5 md:right-10 top-full mt-2 bg-popover border border-border shadow-2xl p-5 w-72 animate-fade-in z-50">
-            <p className="text-eyebrow text-muted-foreground mb-3">Ship to</p>
-            <ul className="space-y-1.5">
+          <div className="absolute right-6 md:right-12 lg:right-16 top-full bg-surface border border-border shadow-[0_28px_56px_-20px_rgba(28,26,23,0.14)] p-5 w-72 animate-fade-in z-50">
+            <p className="text-eyebrow mb-4">Ship to</p>
+            <ul className="space-y-0.5">
               {COUNTRIES.map((c) => (
                 <li key={c.code}>
                   <button
@@ -104,12 +96,12 @@ export function Header() {
                       setCountry(c);
                       setGeo(false);
                     }}
-                    className={`w-full flex items-center justify-between text-sm py-1.5 px-2 hover:bg-muted transition ${country.code === c.code ? "bg-muted" : ""}`}
+                    className={`w-full flex items-center justify-between text-sm py-2.5 px-2 rounded-sm transition-colors duration-300 ${country.code === c.code ? "bg-secondary" : "hover:bg-secondary/70"}`}
                   >
-                    <span>
+                    <span className="text-foreground/90">
                       {c.flag} {c.name}
                     </span>
-                    <span className="font-mono text-xs text-muted-foreground">{c.currency}</span>
+                    <span className="text-caption">{c.currency}</span>
                   </button>
                 </li>
               ))}
