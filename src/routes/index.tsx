@@ -3,7 +3,7 @@ import hero from "@/assets/hero.jpg";
 import collection1 from "@/assets/collection-1.jpg";
 import collection2 from "@/assets/collection-2.jpg";
 import collection3 from "@/assets/collection-3.jpg";
-import { products } from "@/lib/products";
+import { featuredProducts } from "@/lib/products";
 import { ProductCard } from "@/components/site/ProductCard";
 
 export const Route = createFileRoute("/")({
@@ -88,7 +88,7 @@ function Home() {
           <Link to="/collection" className="text-eyebrow link-underline hidden md:inline">View all</Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-8">
-          {products.map((p, i) => (
+          {featuredProducts.map((p, i) => (
             <ProductCard key={p.slug} product={p} index={i} />
           ))}
         </div>

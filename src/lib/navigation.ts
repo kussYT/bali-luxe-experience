@@ -1,3 +1,5 @@
+import { collections } from "@/lib/products";
+
 export const POPULAR_SEARCHES = [
   "bob",
   "bucket",
@@ -7,20 +9,43 @@ export const POPULAR_SEARCHES = [
   "surf hat",
 ] as const;
 
-export const NAV_SHOP = [
-  { label: "View all", to: "/collection" as const },
-  { label: "New collection Mi Paradisio", to: "/collection" as const, search: { c: "mi-paradisio" } },
-  { label: "New Accessories", to: "/collection" as const, search: { cat: "accessories" } },
-  { label: "Bags", to: "/collection" as const, search: { cat: "bags" } },
-] as const;
+export type NavLink = {
+  label: string;
+  to: string;
+  search?: Record<string, string>;
+  hash?: string;
+};
 
-export const NAV_SALES = [{ label: "View all", to: "/collection" as const, search: { sale: "true" } }] as const;
+/** Shop dropdown — collections + category filters. */
+export const NAV_SHOP: NavLink[] = [
+  { label: "View all", to: "/collection" },
+  ...collections.map((c) => ({
+    label: c.name,
+    to: "/collection",
+    search: { c: c.slug },
+  })),
+  { label: "Accessories", to: "/collection", search: { cat: "accessories" } },
+  { label: "Bags", to: "/collection", search: { cat: "bags" } },
+];
 
-export const NAV_ABOUT = [
-  { label: "About us", to: "/about" as const },
-  { label: "Atelier", to: "/about" as const, hash: "atelier" },
-  { label: "Stockists", to: "/stockists" as const },
-  { label: "Shipping", to: "/shipping" as const },
-  { label: "Returns", to: "/returns" as const },
-  { label: "Travel Diaries", to: "/travel-diaries" as const },
+/** Sales dropdown. */
+export const NAV_SALES: NavLink[] = [
+  { label: "View all sale", to: "/collection", search: { sale: "true" } },
+];
+
+/** About dropdown — brand & info pages. */
+export const NAV_ABOUT: NavLink[] = [
+  { label: "About us", to: "/about" },
+  { label: "Atelier", to: "/about", hash: "atelier" },
+  { label: "Stockists", to: "/stockists" },
+  { label: "Shipping", to: "/shipping" },
+  { label: "Returns", to: "/returns" },
+  { label: "Travel Diaries", to: "/travel-diaries" },
+  { label: "Contact", to: "/contact" },
+];
+
+export const NAV_MAIN = [
+  { label: "Shop", items: NAV_SHOP },
+  { label: "Sales", items: NAV_SALES },
+  { label: "About us", items: NAV_ABOUT },
 ] as const;

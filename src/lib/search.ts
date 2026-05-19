@@ -19,3 +19,8 @@ export function productMatchesQuery(product: Product, q: string) {
 export function collectionSlug(name: string) {
   return name.toLowerCase().replace(/\s+/g, "-");
 }
+
+/** Match product by collection nav slug (Shopify-derived). */
+export function productInCollection(product: { collectionSlug: string }, slug: string) {
+  return product.collectionSlug === slug;
+}

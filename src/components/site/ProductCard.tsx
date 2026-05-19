@@ -30,9 +30,11 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
         >
           <Heart className={`size-4 ${wished ? "fill-clay text-clay" : ""}`} />
         </button>
-        <span className="absolute bottom-4 left-4 text-eyebrow bg-bone/90 backdrop-blur px-2.5 py-1">
-          {product.origin}
-        </span>
+        {product.onSale && (
+          <span className="absolute top-4 left-4 text-eyebrow bg-clay text-bone px-2.5 py-1">
+            Sale
+          </span>
+        )}
       </div>
       <div className="pt-4 flex items-baseline justify-between">
         <div>

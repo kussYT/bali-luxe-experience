@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { products, collections } from "@/lib/products";
-import { collectionSlug, productMatchesQuery } from "@/lib/search";
+import { productInCollection, productMatchesQuery } from "@/lib/search";
 import { ProductCard } from "@/components/site/ProductCard";
 
 type CollectionSearch = {
@@ -32,7 +32,7 @@ function Collection() {
   let filtered = products;
 
   if (c) {
-    filtered = filtered.filter((p) => collectionSlug(p.collection) === c);
+    filtered = filtered.filter((p) => productInCollection(p, c));
   }
   if (cat) {
     filtered = filtered.filter((p) => p.category === cat);
