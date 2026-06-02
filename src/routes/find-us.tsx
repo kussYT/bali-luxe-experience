@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { FindUsPage } from "@/components/site/FindUsPage";
 
-export const Route = createFileRoute("/stockists")({
+export const Route = createFileRoute("/find-us")({
   head: () => ({
     meta: [
       { title: "Find us — Retailers | Bingin Diaries" },

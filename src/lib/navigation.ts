@@ -36,7 +36,7 @@ export const NAV_SALES: NavLink[] = [
 export const NAV_ABOUT: NavLink[] = [
   { label: "About us", to: "/about" },
   { label: "Atelier", to: "/about", hash: "atelier" },
-  { label: "Stockists", to: "/stockists" },
+  { label: "Find us", to: "/find-us" },
   { label: "Shipping", to: "/shipping" },
   { label: "Returns", to: "/returns" },
   { label: "Travel Diaries", to: "/travel-diaries" },

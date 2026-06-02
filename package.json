@@ -11,7 +11,11 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "catalog:import": "node scripts/download-shopify-images.mjs && node scripts/generate-catalog.mjs",
-    "catalog:migrate": "node scripts/migrate-catalog-schema.mjs"
+    "catalog:migrate": "node scripts/migrate-catalog-schema.mjs",
+    "lifestyle:images": "node scripts/download-lifestyle-images.mjs",
+    "lifestyle:audio": "node scripts/download-ambient-audio.mjs",
+    "instagram:sync": "node scripts/sync-instagram.mjs",
+    "stockists:sync": "node scripts/sync-stockists.mjs"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",

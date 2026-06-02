@@ -19,6 +19,9 @@ dist-ssr
 .env.local
 .env.*.local
 
+# Newsletter subscribers (local dev storage)
+data/newsletter-subscribers.jsonl
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars

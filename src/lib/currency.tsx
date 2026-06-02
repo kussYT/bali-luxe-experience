@@ -1,43 +1,99 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Product } from "@/lib/catalog-types";
+import {
+  DEFAULT_SHIPPING_COUNTRY,
+  formatShippingLabel,
+  getShippingCountry,
+  type ShippingCountry,
+} from "@/data/shipping-countries";
+import {
+  readShippingCountryCode,
+  shippingToCountry,
+  writeShippingCountryCode,
+  SHIPPING_STORAGE_KEY,
+} from "@/lib/market";
 
 export type Currency = "EUR" | "USD" | "IDR";
 export type Country = { code: string; name: string; currency: Currency; flag: string };
 
-export const COUNTRIES: Country[] = [
-  { code: "FR", name: "France", currency: "EUR", flag: "🇫🇷" },
-  { code: "ID", name: "Indonesia", currency: "IDR", flag: "🇮🇩" },
-  { code: "US", name: "United States", currency: "USD", flag: "🇺🇸" },
-  { code: "GB", name: "United Kingdom", currency: "EUR", flag: "🇬🇧" },
-  { code: "AU", name: "Australia", currency: "USD", flag: "🇦🇺" },
-];
-
 type Ctx = {
   country: Country;
+  shipping: ShippingCountry;
+  setShippingCountryCode: (code: string) => void;
+  /** @deprecated use setShippingCountryCode */
+  setMarketId: (code: string) => void;
   setCountry: (c: Country) => void;
   format: (p: Product) => string;
+  shippingLabel: string;
 };
 
 const CurrencyContext = createContext<Ctx | null>(null);
 
+function initialShipping(): ShippingCountry {
+  if (typeof window === "undefined") return getShippingCountry(DEFAULT_SHIPPING_COUNTRY);
+  const code = readShippingCountryCode();
+  return getShippingCountry(code ?? DEFAULT_SHIPPING_COUNTRY);
+}
+
 export function CurrencyProvider({ children }: { children: ReactNode }) {
-  const [country, setCountry] = useState<Country>(COUNTRIES[0]);
-  const format = (p: Product) => {
-    const eur = p.onSale && p.compareAtEUR != null ? p.compareAtEUR : p.priceEUR;
-    const value =
-      country.currency === "EUR"
-        ? eur
-        : country.currency === "USD"
-          ? Math.round(eur * 1.1)
-          : Math.round(eur * 17_000);
-    const symbol = country.currency === "EUR" ? "€" : country.currency === "USD" ? "$" : "Rp ";
-    return `${symbol}${value.toLocaleString("en-US")}`;
-  };
-  return (
-    <CurrencyContext.Provider value={{ country, setCountry, format }}>
-      {children}
-    </CurrencyContext.Provider>
+  const [shipping, setShipping] = useState<ShippingCountry>(initialShipping);
+  const [country, setCountry] = useState<Country>(() => shippingToCountry(initialShipping()));
+
+  useEffect(() => {
+    const code = readShippingCountryCode();
+    if (code) {
+      const next = getShippingCountry(code);
+      setShipping(next);
+      setCountry(shippingToCountry(next));
+    }
+  }, []);
+
+  const setShippingCountryCode = useCallback((code: string) => {
+    const next = getShippingCountry(code);
+    writeShippingCountryCode(code);
+    setShipping(next);
+    setCountry(shippingToCountry(next));
+  }, []);
+
+  const setCountryLegacy = useCallback(
+    (c: Country) => {
+      const match = getShippingCountry(c.code);
+      setShippingCountryCode(match.code);
+    },
+    [setShippingCountryCode],
   );
+
+  const format = useCallback(
+    (p: Product) => {
+      const eur = p.onSale && p.compareAtEUR != null ? p.compareAtEUR : p.priceEUR;
+      const value =
+        country.currency === "EUR"
+          ? eur
+          : country.currency === "USD"
+            ? Math.round(eur * 1.1)
+            : Math.round(eur * 17_000);
+      const symbol = country.currency === "EUR" ? "€" : country.currency === "USD" ? "$" : "Rp ";
+      return `${symbol}${value.toLocaleString("en-US")}`;
+    },
+    [country.currency],
+  );
+
+  const shippingLabel = formatShippingLabel(shipping);
+
+  const value = useMemo(
+    () => ({
+      country,
+      shipping,
+      shippingLabel,
+      setShippingCountryCode,
+      setMarketId: setShippingCountryCode,
+      setCountry: setCountryLegacy,
+      format,
+    }),
+    [country, shipping, shippingLabel, setShippingCountryCode, setCountryLegacy, format],
+  );
+
+  return <CurrencyContext.Provider value={value}>{children}</CurrencyContext.Provider>;
 }
 
 export function useCurrency() {
@@ -45,3 +101,5 @@ export function useCurrency() {
   if (!ctx) throw new Error("useCurrency must be used within CurrencyProvider");
   return ctx;
 }
+
+export { SHIPPING_STORAGE_KEY };

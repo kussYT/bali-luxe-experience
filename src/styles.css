@@ -337,4 +337,39 @@
   .group:hover .product-image-wrap img {
     transform: scale(1.03);
   }
+
+  /* Scroll reveal — contenu toujours visible (évite sections « vides ») */
+  .reveal-on-scroll {
+    transform: translateY(12px);
+    transition: transform 1s var(--ease-editorial);
+  }
+  .reveal-on-scroll.reveal-pending {
+    opacity: 1;
+  }
+  .reveal-on-scroll.is-visible {
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal-on-scroll {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+    .animate-fade-up,
+    .animate-fade-in,
+    .animate-zoom-out {
+      animation: none;
+    }
+  }
+
+  .image-reveal {
+    overflow: hidden;
+  }
+  .image-reveal img {
+    transition: transform 2s var(--ease-editorial);
+  }
+  .image-reveal:hover img {
+    transform: scale(1.02);
+  }
 }

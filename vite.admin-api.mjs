@@ -15,6 +15,13 @@ import {
   sessionCookieHeader,
   clearSessionCookieHeader,
 } from "./server/admin-auth.mjs";
+import { fetchInstagramFeed, INSTAGRAM_PROFILE } from "./server/instagram-feed.mjs";
+import { subscribeNewsletter } from "./server/newsletter.mjs";
+import { readFile } from "node:fs/promises";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __root = join(dirname(fileURLToPath(import.meta.url)));
 
 loadEnv({ path: ".env.local" });
 loadEnv({ path: ".env" });
@@ -78,6 +85,25 @@ export function adminApiPlugin() {
 
         try {
           // Public catalog (published products only by default)
+          if (pathname === "/api/instagram" && req.method === "GET") {
+            try {
+              const live = await fetchInstagramFeed();
+              if (live) return json(res, 200, live);
+            } catch (e) {
+              console.warn("[api/instagram]", e.message);
+            }
+            try {
+              const cached = await readFile(join(__root, "public", "instagram-feed.json"), "utf8");
+              return json(res, 200, JSON.parse(cached));
+            } catch {
+              return json(res, 200, {
+                profile: INSTAGRAM_PROFILE,
+                posts: [],
+                source: "static",
+              });
+            }
+          }
+
           if (pathname === "/api/catalog" && req.method === "GET") {
             const catalog = await readCatalog();
             const includeDrafts = url.searchParams.get("all") === "1";
@@ -85,6 +111,14 @@ export function adminApiPlugin() {
               ? catalog.products
               : catalog.products.filter((p) => p.status === "published");
             return json(res, 200, { ...catalog, products, productCount: products.length });
+          }
+
+          if (pathname === "/api/newsletter" && req.method === "POST") {
+            const body = await readBody(req);
+            const email = typeof body.email === "string" ? body.email : "";
+            const source = typeof body.source === "string" ? body.source : "website";
+            const result = await subscribeNewsletter({ email, source });
+            return json(res, 200, result);
           }
 
           if (pathname === "/api/admin/login" && req.method === "POST") {

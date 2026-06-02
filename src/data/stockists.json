@@ -1,0 +1,114 @@
+{
+  "source": "https://bingindiaries.com/pages/find-us",
+  "syncedAt": "2026-05-27T08:00:00.000Z",
+  "heroImage": "/lifestyle/journal-bingin.jpg",
+  "wholesaleEmail": "info@bingindiaries.com",
+  "countries": [
+    {
+      "country": "Bali",
+      "areas": [
+        {
+          "name": "Canggu",
+          "stores": [
+            { "name": "Stella Canggu" },
+            { "name": "Corporate Attire" },
+            { "name": "Le Concept" },
+            { "name": "80361" }
+          ]
+        },
+        {
+          "name": "Uluwatu",
+          "stores": [
+            { "name": "BGS", "instagram": "@bgsbali", "url": "https://www.instagram.com/bgsbali/" },
+            { "name": "Ours Spa", "instagram": "@ourspabali", "url": "https://www.instagram.com/ourspabali/" },
+            { "name": "The Find", "instagram": "@thefindbali", "url": "https://www.instagram.com/thefindbali/" },
+            { "name": "Muse", "instagram": "@muse.bali.store", "url": "https://www.instagram.com/muse.bali.store/" }
+          ]
+        },
+        {
+          "name": "Lembongan Island",
+          "stores": [
+            { "name": "Indiana", "instagram": "@indianakenanga", "url": "https://www.instagram.com/indianakenanga/" }
+          ]
+        }
+      ]
+    },
+    {
+      "country": "France",
+      "areas": [
+        {
+          "name": "Paris",
+          "stores": [
+            {
+              "name": "La Samaritaine",
+              "instagram": "@samaritaineparis",
+              "url": "https://www.instagram.com/samaritaineparis/"
+            }
+          ]
+        },
+        {
+          "name": "Agen",
+          "stores": [
+            { "name": "Palomino" },
+            {
+              "name": "Turquoise Bleue",
+              "instagram": "@boutiquepalomino",
+              "url": "https://www.instagram.com/boutiquepalomino/"
+            }
+          ]
+        },
+        {
+          "name": "Nîmes",
+          "stores": [{ "name": "Odile Naturellement" }]
+        },
+        {
+          "name": "Hossegor",
+          "stores": [
+            {
+              "name": "Loulou in the Wood",
+              "instagram": "@loulouinthewoods",
+              "url": "https://www.instagram.com/loulouinthewoods/"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "country": "Guadeloupe",
+      "areas": [
+        {
+          "name": "General",
+          "stores": [
+            {
+              "name": "Koukouli",
+              "instagram": "@koukouli.conceptstore",
+              "url": "https://www.instagram.com/koukouli.conceptstore/"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "country": "Spain",
+      "areas": [
+        {
+          "name": "Cadaqués",
+          "stores": [
+            { "name": "Mo Cadaqués", "instagram": "@mocadaques", "url": "https://www.instagram.com/mocadaques/" }
+          ]
+        }
+      ]
+    },
+    {
+      "country": "Finland",
+      "areas": [
+        {
+          "name": "General",
+          "stores": [
+            { "name": "Pacific Nativ", "instagram": "@pacificnativ", "url": "https://www.instagram.com/pacificnativ/" }
+          ]
+        }
+      ]
+    }
+  ]
+}
