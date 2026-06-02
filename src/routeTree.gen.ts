@@ -13,6 +13,7 @@ import { Route as TravelDiariesRouteImport } from './routes/travel-diaries'
 import { Route as StockistsRouteImport } from './routes/stockists'
 import { Route as ShippingRouteImport } from './routes/shipping'
 import { Route as ReturnsRouteImport } from './routes/returns'
+import { Route as FindUsRouteImport } from './routes/find-us'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CollectionRouteImport } from './routes/collection'
 import { Route as CartRouteImport } from './routes/cart'
@@ -22,6 +23,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
+import { Route as JournalSlugRouteImport } from './routes/journal.$slug'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminProductsIndexRouteImport } from './routes/admin/products/index'
 import { Route as AdminProductsNewRouteImport } from './routes/admin/products/new'
@@ -45,6 +47,11 @@ const ShippingRoute = ShippingRouteImport.update({
 const ReturnsRoute = ReturnsRouteImport.update({
   id: '/returns',
   path: '/returns',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FindUsRoute = FindUsRouteImport.update({
+  id: '/find-us',
+  path: '/find-us',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -92,6 +99,11 @@ const ProductSlugRoute = ProductSlugRouteImport.update({
   path: '/product/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JournalSlugRoute = JournalSlugRouteImport.update({
+  id: '/journal/$slug',
+  path: '/journal/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -121,11 +133,13 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/collection': typeof CollectionRoute
   '/contact': typeof ContactRoute
+  '/find-us': typeof FindUsRoute
   '/returns': typeof ReturnsRoute
   '/shipping': typeof ShippingRoute
   '/stockists': typeof StockistsRoute
   '/travel-diaries': typeof TravelDiariesRoute
   '/admin/login': typeof AdminLoginRoute
+  '/journal/$slug': typeof JournalSlugRoute
   '/product/$slug': typeof ProductSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/products/$slug': typeof AdminProductsSlugRoute
@@ -139,11 +153,13 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/collection': typeof CollectionRoute
   '/contact': typeof ContactRoute
+  '/find-us': typeof FindUsRoute
   '/returns': typeof ReturnsRoute
   '/shipping': typeof ShippingRoute
   '/stockists': typeof StockistsRoute
   '/travel-diaries': typeof TravelDiariesRoute
   '/admin/login': typeof AdminLoginRoute
+  '/journal/$slug': typeof JournalSlugRoute
   '/product/$slug': typeof ProductSlugRoute
   '/admin': typeof AdminIndexRoute
   '/admin/products/$slug': typeof AdminProductsSlugRoute
@@ -159,11 +175,13 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/collection': typeof CollectionRoute
   '/contact': typeof ContactRoute
+  '/find-us': typeof FindUsRoute
   '/returns': typeof ReturnsRoute
   '/shipping': typeof ShippingRoute
   '/stockists': typeof StockistsRoute
   '/travel-diaries': typeof TravelDiariesRoute
   '/admin/login': typeof AdminLoginRoute
+  '/journal/$slug': typeof JournalSlugRoute
   '/product/$slug': typeof ProductSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/products/$slug': typeof AdminProductsSlugRoute
@@ -180,11 +198,13 @@ export interface FileRouteTypes {
     | '/cart'
     | '/collection'
     | '/contact'
+    | '/find-us'
     | '/returns'
     | '/shipping'
     | '/stockists'
     | '/travel-diaries'
     | '/admin/login'
+    | '/journal/$slug'
     | '/product/$slug'
     | '/admin/'
     | '/admin/products/$slug'
@@ -198,11 +218,13 @@ export interface FileRouteTypes {
     | '/cart'
     | '/collection'
     | '/contact'
+    | '/find-us'
     | '/returns'
     | '/shipping'
     | '/stockists'
     | '/travel-diaries'
     | '/admin/login'
+    | '/journal/$slug'
     | '/product/$slug'
     | '/admin'
     | '/admin/products/$slug'
@@ -217,11 +239,13 @@ export interface FileRouteTypes {
     | '/cart'
     | '/collection'
     | '/contact'
+    | '/find-us'
     | '/returns'
     | '/shipping'
     | '/stockists'
     | '/travel-diaries'
     | '/admin/login'
+    | '/journal/$slug'
     | '/product/$slug'
     | '/admin/'
     | '/admin/products/$slug'
@@ -237,10 +261,12 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   CollectionRoute: typeof CollectionRoute
   ContactRoute: typeof ContactRoute
+  FindUsRoute: typeof FindUsRoute
   ReturnsRoute: typeof ReturnsRoute
   ShippingRoute: typeof ShippingRoute
   StockistsRoute: typeof StockistsRoute
   TravelDiariesRoute: typeof TravelDiariesRoute
+  JournalSlugRoute: typeof JournalSlugRoute
   ProductSlugRoute: typeof ProductSlugRoute
 }
 
@@ -272,6 +298,13 @@ declare module '@tanstack/react-router' {
       path: '/returns'
       fullPath: '/returns'
       preLoaderRoute: typeof ReturnsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/find-us': {
+      id: '/find-us'
+      path: '/find-us'
+      fullPath: '/find-us'
+      preLoaderRoute: typeof FindUsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -337,6 +370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/journal/$slug': {
+      id: '/journal/$slug'
+      path: '/journal/$slug'
+      fullPath: '/journal/$slug'
+      preLoaderRoute: typeof JournalSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/login'
@@ -394,10 +434,12 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   CollectionRoute: CollectionRoute,
   ContactRoute: ContactRoute,
+  FindUsRoute: FindUsRoute,
   ReturnsRoute: ReturnsRoute,
   ShippingRoute: ShippingRoute,
   StockistsRoute: StockistsRoute,
   TravelDiariesRoute: TravelDiariesRoute,
+  JournalSlugRoute: JournalSlugRoute,
   ProductSlugRoute: ProductSlugRoute,
 }
 export const routeTree = rootRouteImport

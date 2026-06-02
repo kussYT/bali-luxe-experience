@@ -1,0 +1,48 @@
+{
+  "profile": {
+    "handle": "@bingindiaries",
+    "profileUrl": "https://www.instagram.com/bingindiaries/",
+    "title": "Follow the diary",
+    "subtitle": "Seen in the sun"
+  },
+  "posts": [
+    {
+      "id": "ig-1",
+      "image": "/lifestyle/lookbook-sunburn.jpg",
+      "alt": "Bingin Diaries",
+      "permalink": "https://www.instagram.com/bingindiaries/"
+    },
+    {
+      "id": "ig-2",
+      "image": "/lifestyle/journal-sunset.jpg",
+      "alt": "Golden hour",
+      "permalink": "https://www.instagram.com/bingindiaries/"
+    },
+    {
+      "id": "ig-3",
+      "image": "/lifestyle/shop-mood.jpg",
+      "alt": "Editorial mood",
+      "permalink": "https://www.instagram.com/bingindiaries/"
+    },
+    {
+      "id": "ig-4",
+      "image": "/lifestyle/journal-bingin.jpg",
+      "alt": "Bingin beach",
+      "permalink": "https://www.instagram.com/bingindiaries/"
+    },
+    {
+      "id": "ig-5",
+      "image": "/lifestyle/lookbook-salt.jpg",
+      "alt": "Salt air",
+      "permalink": "https://www.instagram.com/bingindiaries/"
+    },
+    {
+      "id": "ig-6",
+      "image": "/lifestyle/editorial-designed.jpg",
+      "alt": "Designed in Bali",
+      "permalink": "https://www.instagram.com/bingindiaries/"
+    }
+  ],
+  "syncedAt": "2026-05-27T07:40:04.854Z",
+  "source": "static"
+}
