@@ -1,6 +1,27 @@
 export type ProductCategory = "hats" | "accessories" | "bags";
 export type ProductStatus = "published" | "draft";
 export type ProductOrigin = "Bali" | "France";
+export type WarehouseId = "france" | "bali";
+
+export type VariantInventory = {
+  france: number;
+  bali: number;
+};
+
+export type ProductVariant = {
+  id: string;
+  slug: string;
+  sku?: string;
+  title: string;
+  option1?: string;
+  option2?: string;
+  option3?: string;
+  priceEUR?: number;
+  compareAtEUR?: number;
+  isDefault?: boolean;
+  inventory: VariantInventory;
+  available: boolean;
+};
 
 export type Collection = {
   slug: string;
@@ -9,6 +30,8 @@ export type Collection = {
 };
 
 export type Product = {
+  /** Postgres UUID — present when loaded from database */
+  id?: string;
   slug: string;
   name: string;
   story: string;
@@ -26,11 +49,16 @@ export type Product = {
   details: string[];
   tags: string[];
   stock: number;
+  /** Per-warehouse totals (S2 allocation) */
+  stockFrance?: number;
+  stockBali?: number;
   status: ProductStatus;
   featured: boolean;
   onSale?: boolean;
   available: boolean;
   origin: ProductOrigin;
+  defaultWarehouse?: WarehouseId;
+  variants?: ProductVariant[];
 };
 
 export type Catalog = {
@@ -39,4 +67,5 @@ export type Catalog = {
   productCount: number;
   collections: Collection[];
   products: Product[];
+  source?: "postgres" | "json-fallback";
 };

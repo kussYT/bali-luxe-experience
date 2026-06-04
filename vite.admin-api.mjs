@@ -18,6 +18,8 @@ import {
 import { fetchInstagramFeed, INSTAGRAM_PROFILE } from "./server/instagram-feed.mjs";
 import { subscribeNewsletter } from "./server/newsletter.mjs";
 import { createCheckoutSession, handleStripeWebhook, getCheckoutSessionStatus } from "./server/checkout.mjs";
+import { getCatalogResponse } from "./server/api/catalog.mjs";
+import { isDatabaseConfigured } from "./server/db/pool.mjs";
 import { readFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -141,12 +143,9 @@ export function adminApiPlugin() {
           }
 
           if (pathname === "/api/catalog" && req.method === "GET") {
-            const catalog = await readCatalog();
             const includeDrafts = url.searchParams.get("all") === "1";
-            const products = includeDrafts
-              ? catalog.products
-              : catalog.products.filter((p) => p.status === "published");
-            return json(res, 200, { ...catalog, products, productCount: products.length });
+            const catalog = await getCatalogResponse({ includeDrafts });
+            return json(res, 200, catalog);
           }
 
           if (pathname === "/api/newsletter" && req.method === "POST") {
@@ -180,11 +179,16 @@ export function adminApiPlugin() {
           requireAdmin(req);
 
           if (pathname === "/api/admin/catalog" && req.method === "GET") {
-            const catalog = await readCatalog();
+            const catalog = await getCatalogResponse({ includeDrafts: true });
             return json(res, 200, catalog);
           }
 
           if (pathname === "/api/admin/products" && req.method === "POST") {
+            if (isDatabaseConfigured()) {
+              return json(res, 503, {
+                error: "Admin product writes use JSON until S2. Catalog reads are from Postgres.",
+              });
+            }
             const body = await readBody(req);
             const catalog = await readCatalog();
             const slug = body.slug || slugify(body.name);
@@ -204,6 +208,11 @@ export function adminApiPlugin() {
             const index = catalog.products.findIndex((p) => p.slug === slug);
 
             if (req.method === "PUT") {
+              if (isDatabaseConfigured()) {
+                return json(res, 503, {
+                  error: "Admin product writes use JSON until S2. Catalog reads are from Postgres.",
+                });
+              }
               if (index === -1) return json(res, 404, { error: "Product not found" });
               const body = await readBody(req);
               const updated = normalizeCatalog({
@@ -215,6 +224,11 @@ export function adminApiPlugin() {
             }
 
             if (req.method === "DELETE") {
+              if (isDatabaseConfigured()) {
+                return json(res, 503, {
+                  error: "Admin product writes use JSON until S2. Catalog reads are from Postgres.",
+                });
+              }
               if (index === -1) return json(res, 404, { error: "Product not found" });
               catalog.products.splice(index, 1);
               const saved = await writeCatalog(catalog);

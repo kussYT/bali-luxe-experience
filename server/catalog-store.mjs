@@ -79,6 +79,12 @@ export function normalizeCatalog(raw) {
 }
 
 export async function readCatalog() {
+  const { isDatabaseConfigured } = await import("./db/pool.mjs");
+  if (isDatabaseConfigured()) {
+    const { getCatalogResponse } = await import("./api/catalog.mjs");
+    return getCatalogResponse({ includeDrafts: true });
+  }
+
   for (const filePath of CATALOG_PATHS) {
     try {
       const raw = JSON.parse(await readFile(filePath, "utf8"));
