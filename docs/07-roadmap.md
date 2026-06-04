@@ -35,13 +35,18 @@
 
 ---
 
-## S3 — Orders + Stripe production
+## S3 — Orders + Stripe production ✅
 
-- `orders`, `order_items` tables
-- Stripe webhook → Postgres (idempotent)
-- Order admin (list, detail, statuses)
-- Stock decrement on correct variant / warehouse
-- Admin catalog CRUD → Postgres (end JSON writes)
+| Deliverable | Status |
+|-------------|--------|
+| `orders`, `order_items` tables (`002_orders.sql`) | ✅ |
+| Stripe webhook → Postgres (idempotent via `stripe_event_id`) | ✅ |
+| Admin `/admin/orders` list + detail | ✅ |
+| Stock decrement + `inventory_movements` (`sale`) | ✅ |
+| `shipping_country_code` + `fulfillment_warehouse` on order | ✅ |
+| Dev server port **8080** | ✅ |
+
+**Follow-up:** admin catalog CRUD → Postgres, order emails, production Worker API.
 
 ---
 

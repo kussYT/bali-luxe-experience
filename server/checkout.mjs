@@ -1,12 +1,14 @@
-import { readCatalog, writeCatalog } from "./catalog-store.mjs";
-import { availableForCheckout } from "./warehouse-allocation.mjs";
+import { readCatalog } from "./catalog-store.mjs";
+import { availableForCheckout, getDefaultVariant } from "./warehouse-allocation.mjs";
 import {
   createPendingOrder,
   attachStripeSession,
-  markOrderPaid,
   findOrderBySessionId,
   findOrderById,
+  markOrderPaid,
 } from "./orders-store.mjs";
+import { isDatabaseConfigured } from "./db/pool.mjs";
+import { buildOrderItemFromCartLine } from "./db/orders.mjs";
 import { getStripe, getSiteUrl } from "./stripe-client.mjs";
 import {
   unitPrice,
@@ -60,9 +62,31 @@ export function validateCartItems(catalog, lineItems, countryCode) {
       throw err;
     }
 
+    if (isDatabaseConfigured()) {
+      const variant = getDefaultVariant(product);
+      if (!variant?.id) {
+        const err = new Error(`Product has no variant in database: ${slug}`);
+        err.status = 500;
+        throw err;
+      }
+      if (!stockCheck.warehouse) {
+        const err = new Error(`Could not determine fulfillment warehouse for ${slug}`);
+        err.status = 500;
+        throw err;
+      }
+    }
+
     resolved.push({ product, qty, fulfillmentWarehouse: stockCheck.warehouse });
   }
   return resolved;
+}
+
+function shippingCountryFromStripeSession(session) {
+  return (
+    session.shipping_details?.address?.country ||
+    session.customer_details?.address?.country ||
+    null
+  )?.toUpperCase() || null;
 }
 
 export async function createCheckoutSession({ items, currency, countryCode }) {
@@ -78,13 +102,25 @@ export async function createCheckoutSession({ items, currency, countryCode }) {
   const siteUrl = getSiteUrl();
   const stripe = getStripe();
 
-  const orderItems = resolved.map(({ product, qty }) => ({
-    slug: product.slug,
-    name: product.name,
-    qty,
-    unitPrice: unitPrice(product, currency),
-    image: product.image,
-  }));
+  const orderItems = resolved.map(({ product, qty, fulfillmentWarehouse }) => {
+    const price = unitPrice(product, currency);
+    if (isDatabaseConfigured()) {
+      return buildOrderItemFromCartLine({
+        product,
+        qty,
+        fulfillmentWarehouse,
+        unitPriceAmount: price,
+      });
+    }
+    return {
+      slug: product.slug,
+      name: product.name,
+      qty,
+      unitPrice: price,
+      image: product.image,
+      warehouseId: fulfillmentWarehouse,
+    };
+  });
 
   const order = await createPendingOrder({
     items: orderItems,
@@ -146,7 +182,7 @@ export async function createCheckoutSession({ items, currency, countryCode }) {
   return { url: session.url, sessionId: session.id, orderId: order.id };
 }
 
-export async function fulfillPaidSession(stripeSession) {
+export async function fulfillPaidSession(stripeSession, stripeEventId = null) {
   const orderId = stripeSession.metadata?.orderId || stripeSession.client_reference_id;
   if (!orderId) throw new Error("Missing order id on Stripe session");
 
@@ -154,34 +190,23 @@ export async function fulfillPaidSession(stripeSession) {
   if (!existing) throw new Error(`Order not found: ${orderId}`);
   if (existing.status === "paid") return existing;
 
+  const shippingCountryCode = shippingCountryFromStripeSession(stripeSession);
+
   const paid = await markOrderPaid(orderId, {
     stripeSessionId: stripeSession.id,
+    stripePaymentIntentId:
+      typeof stripeSession.payment_intent === "string"
+        ? stripeSession.payment_intent
+        : stripeSession.payment_intent?.id,
+    stripeEventId,
     customerEmail: stripeSession.customer_details?.email || stripeSession.customer_email,
     amountTotal: stripeSession.amount_total,
+    amountSubtotal: stripeSession.amount_subtotal,
+    amountShipping: stripeSession.total_details?.amount_shipping ?? null,
     currency: stripeSession.currency?.toUpperCase(),
+    shippingCountryCode,
   });
 
-  if (!paid) return null;
-
-  const catalog = await readCatalog();
-  let changed = false;
-
-  for (const item of existing.items) {
-    const idx = catalog.products.findIndex((p) => p.slug === item.slug);
-    if (idx === -1) continue;
-    const p = catalog.products[idx];
-    const nextStock = Math.max(0, (p.stock ?? 0) - item.qty);
-    if (nextStock !== p.stock) {
-      catalog.products[idx] = {
-        ...p,
-        stock: nextStock,
-        available: nextStock > 0 && p.status === "published",
-      };
-      changed = true;
-    }
-  }
-
-  if (changed) await writeCatalog(catalog);
   return paid;
 }
 
@@ -199,11 +224,11 @@ export async function handleStripeWebhook(rawBody, signature) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
     if (session.payment_status === "paid") {
-      await fulfillPaidSession(session);
+      await fulfillPaidSession(session, event.id);
     }
   }
 
-  return { received: true };
+  return { received: true, type: event.type };
 }
 
 export async function getCheckoutSessionStatus(sessionId) {

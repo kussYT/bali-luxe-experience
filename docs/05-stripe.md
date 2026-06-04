@@ -64,7 +64,8 @@ Never expose these keys in `VITE_*`.
 ## Local webhook
 
 ```bash
-stripe listen --forward-to localhost:5173/api/stripe/webhook
+npm run stripe:webhook
+# forwards to http://localhost:8080/api/stripe/webhook
 ```
 
 Copy the displayed `whsec_...` into `.env.local`.

@@ -20,6 +20,7 @@ import { subscribeNewsletter } from "./server/newsletter.mjs";
 import { createCheckoutSession, handleStripeWebhook, getCheckoutSessionStatus } from "./server/checkout.mjs";
 import { getCatalogResponse } from "./server/api/catalog.mjs";
 import { getAdminInventoryResponse, patchAdminInventory } from "./server/api/inventory.mjs";
+import { getAdminOrdersResponse, getAdminOrderResponse } from "./server/api/orders.mjs";
 import { isDatabaseConfigured } from "./server/db/pool.mjs";
 import { readFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
@@ -193,6 +194,18 @@ export function adminApiPlugin() {
             const body = await readBody(req);
             const result = await patchAdminInventory(body);
             return json(res, 200, result);
+          }
+
+          if (pathname === "/api/admin/orders" && req.method === "GET") {
+            const orders = await getAdminOrdersResponse();
+            return json(res, 200, orders);
+          }
+
+          const orderMatch = pathname.match(/^\/api\/admin\/orders\/([^/]+)$/);
+          if (orderMatch && req.method === "GET") {
+            const orderId = decodeURIComponent(orderMatch[1]);
+            const detail = await getAdminOrderResponse(orderId);
+            return json(res, 200, detail);
           }
 
           if (pathname === "/api/admin/products" && req.method === "POST") {

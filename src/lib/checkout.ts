@@ -32,7 +32,15 @@ export type CheckoutStatus = {
   order?: {
     id: string;
     status: string;
-    items: { name: string; qty: number }[];
+    countryCode?: string | null;
+    shippingCountryCode?: string | null;
+    fulfillmentWarehouse?: string | null;
+    items: {
+      name: string;
+      qty: number;
+      warehouseId?: string;
+      slug?: string;
+    }[];
   };
 };
 

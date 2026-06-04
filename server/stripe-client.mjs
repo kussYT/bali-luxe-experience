@@ -14,5 +14,5 @@ export function getStripe() {
 }
 
 export function getSiteUrl() {
-  return (process.env.SITE_URL || "http://localhost:5173").replace(/\/$/, "");
+  return (process.env.SITE_URL || "http://localhost:8080").replace(/\/$/, "");
 }

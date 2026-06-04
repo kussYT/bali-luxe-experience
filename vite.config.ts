@@ -9,6 +9,10 @@ import { adminApiPlugin } from "./vite.admin-api.mjs";
 
 export default defineConfig({
   vite: {
+    server: {
+      port: 8080,
+      strictPort: true,
+    },
     plugins: [adminApiPlugin()],
   },
 });

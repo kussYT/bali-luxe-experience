@@ -95,6 +95,40 @@ export async function fetchAdminInventory() {
   return request<AdminInventoryResponse>("/api/admin/inventory");
 }
 
+export type AdminOrder = {
+  id: string;
+  status: string;
+  currency: string;
+  countryCode: string | null;
+  shippingCountryCode: string | null;
+  fulfillmentWarehouse: string | null;
+  customerEmail: string | null;
+  stripeSessionId: string | null;
+  amountTotal: number | null;
+  paidAt: string | null;
+  createdAt: string;
+  items: {
+    id: string;
+    slug: string;
+    name: string;
+    variantTitle: string | null;
+    qty: number;
+    unitPrice: number;
+    warehouseId: string;
+    image: string | null;
+  }[];
+};
+
+export async function fetchAdminOrders() {
+  return request<{ orders: AdminOrder[]; count: number; source: string }>("/api/admin/orders");
+}
+
+export async function fetchAdminOrder(orderId: string) {
+  return request<{ order: AdminOrder; source: string }>(
+    `/api/admin/orders/${encodeURIComponent(orderId)}`,
+  );
+}
+
 export async function updateInventoryQuantity(payload: {
   variantId: string;
   warehouseId: "france" | "bali";

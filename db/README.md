@@ -36,7 +36,8 @@ This applies migrations and imports the catalog from `data/catalog.json` + Shopi
 - `product_images`
 - `product_variants`
 - `product_inventory` — quantity per variant × warehouse
-- `inventory_movements` — audit (S2)
+- `inventory_movements` — audit (S2+)
+- `orders`, `order_items` — checkout & Stripe (S3)
 
 ## API
 

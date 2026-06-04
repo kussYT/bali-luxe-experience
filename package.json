@@ -19,7 +19,8 @@
     "db:migrate": "node scripts/db-migrate.mjs",
     "db:seed-catalog": "node scripts/migrate-catalog-to-postgres.mjs",
     "db:setup": "npm run db:migrate && npm run db:seed-catalog",
-    "db:validate-s1": "node scripts/validate-s1.mjs"
+    "db:validate-s1": "node scripts/validate-s1.mjs",
+    "stripe:webhook": "stripe listen --forward-to localhost:8080/api/stripe/webhook"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",

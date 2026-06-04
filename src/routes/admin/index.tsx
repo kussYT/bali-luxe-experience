@@ -73,6 +73,9 @@ function AdminDashboard() {
             <Link to="/admin/inventory" className="link-underline w-fit">
               France / Bali inventory
             </Link>
+            <Link to="/admin/orders" className="link-underline w-fit">
+              View orders
+            </Link>
             <Link to="/collection" className="link-underline w-fit text-muted-foreground">
               View public shop
             </Link>
