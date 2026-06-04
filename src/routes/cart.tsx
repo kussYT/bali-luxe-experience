@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCart } from "@/lib/cart";
 import { useCurrency } from "@/lib/currency";
+import { getUnitPrice, formatMoney } from "@/lib/pricing";
+import { CheckoutButton } from "@/components/site/CheckoutButton";
 import { Minus, Plus, X } from "lucide-react";
 
 export const Route = createFileRoute("/cart")({
@@ -9,24 +11,24 @@ export const Route = createFileRoute("/cart")({
 });
 
 function CartPage() {
-  const { resolved, remove, add } = useCart();
-  const { format, country } = useCurrency();
+  const { resolved, remove, updateQty } = useCart();
+  const { country } = useCurrency();
+  const currency = country.currency;
 
-  const total = resolved.reduce((s, { product, qty }) => {
-    const v = country.currency === "EUR" ? product.priceEUR : country.currency === "USD" ? product.priceUSD : product.priceIDR;
-    return s + v * qty;
-  }, 0);
-  const symbol = country.currency === "EUR" ? "€" : country.currency === "USD" ? "$" : "Rp ";
+  const total = resolved.reduce(
+    (s, { product, qty }) => s + getUnitPrice(product, currency) * qty,
+    0,
+  );
 
   return (
-    <section className="px-6 md:px-14 py-20 max-w-6xl">
+    <section className="page-wrap section-pad py-20 max-w-6xl">
       <p className="text-eyebrow text-muted-foreground">Your bag — {resolved.length} pieces</p>
       <h1 className="font-display text-5xl md:text-7xl mt-4 leading-[0.95]">Cart</h1>
 
       {resolved.length === 0 ? (
         <div className="text-center py-32">
           <p className="font-display text-3xl">Your cart is empty</p>
-          <Link to="/collection" className="mt-8 inline-block bg-ink text-bone px-10 py-4 text-eyebrow">
+          <Link to="/collection" className="mt-8 inline-block btn-primary">
             Continue shopping
           </Link>
         </div>
@@ -35,45 +37,63 @@ function CartPage() {
           <ul className="divide-y divide-border">
             {resolved.map(({ product, qty }) => (
               <li key={product.slug} className="flex gap-6 py-8">
-                <img src={product.image} alt={product.name} className="size-32 md:size-40 object-cover bg-sand" />
+                <img src={product.image} alt={product.name} className="size-32 md:size-40 object-cover bg-secondary" />
                 <div className="flex-1">
                   <div className="flex justify-between">
                     <div>
                       <p className="font-display text-2xl">{product.name}</p>
-                      <p className="text-eyebrow text-muted-foreground mt-1">{product.collection} — {product.origin}</p>
+                      <p className="text-eyebrow text-muted-foreground mt-1">
+                        {product.collection} — {product.origin}
+                      </p>
                     </div>
-                    <button onClick={() => remove(product.slug)} aria-label="Remove"><X className="size-4" /></button>
+                    <button type="button" onClick={() => remove(product.slug)} aria-label="Remove">
+                      <X className="size-4" />
+                    </button>
                   </div>
                   <div className="flex items-center justify-between mt-8">
-                    <div className="flex items-center border border-border">
+                    <div className="flex items-center border border-border rounded-sm">
                       <button
-                        onClick={() => {
-                          if (qty <= 1) return;
-                          remove(product.slug);
-                          for (let i = 0; i < qty - 1; i++) add(product.slug);
-                        }}
-                        className="size-10 flex items-center justify-center"
-                      ><Minus className="size-3" /></button>
-                      <span className="w-10 text-center font-mono text-sm">{qty}</span>
-                      <button onClick={() => add(product.slug)} className="size-10 flex items-center justify-center"><Plus className="size-3" /></button>
+                        type="button"
+                        onClick={() => updateQty(product.slug, qty - 1)}
+                        className="size-10 flex items-center justify-center hover:bg-secondary transition-colors"
+                      >
+                        <Minus className="size-3" />
+                      </button>
+                      <span className="w-10 text-center text-sm">{qty}</span>
+                      <button
+                        type="button"
+                        onClick={() => updateQty(product.slug, qty + 1)}
+                        disabled={qty >= product.stock}
+                        className="size-10 flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-40"
+                      >
+                        <Plus className="size-3" />
+                      </button>
                     </div>
-                    <p className="font-mono">{format(product)}</p>
+                    <p className="text-sm">{formatMoney(getUnitPrice(product, currency) * qty, currency)}</p>
                   </div>
                 </div>
               </li>
             ))}
           </ul>
 
-          <aside className="bg-sand p-8 h-fit space-y-6">
+          <aside className="bg-secondary p-8 h-fit space-y-6 border border-border">
             <h3 className="font-display text-2xl">Summary</h3>
             <div className="space-y-3 text-sm">
-              <div className="flex justify-between"><span>Subtotal</span><span className="font-mono">{symbol}{total.toLocaleString("en-US")}</span></div>
-              <div className="flex justify-between text-muted-foreground"><span>Shipping</span><span>Calculated at checkout</span></div>
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>{formatMoney(total, currency)}</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Shipping</span>
+                <span>At checkout</span>
+              </div>
             </div>
             <div className="border-t border-border pt-4 flex justify-between font-display text-xl">
-              <span>Total</span><span>{symbol}{total.toLocaleString("en-US")}</span>
+              <span>Subtotal</span>
+              <span>{formatMoney(total, currency)}</span>
             </div>
-            <button className="w-full bg-ink text-bone py-4 text-eyebrow hover:bg-clay transition-colors">Checkout</button>
+            <CheckoutButton className="w-full bg-foreground text-surface py-4 text-eyebrow hover:opacity-90 transition-opacity" />
+            <p className="text-caption text-center">Secure payment by Stripe</p>
           </aside>
         </div>
       )}

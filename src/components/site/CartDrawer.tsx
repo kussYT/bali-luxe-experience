@@ -1,6 +1,8 @@
 import { useCart } from "@/lib/cart";
 import { useCurrency } from "@/lib/currency";
 import { useCatalog } from "@/lib/catalog-context";
+import { getUnitPrice, formatMoney } from "@/lib/pricing";
+import { CheckoutButton } from "@/components/site/CheckoutButton";
 import { X, Minus } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
@@ -8,18 +10,13 @@ export function CartDrawer() {
   const { publishedProducts } = useCatalog();
   const suggested = publishedProducts.slice(0, 3);
   const { open, setOpen, resolved, remove } = useCart();
-  const { format, country } = useCurrency();
+  const { country } = useCurrency();
+  const currency = country.currency;
 
-  const total = resolved.reduce((s, { product, qty }) => {
-    const v =
-      country.currency === "EUR"
-        ? product.priceEUR
-        : country.currency === "USD"
-          ? product.priceUSD
-          : product.priceIDR;
-    return s + v * qty;
-  }, 0);
-  const symbol = country.currency === "EUR" ? "€" : country.currency === "USD" ? "$" : "Rp ";
+  const total = resolved.reduce(
+    (s, { product, qty }) => s + getUnitPrice(product, currency) * qty,
+    0,
+  );
 
   if (!open) return null;
 
@@ -96,16 +93,14 @@ export function CartDrawer() {
             </ul>
             <div className="p-6 border-t border-border space-y-4">
               <div className="flex justify-between font-display text-xl">
-                <span>Total</span>
-                <span>
-                  {symbol}
-                  {total.toLocaleString("en-US")}
-                </span>
+                <span>Subtotal</span>
+                <span>{formatMoney(total, currency)}</span>
               </div>
-              <p className="text-eyebrow text-muted-foreground">Shipping calculated at checkout</p>
-              <button className="w-full bg-ink text-bone py-4 text-eyebrow hover:bg-clay transition-colors">
-                Checkout
-              </button>
+              <p className="text-eyebrow text-muted-foreground">Shipping at checkout</p>
+              <CheckoutButton
+                className="w-full bg-foreground text-surface py-4 text-eyebrow hover:opacity-90 transition-opacity"
+                onStarted={close}
+              />
               <Link to="/collection" onClick={close} className="block text-center text-eyebrow link-underline">
                 Continue shopping
               </Link>

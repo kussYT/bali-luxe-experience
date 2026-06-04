@@ -17,6 +17,7 @@ import {
 } from "./server/admin-auth.mjs";
 import { fetchInstagramFeed, INSTAGRAM_PROFILE } from "./server/instagram-feed.mjs";
 import { subscribeNewsletter } from "./server/newsletter.mjs";
+import { createCheckoutSession, handleStripeWebhook, getCheckoutSessionStatus } from "./server/checkout.mjs";
 import { readFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -32,13 +33,17 @@ function json(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
-async function readBody(req) {
+async function readRawBody(req) {
   const chunks = [];
   for await (const chunk of req) chunks.push(chunk);
-  const raw = Buffer.concat(chunks).toString("utf8");
-  if (!raw) return {};
+  return Buffer.concat(chunks);
+}
+
+async function readBody(req) {
+  const raw = await readRawBody(req);
+  if (!raw.length) return {};
   try {
-    return JSON.parse(raw);
+    return JSON.parse(raw.toString("utf8"));
   } catch {
     return {};
   }
@@ -84,6 +89,29 @@ export function adminApiPlugin() {
         const pathname = url.pathname;
 
         try {
+          if (pathname === "/api/stripe/webhook" && req.method === "POST") {
+            const raw = await readRawBody(req);
+            const signature = req.headers["stripe-signature"];
+            const result = await handleStripeWebhook(raw, signature);
+            return json(res, 200, result);
+          }
+
+          if (pathname === "/api/checkout/session" && req.method === "POST") {
+            const body = await readBody(req);
+            const result = await createCheckoutSession({
+              items: body.items,
+              currency: body.currency,
+              countryCode: body.countryCode,
+            });
+            return json(res, 200, result);
+          }
+
+          if (pathname === "/api/checkout/session" && req.method === "GET") {
+            const sessionId = url.searchParams.get("session_id");
+            const result = await getCheckoutSessionStatus(sessionId);
+            return json(res, 200, result);
+          }
+
           // Public catalog (published products only by default)
           if (pathname === "/api/instagram" && req.method === "GET") {
             let liveError = null;

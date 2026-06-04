@@ -99,15 +99,16 @@ function ProductPage() {
               <span className="w-10 text-center text-sm">{qty}</span>
               <button
                 type="button"
-                onClick={() => setQty(qty + 1)}
-                className="size-11 flex items-center justify-center hover:bg-secondary transition-colors"
+                onClick={() => setQty(Math.min(product.stock, qty + 1))}
+                disabled={qty >= product.stock}
+                className="size-11 flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-40"
               >
                 <Plus className="size-3 stroke-[1.25]" />
               </button>
             </div>
             <button
               type="button"
-              onClick={() => Array.from({ length: qty }).forEach(() => add(product.slug))}
+              onClick={() => add(product.slug, qty)}
               disabled={!product.available || product.stock <= 0}
               className="btn-primary flex-1 sm:flex-none disabled:opacity-45"
             >
