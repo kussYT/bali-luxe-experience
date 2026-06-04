@@ -3,7 +3,7 @@ import { useInstagramFeed } from "@/lib/use-instagram-feed";
 import { Reveal } from "@/components/lifestyle/Reveal";
 
 export function InstagramSection() {
-  const { feed, loading } = useInstagramFeed();
+  const { feed, loading, error } = useInstagramFeed();
   const { handle, profileUrl, title, subtitle } = feed.profile;
 
   return (
@@ -67,6 +67,7 @@ export function InstagramSection() {
         <a href={profileUrl} target="_blank" rel="noreferrer" className="link-underline !text-foreground">
           {profileUrl.replace("https://www.", "")}
         </a>
+        {error && <span className="block mt-2 text-[0.7rem] opacity-60">{error}</span>}
         {feed.source === "graph-api" && feed.syncedAt && (
           <span className="block mt-2 text-[0.7rem] opacity-60">
             Live from Instagram · updated {new Date(feed.syncedAt).toLocaleDateString()}

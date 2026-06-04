@@ -6,6 +6,7 @@ export type InstagramFeed = {
   posts: InstagramPost[];
   syncedAt?: string;
   source?: "graph-api" | "oembed" | "static" | "fallback";
+  error?: string;
 };
 
 const STATIC_FEED: InstagramFeed = {
@@ -17,11 +18,34 @@ const STATIC_FEED: InstagramFeed = {
 export function useInstagramFeed() {
   const [feed, setFeed] = useState<InstagramFeed>(STATIC_FEED);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
+      // 1) server API (token stays server-side)
+      try {
+        const res = await fetch("/api/instagram", { cache: "no-store" });
+        if (res.ok) {
+          const data = (await res.json()) as InstagramFeed;
+          if (!cancelled && data.posts?.length) {
+            setFeed({
+              profile: { ...INSTAGRAM, ...data.profile },
+              posts: data.posts,
+              syncedAt: data.syncedAt,
+              source: data.source,
+              error: data.error,
+            });
+            setError(data.error ?? null);
+            return;
+          }
+        }
+      } catch {
+        /* continue to static-file fallback */
+      }
+
+      // 2) static public JSON fallback
       try {
         const res = await fetch("/instagram-feed.json", { cache: "no-store" });
         if (res.ok) {
@@ -31,16 +55,20 @@ export function useInstagramFeed() {
               profile: { ...INSTAGRAM, ...data.profile },
               posts: data.posts,
               syncedAt: data.syncedAt,
-              source: data.source,
+              source: data.source || "static",
             });
+            setError("Instagram live feed unavailable. Showing curated posts.");
             return;
           }
         }
       } catch {
-        /* static fallback */
+        /* continue to local fallback */
       }
 
-      if (!cancelled) setFeed(STATIC_FEED);
+      if (!cancelled) {
+        setFeed(STATIC_FEED);
+        setError("Instagram feed unavailable. Showing fallback content.");
+      }
     }
 
     void load().finally(() => {
@@ -52,5 +80,5 @@ export function useInstagramFeed() {
     };
   }, []);
 
-  return { feed, loading };
+  return { feed, loading, error };
 }

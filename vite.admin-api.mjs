@@ -86,20 +86,28 @@ export function adminApiPlugin() {
         try {
           // Public catalog (published products only by default)
           if (pathname === "/api/instagram" && req.method === "GET") {
+            let liveError = null;
             try {
               const live = await fetchInstagramFeed();
               if (live) return json(res, 200, live);
             } catch (e) {
+              liveError = e;
               console.warn("[api/instagram]", e.message);
             }
             try {
               const cached = await readFile(join(__root, "public", "instagram-feed.json"), "utf8");
-              return json(res, 200, JSON.parse(cached));
+              const payload = JSON.parse(cached);
+              return json(res, 200, {
+                ...payload,
+                source: payload.source || "static",
+                error: liveError ? "Instagram live feed unavailable. Using cached content." : undefined,
+              });
             } catch {
               return json(res, 200, {
                 profile: INSTAGRAM_PROFILE,
                 posts: [],
-                source: "static",
+                source: "fallback",
+                error: liveError ? "Instagram API unavailable" : "No instagram fallback content found",
               });
             }
           }

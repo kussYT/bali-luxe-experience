@@ -25,18 +25,20 @@ function mapGraphMedia(item) {
     id: item.id,
     image,
     alt,
+    caption: caption || undefined,
     permalink: item.permalink || INSTAGRAM_PROFILE.profileUrl,
   };
 }
 
-/** Instagram Graph API — requires INSTAGRAM_ACCESS_TOKEN + INSTAGRAM_USER_ID */
+/** Instagram Graph API — requires INSTAGRAM_ACCESS_TOKEN */
 export async function fetchInstagramFromGraph() {
   const token = process.env.INSTAGRAM_ACCESS_TOKEN?.trim();
   const userId = process.env.INSTAGRAM_USER_ID?.trim();
-  if (!token || !userId) return null;
+  if (!token) return null;
 
   const fields = "id,media_type,media_url,permalink,caption,thumbnail_url";
-  const url = `https://graph.instagram.com/${GRAPH_VERSION}/${userId}/media?fields=${fields}&limit=6&access_token=${encodeURIComponent(token)}`;
+  const accountPath = userId ? `${userId}/media` : "me/media";
+  const url = `https://graph.instagram.com/${accountPath}?fields=${fields}&limit=6&access_token=${encodeURIComponent(token)}`;
 
   const res = await fetch(url);
   if (!res.ok) {

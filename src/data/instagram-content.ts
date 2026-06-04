@@ -15,6 +15,7 @@ export type InstagramPost = {
   id: string;
   image: string;
   alt: string;
+  caption?: string;
   /** URL du post — à remplir via API */
   permalink?: string;
 };

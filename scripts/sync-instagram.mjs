@@ -1,9 +1,9 @@
 /**
  * Synchronise le feed @bingindiaries vers public/instagram-feed.json
  *
- * Option A — Graph API (recommandé) dans .env.local :
+ * Option A — Graph API (recommandé) dans .env.local / .env :
  *   INSTAGRAM_ACCESS_TOKEN=...
- *   INSTAGRAM_USER_ID=...   (ID compte Instagram Business/Creator)
+ *   INSTAGRAM_USER_ID=...   (optionnel, pour cibler un compte précis)
  *
  * Option B — URLs de posts (oEmbed) :
  *   INSTAGRAM_POST_URLS=https://www.instagram.com/p/XXX/,https://...
@@ -49,7 +49,7 @@ if (!feed) {
       source: "static",
     };
     console.log("Created static fallback (lifestyle images).");
-    console.log("Add INSTAGRAM_ACCESS_TOKEN + INSTAGRAM_USER_ID to .env.local and re-run for live posts.\n");
+    console.log("Add INSTAGRAM_ACCESS_TOKEN to .env.local (INSTAGRAM_USER_ID optional) and re-run for live posts.\n");
   }
 }
 
