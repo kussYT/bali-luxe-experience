@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { fetchAdminCatalog } from "@/lib/admin-api";
+import { fetchAdminCatalog, fetchAdminInventory } from "@/lib/admin-api";
 import type { Catalog } from "@/lib/catalog-types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -11,9 +11,19 @@ export const Route = createFileRoute("/admin/")({
 
 function AdminDashboard() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const [stockParis, setStockParis] = useState<number | null>(null);
+  const [stockBali, setStockBali] = useState<number | null>(null);
+  const [lowStockWh, setLowStockWh] = useState<number | null>(null);
 
   useEffect(() => {
     fetchAdminCatalog().then(setCatalog).catch(console.error);
+    fetchAdminInventory()
+      .then((inv) => {
+        setStockParis(inv.totals.france);
+        setStockBali(inv.totals.bali);
+        setLowStockWh(inv.lowStockCount);
+      })
+      .catch(() => {});
   }, []);
 
   const published = catalog?.products.filter((p) => p.status === "published").length ?? 0;
@@ -28,12 +38,14 @@ function AdminDashboard() {
         <h2 className="font-display text-4xl mt-2">Store overview</h2>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {[
           { label: "Products", value: catalog?.productCount ?? "—" },
           { label: "Published", value: published },
           { label: "On sale", value: onSale },
           { label: "Low stock (≤3)", value: lowStock },
+          { label: "Paris available", value: stockParis ?? "—" },
+          { label: "Bali available", value: stockBali ?? "—" },
         ].map((stat) => (
           <Card key={stat.label}>
             <CardHeader className="pb-2">
@@ -58,6 +70,9 @@ function AdminDashboard() {
             <Link to="/admin/products" className="link-underline w-fit">
               Manage all products
             </Link>
+            <Link to="/admin/inventory" className="link-underline w-fit">
+              France / Bali inventory
+            </Link>
             <Link to="/collection" className="link-underline w-fit text-muted-foreground">
               View public shop
             </Link>
@@ -80,6 +95,10 @@ function AdminDashboard() {
             </p>
             <p>
               <strong className="text-foreground">Sales</strong> — products with a sale price appear in Sales
+            </p>
+            <p>
+              <strong className="text-foreground">Warehouses</strong> —{" "}
+              {lowStockWh != null ? `${lowStockWh} low-stock variant alerts` : "load inventory for totals"}
             </p>
           </CardContent>
         </Card>

@@ -19,6 +19,7 @@ import { fetchInstagramFeed, INSTAGRAM_PROFILE } from "./server/instagram-feed.m
 import { subscribeNewsletter } from "./server/newsletter.mjs";
 import { createCheckoutSession, handleStripeWebhook, getCheckoutSessionStatus } from "./server/checkout.mjs";
 import { getCatalogResponse } from "./server/api/catalog.mjs";
+import { getAdminInventoryResponse, patchAdminInventory } from "./server/api/inventory.mjs";
 import { isDatabaseConfigured } from "./server/db/pool.mjs";
 import { readFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
@@ -183,10 +184,21 @@ export function adminApiPlugin() {
             return json(res, 200, catalog);
           }
 
+          if (pathname === "/api/admin/inventory" && req.method === "GET") {
+            const inventory = await getAdminInventoryResponse();
+            return json(res, 200, inventory);
+          }
+
+          if (pathname === "/api/admin/inventory" && req.method === "PATCH") {
+            const body = await readBody(req);
+            const result = await patchAdminInventory(body);
+            return json(res, 200, result);
+          }
+
           if (pathname === "/api/admin/products" && req.method === "POST") {
             if (isDatabaseConfigured()) {
               return json(res, 503, {
-                error: "Admin product writes use JSON until S2. Catalog reads are from Postgres.",
+                error: "Admin product writes are planned for S3. Use Inventory for stock updates.",
               });
             }
             const body = await readBody(req);
@@ -210,7 +222,7 @@ export function adminApiPlugin() {
             if (req.method === "PUT") {
               if (isDatabaseConfigured()) {
                 return json(res, 503, {
-                  error: "Admin product writes use JSON until S2. Catalog reads are from Postgres.",
+                  error: "Admin product writes are planned for S3. Use Inventory for stock updates.",
                 });
               }
               if (index === -1) return json(res, 404, { error: "Product not found" });
@@ -226,7 +238,7 @@ export function adminApiPlugin() {
             if (req.method === "DELETE") {
               if (isDatabaseConfigured()) {
                 return json(res, 503, {
-                  error: "Admin product writes use JSON until S2. Catalog reads are from Postgres.",
+                  error: "Admin product writes are planned for S3. Use Inventory for stock updates.",
                 });
               }
               if (index === -1) return json(res, 404, { error: "Product not found" });

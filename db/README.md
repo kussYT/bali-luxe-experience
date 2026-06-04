@@ -1,5 +1,7 @@
 # PostgreSQL — Bingin Diaries
 
+Full documentation: [`/docs`](../docs/README.md) · S1 validation: [`docs/sprint-s1-validation.md`](../docs/sprint-s1-validation.md)
+
 ## Setup
 
 1. Create a database (local Docker, Neon, Supabase, etc.)

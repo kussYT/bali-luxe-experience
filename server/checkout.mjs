@@ -1,4 +1,5 @@
 import { readCatalog, writeCatalog } from "./catalog-store.mjs";
+import { availableForCheckout } from "./warehouse-allocation.mjs";
 import {
   createPendingOrder,
   attachStripeSession,
@@ -28,7 +29,7 @@ function absoluteImageUrl(siteUrl, path) {
   return `${siteUrl}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
-export function validateCartItems(catalog, lineItems) {
+export function validateCartItems(catalog, lineItems, countryCode) {
   if (!Array.isArray(lineItems) || lineItems.length === 0) {
     const err = new Error("Cart is empty");
     err.status = 400;
@@ -51,13 +52,15 @@ export function validateCartItems(catalog, lineItems) {
       err.status = 400;
       throw err;
     }
-    if (product.stock < qty) {
+
+    const stockCheck = availableForCheckout(product, countryCode, qty);
+    if (!stockCheck.ok) {
       const err = new Error(`Insufficient stock for ${product.name}`);
       err.status = 409;
       throw err;
     }
 
-    resolved.push({ product, qty });
+    resolved.push({ product, qty, fulfillmentWarehouse: stockCheck.warehouse });
   }
   return resolved;
 }
@@ -71,7 +74,7 @@ export async function createCheckoutSession({ items, currency, countryCode }) {
   }
 
   const catalog = await readCatalog();
-  const resolved = validateCartItems(catalog, items);
+  const resolved = validateCartItems(catalog, items, countryCode);
   const siteUrl = getSiteUrl();
   const stripe = getStripe();
 

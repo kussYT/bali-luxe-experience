@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Product } from "@/lib/catalog-types";
 import { useCatalog } from "@/lib/catalog-context";
+import { useCurrency } from "@/lib/currency";
+import { maxCartQty } from "@/lib/warehouse-allocation";
 
 export type CartItem = { slug: string; qty: number };
 
@@ -36,6 +38,7 @@ function readStoredCart(): CartItem[] {
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { products } = useCatalog();
+  const { shipping } = useCurrency();
   const [items, setItems] = useState<CartItem[]>(readStoredCart);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
@@ -46,7 +49,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const add = (slug: string, qty = 1) => {
     const product = products.find((p) => p.slug === slug);
-    const max = product?.stock ?? qty;
+    const max = product ? maxCartQty(product, shipping.code) : qty;
     setItems((prev) => {
       const ex = prev.find((i) => i.slug === slug);
       if (ex) {
@@ -62,7 +65,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const updateQty = (slug: string, qty: number) => {
     const product = products.find((p) => p.slug === slug);
-    const max = product?.stock ?? qty;
+    const max = product ? maxCartQty(product, shipping.code) : qty;
     if (qty < 1) {
       remove(slug);
       return;

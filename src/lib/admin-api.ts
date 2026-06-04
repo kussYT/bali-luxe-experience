@@ -57,6 +57,56 @@ export async function deleteProduct(slug: string) {
   });
 }
 
+export type InventoryRow = {
+  productId: string;
+  productSlug: string;
+  productName: string;
+  status: string;
+  origin: string;
+  defaultWarehouse: string;
+  variantId: string;
+  variantSlug: string;
+  variantTitle: string;
+  sku?: string;
+  isDefault: boolean;
+  france: number;
+  bali: number;
+  franceReserved: number;
+  baliReserved: number;
+  franceAvailable: number;
+  baliAvailable: number;
+};
+
+export type AdminInventoryResponse = {
+  items: InventoryRow[];
+  totals: { france: number; bali: number };
+  lowStock: {
+    productSlug: string;
+    productName: string;
+    variantTitle: string;
+    franceAvailable: number;
+    baliAvailable: number;
+  }[];
+  lowStockCount: number;
+  source: string;
+};
+
+export async function fetchAdminInventory() {
+  return request<AdminInventoryResponse>("/api/admin/inventory");
+}
+
+export async function updateInventoryQuantity(payload: {
+  variantId: string;
+  warehouseId: "france" | "bali";
+  quantity: number;
+  note?: string;
+}) {
+  return request<{ ok: boolean; variantId: string; warehouseId: string; previous: number; quantity: number; delta: number }>(
+    "/api/admin/inventory",
+    { method: "PATCH", body: JSON.stringify(payload) },
+  );
+}
+
 export async function uploadProductImages(slug: string, files: FileList | File[]) {
   const form = new FormData();
   for (const file of files) form.append("images", file);

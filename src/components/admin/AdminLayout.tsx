@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 const links = [
   { to: "/admin", label: "Dashboard", exact: true },
   { to: "/admin/products", label: "Products" },
+  { to: "/admin/inventory", label: "Inventory" },
 ] as const;
 
 export function AdminLayout() {
