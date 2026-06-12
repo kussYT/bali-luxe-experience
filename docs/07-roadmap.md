@@ -46,7 +46,19 @@
 | `shipping_country_code` + `fulfillment_warehouse` on order | ✅ |
 | Dev server port **8080** | ✅ |
 
-**Follow-up:** admin catalog CRUD → Postgres, order emails, production Worker API.
+**Follow-up:** order emails, production Worker API, per-variant cart lines.
+
+---
+
+## Admin catalog (Postgres) ✅
+
+| Deliverable | Status |
+|-------------|--------|
+| `POST /api/admin/products` → Postgres | ✅ |
+| `PUT /api/admin/products/:slug` → Postgres | ✅ |
+| `DELETE /api/admin/products/:slug` → Postgres | ✅ |
+| Default variant + primary warehouse stock on create | ✅ |
+| JSON fallback when no `DATABASE_URL` | ✅ |
 
 ---
 
@@ -80,8 +92,8 @@
 
 | Item | Target sprint |
 |------|----------------|
-| Admin product writes → 503 when Postgres active | S2/S3 |
-| Orders in `orders.json` | S3 |
+| Admin product CRUD → Postgres | ✅ |
+| Orders in `orders.json` (fallback without DATABASE_URL) | JSON legacy |
 | `/api/*` only in Vite middleware | S5 |
 | Checkout stock = product total, not variant/warehouse | S2 |
 | No Stripe Tax / auto VAT | S4+ |

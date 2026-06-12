@@ -71,10 +71,17 @@ export function ProductForm({
   onCancel,
   submitLabel = "Save",
 }: ProductFormProps) {
-  const [values, setValues] = useState<ProductFormValues>({
-    ...empty,
-    ...initial,
-    images: initial?.images?.length ? initial.images : initial?.image ? [initial.image] : [],
+  const [values, setValues] = useState<ProductFormValues>(() => {
+    const primaryStock =
+      initial?.origin === "France"
+        ? (initial?.stockFrance ?? initial?.stock ?? 0)
+        : (initial?.stockBali ?? initial?.stock ?? 0);
+    return {
+      ...empty,
+      ...initial,
+      stock: initial ? primaryStock : empty.stock,
+      images: initial?.images?.length ? initial.images : initial?.image ? [initial.image] : [],
+    };
   });
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -186,7 +193,7 @@ export function ProductForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="stock">Stock</Label>
+          <Label htmlFor="stock">Stock (primary warehouse)</Label>
           <Input
             id="stock"
             type="number"
@@ -194,6 +201,9 @@ export function ProductForm({
             value={values.stock}
             onChange={(e) => set("stock", Number(e.target.value))}
           />
+          <p className="text-xs text-muted-foreground">
+            Based on origin: Paris for France, Bali for Indonesia. Use Inventory for split stock.
+          </p>
         </div>
       </div>
 

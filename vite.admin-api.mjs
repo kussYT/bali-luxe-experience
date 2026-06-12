@@ -21,6 +21,11 @@ import { createCheckoutSession, handleStripeWebhook, getCheckoutSessionStatus } 
 import { getCatalogResponse } from "./server/api/catalog.mjs";
 import { getAdminInventoryResponse, patchAdminInventory } from "./server/api/inventory.mjs";
 import { getAdminOrdersResponse, getAdminOrderResponse } from "./server/api/orders.mjs";
+import {
+  createAdminProduct,
+  updateAdminProduct,
+  deleteAdminProduct,
+} from "./server/api/products-admin.mjs";
 import { isDatabaseConfigured } from "./server/db/pool.mjs";
 import { readFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
@@ -209,12 +214,11 @@ export function adminApiPlugin() {
           }
 
           if (pathname === "/api/admin/products" && req.method === "POST") {
-            if (isDatabaseConfigured()) {
-              return json(res, 503, {
-                error: "Admin product writes are planned for S3. Use Inventory for stock updates.",
-              });
-            }
             const body = await readBody(req);
+            if (isDatabaseConfigured()) {
+              const result = await createAdminProduct(body);
+              return json(res, 201, result);
+            }
             const catalog = await readCatalog();
             const slug = body.slug || slugify(body.name);
             if (catalog.products.some((p) => p.slug === slug)) {
@@ -229,17 +233,16 @@ export function adminApiPlugin() {
           const productMatch = pathname.match(/^\/api\/admin\/products\/([^/]+)$/);
           if (productMatch) {
             const slug = decodeURIComponent(productMatch[1]);
-            const catalog = await readCatalog();
-            const index = catalog.products.findIndex((p) => p.slug === slug);
 
             if (req.method === "PUT") {
-              if (isDatabaseConfigured()) {
-                return json(res, 503, {
-                  error: "Admin product writes are planned for S3. Use Inventory for stock updates.",
-                });
-              }
-              if (index === -1) return json(res, 404, { error: "Product not found" });
               const body = await readBody(req);
+              if (isDatabaseConfigured()) {
+                const result = await updateAdminProduct(slug, body);
+                return json(res, 200, result);
+              }
+              const catalog = await readCatalog();
+              const index = catalog.products.findIndex((p) => p.slug === slug);
+              if (index === -1) return json(res, 404, { error: "Product not found" });
               const updated = normalizeCatalog({
                 products: [{ ...catalog.products[index], ...body, slug }],
               }).products[0];
@@ -250,10 +253,11 @@ export function adminApiPlugin() {
 
             if (req.method === "DELETE") {
               if (isDatabaseConfigured()) {
-                return json(res, 503, {
-                  error: "Admin product writes are planned for S3. Use Inventory for stock updates.",
-                });
+                const result = await deleteAdminProduct(slug);
+                return json(res, 200, result);
               }
+              const catalog = await readCatalog();
+              const index = catalog.products.findIndex((p) => p.slug === slug);
               if (index === -1) return json(res, 404, { error: "Product not found" });
               catalog.products.splice(index, 1);
               const saved = await writeCatalog(catalog);
