@@ -223,6 +223,11 @@ export async function handleStripeWebhook(rawBody, signature) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
+    const orderId = session.metadata?.orderId || session.client_reference_id;
+    if (!orderId) {
+      // Session not created by this app (e.g. `stripe trigger` fixtures) — ack and skip
+      return { received: true, type: event.type, ignored: "no order id on session" };
+    }
     if (session.payment_status === "paid") {
       await fulfillPaidSession(session, event.id);
     }

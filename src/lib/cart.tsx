@@ -50,13 +50,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const add = (slug: string, qty = 1) => {
     const product = products.find((p) => p.slug === slug);
     const max = product ? maxCartQty(product, shipping.code) : qty;
+    if (max < 1) {
+      // Out of stock in every warehouse — don't add an empty line
+      setOpen(true);
+      return;
+    }
     setItems((prev) => {
       const ex = prev.find((i) => i.slug === slug);
       if (ex) {
-        const nextQty = Math.min(ex.qty + qty, max);
+        const nextQty = Math.max(1, Math.min(ex.qty + qty, max));
         return prev.map((i) => (i.slug === slug ? { ...i, qty: nextQty } : i));
       }
-      return [...prev, { slug, qty: Math.min(qty, max) }];
+      return [...prev, { slug, qty: Math.max(1, Math.min(qty, max)) }];
     });
     setOpen(true);
   };

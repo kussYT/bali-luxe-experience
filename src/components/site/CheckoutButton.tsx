@@ -22,7 +22,6 @@ export function CheckoutButton({ className = "btn-primary w-full", onStarted }: 
 
     setLoading(true);
     setError(null);
-    onStarted?.();
 
     const result = await startCheckout(items, shipping.currency, shipping.code);
     setLoading(false);
@@ -32,6 +31,7 @@ export function CheckoutButton({ className = "btn-primary w-full", onStarted }: 
       return;
     }
 
+    onStarted?.();
     window.location.href = result.url;
   }
 

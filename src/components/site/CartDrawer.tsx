@@ -10,7 +10,7 @@ export function CartDrawer() {
   const { publishedProducts } = useCatalog();
   const suggested = publishedProducts.slice(0, 3);
   const { open, setOpen, resolved, remove } = useCart();
-  const { country } = useCurrency();
+  const { country, format } = useCurrency();
   const currency = country.currency;
 
   const total = resolved.reduce(
