@@ -36,7 +36,7 @@ function NotFoundComponent() {
 
       <div className="max-w-md text-center">
 
-        <h1 className="font-display text-7xl">404</h1>
+        <h1 className="font-display text-5xl md:text-7xl">404</h1>
 
         <p className="mt-4 text-muted-foreground">This page drifted out to sea.</p>
 

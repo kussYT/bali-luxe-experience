@@ -35,6 +35,14 @@ function Hotspot({
   active: boolean;
   onActivate: () => void;
 }) {
+  const alignLeft = spot.x < 22;
+  const alignRight = spot.x > 78;
+  const tooltipAlign = alignLeft
+    ? "left-0 translate-x-0 items-start"
+    : alignRight
+      ? "right-0 left-auto translate-x-0 items-end"
+      : "left-1/2 -translate-x-1/2 items-center";
+
   return (
     <div
       className="absolute z-10"
@@ -54,13 +62,13 @@ function Hotspot({
         />
       </button>
       <div
-        className={`absolute left-1/2 -translate-x-1/2 top-full mt-3 flex flex-col items-center gap-2 transition-all duration-500 ${active ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1 pointer-events-none group-hover/hot:opacity-100 md:opacity-0"}`}
+        className={`absolute top-full mt-3 flex flex-col gap-2 transition-all duration-500 max-w-[min(11rem,calc(100vw-3rem))] ${tooltipAlign} ${active ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1 pointer-events-none group-hover/hot:opacity-100 md:opacity-0"}`}
       >
-        <span className="whitespace-nowrap px-3 py-2 bg-surface border border-border text-[0.625rem] tracking-[0.2em] uppercase text-foreground">
+        <span className="px-3 py-2 bg-surface border border-border text-[0.625rem] tracking-[0.2em] uppercase text-foreground text-center leading-snug">
           {spot.label}
         </span>
         {active && (
-          <HotspotLink spot={spot} className="text-eyebrow link-underline !text-surface whitespace-nowrap">
+          <HotspotLink spot={spot} className="text-eyebrow link-underline !text-surface">
             View piece
           </HotspotLink>
         )}

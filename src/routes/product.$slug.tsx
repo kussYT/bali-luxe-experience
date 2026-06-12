@@ -46,7 +46,7 @@ function ProductPage() {
 
   return (
     <>
-      <section className="grid md:grid-cols-[1.1fr_0.9fr] min-h-[calc(100vh-5.25rem)]">
+      <section className="grid md:grid-cols-[1.1fr_0.9fr] min-h-[calc(100vh-4.25rem)] md:min-h-[calc(100vh-5.25rem)]">
         <div className="bg-secondary md:sticky md:top-[5.25rem] md:self-start md:max-h-[calc(100vh-5.25rem)] overflow-hidden">
           <img
             src={gallery[activeImage]}

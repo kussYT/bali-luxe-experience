@@ -33,24 +33,33 @@ function CartPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid md:grid-cols-[1fr_360px] gap-16 mt-16">
+        <div className="grid lg:grid-cols-[1fr_minmax(280px,360px)] gap-8 lg:gap-16 mt-10 md:mt-16">
           <ul className="divide-y divide-border">
             {resolved.map(({ product, qty }) => (
-              <li key={product.slug} className="flex gap-6 py-8">
-                <img src={product.image} alt={product.name} className="size-32 md:size-40 object-cover bg-secondary" />
-                <div className="flex-1">
-                  <div className="flex justify-between">
-                    <div>
-                      <p className="font-display text-2xl">{product.name}</p>
+              <li key={product.slug} className="flex flex-col sm:flex-row gap-4 sm:gap-6 py-6 sm:py-8">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="size-24 sm:size-32 md:size-40 object-cover bg-secondary shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-display text-xl sm:text-2xl truncate">{product.name}</p>
                       <p className="text-eyebrow text-muted-foreground mt-1">
                         {product.collection} — {product.origin}
                       </p>
                     </div>
-                    <button type="button" onClick={() => remove(product.slug)} aria-label="Remove">
+                    <button
+                      type="button"
+                      onClick={() => remove(product.slug)}
+                      aria-label="Remove"
+                      className="shrink-0"
+                    >
                       <X className="size-4" />
                     </button>
                   </div>
-                  <div className="flex items-center justify-between mt-8">
+                  <div className="flex flex-wrap items-center justify-between gap-4 mt-6 sm:mt-8">
                     <div className="flex items-center border border-border rounded-sm">
                       <button
                         type="button"

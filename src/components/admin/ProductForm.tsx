@@ -289,7 +289,7 @@ export function ProductForm({
         <Input type="file" accept="image/*" multiple onChange={(e) => handleFiles(e.target.files)} disabled={uploading} />
         {uploading && <p className="text-sm text-muted-foreground">Uploading…</p>}
         {values.images.length > 0 && (
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-3">
             {values.images.map((src) => (
               <div key={src} className="relative group aspect-square bg-sand overflow-hidden">
                 <img src={src} alt="" className="size-full object-cover" />

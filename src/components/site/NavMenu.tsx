@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { X } from "lucide-react";
 import type { NavLink } from "@/lib/navigation";
+import { MarketSelector } from "@/components/site/MarketSelector";
 
 type NavSection = { label: string; items: readonly NavLink[] };
 
@@ -46,6 +47,11 @@ export function NavMenu({ open, onClose, sections }: NavMenuProps) {
         </div>
 
         <nav className="p-6 space-y-10">
+          <div className="space-y-3 pb-6 border-b border-border">
+            <p className="text-eyebrow text-muted-foreground">Ship to</p>
+            <MarketSelector variant="nav" />
+          </div>
+
           {sections.map((section) => (
             <div key={section.label} className="space-y-4">
               <p className="text-eyebrow text-muted-foreground">{section.label}</p>

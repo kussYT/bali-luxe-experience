@@ -111,6 +111,7 @@
 
   html {
     scroll-behavior: smooth;
+    overflow-x: clip;
   }
 
   body {
@@ -123,6 +124,7 @@
     letter-spacing: 0.015em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: clip;
   }
 
   h1, h2, h3, h4 {
@@ -168,7 +170,8 @@
     letter-spacing: -0.03em;
   }
 
-  .link-underline {
+  /* :where() keeps specificity at 0 so utilities like `hidden` can override the display */
+  :where(.link-underline) {
     position: relative;
     display: inline-block;
   }

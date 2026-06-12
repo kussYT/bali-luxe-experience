@@ -23,7 +23,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
             e.preventDefault();
             toggleWish(product.slug);
           }}
-          className="absolute top-3 right-3 size-8 flex items-center justify-center bg-surface/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          className="absolute top-3 right-3 size-8 flex items-center justify-center bg-surface/90 backdrop-blur-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-500"
           aria-label="Wishlist"
         >
           <Heart

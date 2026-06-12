@@ -51,7 +51,7 @@ function Collection() {
         <p className="text-eyebrow">
           {loading ? "Loading…" : `${filtered.length} ${filtered.length === 1 ? "piece" : "pieces"}`}
         </p>
-        <h1 className="font-display text-5xl md:text-7xl lg:text-[5.5rem] mt-4 leading-[0.94]">{title}</h1>
+        <h1 className="font-display text-3xl sm:text-5xl md:text-7xl lg:text-[5.5rem] mt-4 leading-[0.94] break-words">{title}</h1>
         <p className="text-caption mt-6 max-w-lg">
           Hand-woven, slow-finished, and shipped from our two ateliers in Canggu and Paris.
         </p>

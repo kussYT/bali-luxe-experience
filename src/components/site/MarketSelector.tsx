@@ -9,11 +9,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const triggerClass =
-  "text-[0.6875rem] font-medium tracking-[0.22em] uppercase py-2 link-underline text-foreground/80 hover:text-foreground transition-colors duration-[450ms] max-w-[11rem] md:max-w-[14rem] truncate";
+const headerTriggerClass =
+  "text-[0.6875rem] font-medium tracking-[0.22em] uppercase py-2 link-underline text-foreground/80 hover:text-foreground transition-colors duration-[450ms] max-w-[11rem] lg:max-w-[14rem] truncate";
 
 type MarketSelectorProps = {
-  variant?: "header" | "footer";
+  variant?: "header" | "footer" | "nav";
 };
 
 export function MarketSelector({ variant = "header" }: MarketSelectorProps) {
@@ -37,28 +37,12 @@ export function MarketSelector({ variant = "header" }: MarketSelectorProps) {
 
   const triggerLabel = shippingLabel;
 
-  if (variant === "footer") {
-    return (
-      <>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="text-eyebrow !text-surface/70 link-underline hover:!text-surface text-left"
-        >
-          {triggerLabel}
-        </button>
-        <CountryDialog
-          open={open}
-          onOpenChange={setOpen}
-          query={query}
-          setQuery={setQuery}
-          filtered={filtered}
-          selectedCode={shipping.code}
-          onSelect={select}
-        />
-      </>
-    );
-  }
+  const triggerClass =
+    variant === "nav"
+      ? "w-full text-left text-sm py-3 px-4 border border-border bg-background hover:border-accent/60 transition-colors"
+      : variant === "footer"
+        ? "text-eyebrow !text-surface/70 link-underline hover:!text-surface text-left"
+        : headerTriggerClass;
 
   return (
     <>

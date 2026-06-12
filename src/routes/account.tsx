@@ -16,16 +16,16 @@ function Account() {
   const wished = publishedProducts.filter((p) => wishlist.includes(p.slug));
 
   return (
-    <section className="px-6 md:px-14 py-20 max-w-6xl">
+    <section className="page-wrap section-pad mx-auto py-16 md:py-20 max-w-6xl">
       <p className="text-eyebrow text-muted-foreground">Your account</p>
       <h1 className="font-display text-5xl md:text-7xl mt-4 leading-[0.95]">Bonjour.</h1>
 
-      <div className="flex gap-8 mt-12 border-b border-border">
+      <div className="flex gap-4 sm:gap-8 mt-12 border-b border-border overflow-x-auto">
         {(["login", "wishlist", "orders"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`pb-4 text-eyebrow ${tab === t ? "text-ink border-b border-ink -mb-px" : "text-muted-foreground"}`}
+            className={`pb-4 text-eyebrow whitespace-nowrap shrink-0 ${tab === t ? "text-ink border-b border-ink -mb-px" : "text-muted-foreground"}`}
           >
             {t}
           </button>
@@ -42,7 +42,7 @@ function Account() {
               <button className="bg-ink text-bone px-8 py-3.5 text-eyebrow w-full">Sign in</button>
               <a href="#" className="text-eyebrow text-muted-foreground link-underline block">Forgot password?</a>
             </form>
-            <div className="border-l border-border pl-12">
+            <div className="md:border-l md:border-border md:pl-12 pt-8 md:pt-0 border-t md:border-t-0 border-border">
               <h2 className="font-display text-2xl">New here?</h2>
               <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
                 Create an account to track orders, save your favourites, and receive private invitations.
