@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCart } from "@/lib/cart";
+import { useCart, cartLineKey } from "@/lib/cart";
 import { useCurrency } from "@/lib/currency";
 import { getUnitPrice, formatMoney } from "@/lib/pricing";
+import { maxCartQty } from "@/lib/warehouse-allocation";
 import { CheckoutButton } from "@/components/site/CheckoutButton";
 import { Minus, Plus, X } from "lucide-react";
 
@@ -12,7 +13,7 @@ export const Route = createFileRoute("/cart")({
 
 function CartPage() {
   const { resolved, remove, updateQty } = useCart();
-  const { country } = useCurrency();
+  const { country, shipping } = useCurrency();
   const currency = country.currency;
 
   const total = resolved.reduce(
@@ -35,54 +36,62 @@ function CartPage() {
       ) : (
         <div className="grid lg:grid-cols-[1fr_minmax(280px,360px)] gap-8 lg:gap-16 mt-10 md:mt-16">
           <ul className="divide-y divide-border">
-            {resolved.map(({ product, qty }) => (
-              <li key={product.slug} className="flex flex-col sm:flex-row gap-4 sm:gap-6 py-6 sm:py-8">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="size-24 sm:size-32 md:size-40 object-cover bg-secondary shrink-0"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-display text-xl sm:text-2xl truncate">{product.name}</p>
-                      <p className="text-eyebrow text-muted-foreground mt-1">
-                        {product.collection} — {product.origin}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => remove(product.slug)}
-                      aria-label="Remove"
-                      className="shrink-0"
-                    >
-                      <X className="size-4" />
-                    </button>
-                  </div>
-                  <div className="flex flex-wrap items-center justify-between gap-4 mt-6 sm:mt-8">
-                    <div className="flex items-center border border-border rounded-sm">
+            {resolved.map(({ product, variant, qty }) => {
+              const max = maxCartQty(product, shipping.code, variant?.id);
+              const lineKey = cartLineKey({ slug: product.slug, variantId: variant?.id });
+
+              return (
+                <li key={lineKey} className="flex flex-col sm:flex-row gap-4 sm:gap-6 py-6 sm:py-8">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="size-24 sm:size-32 md:size-40 object-cover bg-secondary shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-display text-xl sm:text-2xl truncate">{product.name}</p>
+                        <p className="text-eyebrow text-muted-foreground mt-1">
+                          {product.collection}
+                          {variant && variant.title !== "Default" ? ` · ${variant.title}` : ""}
+                          {" — "}
+                          {product.origin}
+                        </p>
+                      </div>
                       <button
                         type="button"
-                        onClick={() => updateQty(product.slug, qty - 1)}
-                        className="size-10 flex items-center justify-center hover:bg-secondary transition-colors"
+                        onClick={() => remove(product.slug, variant?.id)}
+                        aria-label="Remove"
+                        className="shrink-0"
                       >
-                        <Minus className="size-3" />
-                      </button>
-                      <span className="w-10 text-center text-sm">{qty}</span>
-                      <button
-                        type="button"
-                        onClick={() => updateQty(product.slug, qty + 1)}
-                        disabled={qty >= product.stock}
-                        className="size-10 flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-40"
-                      >
-                        <Plus className="size-3" />
+                        <X className="size-4" />
                       </button>
                     </div>
-                    <p className="text-sm">{formatMoney(getUnitPrice(product, currency) * qty, currency)}</p>
+                    <div className="flex flex-wrap items-center justify-between gap-4 mt-6 sm:mt-8">
+                      <div className="flex items-center border border-border rounded-sm">
+                        <button
+                          type="button"
+                          onClick={() => updateQty(product.slug, qty - 1, variant?.id)}
+                          className="size-10 flex items-center justify-center hover:bg-secondary transition-colors"
+                        >
+                          <Minus className="size-3" />
+                        </button>
+                        <span className="w-10 text-center text-sm">{qty}</span>
+                        <button
+                          type="button"
+                          onClick={() => updateQty(product.slug, qty + 1, variant?.id)}
+                          disabled={qty >= max}
+                          className="size-10 flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-40"
+                        >
+                          <Plus className="size-3" />
+                        </button>
+                      </div>
+                      <p className="text-sm">{formatMoney(getUnitPrice(product, currency) * qty, currency)}</p>
+                    </div>
                   </div>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
 
           <aside className="bg-secondary p-8 h-fit space-y-6 border border-border">

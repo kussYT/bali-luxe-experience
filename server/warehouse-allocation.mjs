@@ -36,13 +36,29 @@ export function getDefaultVariant(product) {
 }
 
 /**
+ * Resolve a variant by id, falling back to default.
+ * @param {{ variants?: { id: string, isDefault?: boolean }[] }} product
+ * @param {string | null | undefined} variantId
+ */
+export function getVariant(product, variantId) {
+  const variants = product?.variants;
+  if (!variants?.length) return null;
+  if (variantId) {
+    const found = variants.find((v) => v.id === variantId);
+    if (found) return found;
+  }
+  return getDefaultVariant(product);
+}
+
+/**
  * Available units for checkout: primary warehouse first, then fallback.
- * @param {{ stock?: number, defaultWarehouse?: WarehouseId, variants?: { isDefault?: boolean, inventory?: { france: number, bali: number } }[] }} product
+ * @param {{ stock?: number, defaultWarehouse?: WarehouseId, variants?: { id: string, isDefault?: boolean, inventory?: { france: number, bali: number } }[] }} product
  * @param {string | null | undefined} countryCode
  * @param {number} qty
+ * @param {string | null | undefined} [variantId]
  */
-export function availableForCheckout(product, countryCode, qty = 1) {
-  const variant = getDefaultVariant(product);
+export function availableForCheckout(product, countryCode, qty = 1, variantId = null) {
+  const variant = getVariant(product, variantId);
   if (!variant?.inventory) {
     return { ok: (product.stock ?? 0) >= qty, available: product.stock ?? 0, warehouse: null };
   }

@@ -20,7 +20,8 @@ import { subscribeNewsletter } from "./server/newsletter.mjs";
 import { createCheckoutSession, handleStripeWebhook, getCheckoutSessionStatus } from "./server/checkout.mjs";
 import { getCatalogResponse } from "./server/api/catalog.mjs";
 import { getAdminInventoryResponse, patchAdminInventory } from "./server/api/inventory.mjs";
-import { getAdminOrdersResponse, getAdminOrderResponse } from "./server/api/orders.mjs";
+import { getAdminOrdersResponse, getAdminOrderResponse, shipAdminOrder, getAdminOrdersCsv } from "./server/api/orders.mjs";
+import { postContactMessage } from "./server/api/contact.mjs";
 import {
   createAdminProduct,
   updateAdminProduct,
@@ -163,6 +164,12 @@ export function adminApiPlugin() {
             return json(res, 200, result);
           }
 
+          if (pathname === "/api/contact" && req.method === "POST") {
+            const body = await readBody(req);
+            const result = await postContactMessage(body);
+            return json(res, 200, result);
+          }
+
           if (pathname === "/api/admin/login" && req.method === "POST") {
             const body = await readBody(req);
             if (body.password !== getAdminPassword()) {
@@ -204,6 +211,22 @@ export function adminApiPlugin() {
           if (pathname === "/api/admin/orders" && req.method === "GET") {
             const orders = await getAdminOrdersResponse();
             return json(res, 200, orders);
+          }
+
+          if (pathname === "/api/admin/orders/export.csv" && req.method === "GET") {
+            const csv = await getAdminOrdersCsv();
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "text/csv; charset=utf-8");
+            res.setHeader("Content-Disposition", 'attachment; filename="bingin-orders.csv"');
+            res.end(csv);
+            return;
+          }
+
+          const orderShipMatch = pathname.match(/^\/api\/admin\/orders\/([^/]+)\/ship$/);
+          if (orderShipMatch && req.method === "PATCH") {
+            const orderId = decodeURIComponent(orderShipMatch[1]);
+            const result = await shipAdminOrder(orderId);
+            return json(res, 200, result);
           }
 
           const orderMatch = pathname.match(/^\/api\/admin\/orders\/([^/]+)$/);

@@ -1,5 +1,5 @@
 import { readCatalog } from "./catalog-store.mjs";
-import { availableForCheckout, getDefaultVariant } from "./warehouse-allocation.mjs";
+import { availableForCheckout, getVariant } from "./warehouse-allocation.mjs";
 import {
   createPendingOrder,
   attachStripeSession,
@@ -16,6 +16,7 @@ import {
   stripeCurrency,
   SHIPPING_FLAT,
 } from "./pricing.mjs";
+import { sendOrderConfirmationEmail } from "./emails/order-emails.mjs";
 
 /** ISO codes for Stripe shipping_address_collection */
 export const SHIPPING_COUNTRY_CODES = [
@@ -31,6 +32,13 @@ function absoluteImageUrl(siteUrl, path) {
   return `${siteUrl}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+function lineDisplayName(product, variant) {
+  if (variant?.title && variant.title !== "Default") {
+    return `${product.name} — ${variant.title}`;
+  }
+  return product.name;
+}
+
 export function validateCartItems(catalog, lineItems, countryCode) {
   if (!Array.isArray(lineItems) || lineItems.length === 0) {
     const err = new Error("Cart is empty");
@@ -41,6 +49,7 @@ export function validateCartItems(catalog, lineItems, countryCode) {
   const resolved = [];
   for (const line of lineItems) {
     const slug = line?.slug;
+    const variantId = line?.variantId || null;
     const qty = Number(line?.qty);
     if (!slug || !Number.isFinite(qty) || qty < 1) {
       const err = new Error("Invalid cart line");
@@ -55,15 +64,16 @@ export function validateCartItems(catalog, lineItems, countryCode) {
       throw err;
     }
 
-    const stockCheck = availableForCheckout(product, countryCode, qty);
+    const variant = getVariant(product, variantId);
+    const stockCheck = availableForCheckout(product, countryCode, qty, variant?.id);
     if (!stockCheck.ok) {
-      const err = new Error(`Insufficient stock for ${product.name}`);
+      const label = lineDisplayName(product, variant);
+      const err = new Error(`Insufficient stock for ${label}`);
       err.status = 409;
       throw err;
     }
 
     if (isDatabaseConfigured()) {
-      const variant = getDefaultVariant(product);
       if (!variant?.id) {
         const err = new Error(`Product has no variant in database: ${slug}`);
         err.status = 500;
@@ -76,7 +86,7 @@ export function validateCartItems(catalog, lineItems, countryCode) {
       }
     }
 
-    resolved.push({ product, qty, fulfillmentWarehouse: stockCheck.warehouse });
+    resolved.push({ product, variant, qty, fulfillmentWarehouse: stockCheck.warehouse });
   }
   return resolved;
 }
@@ -102,11 +112,12 @@ export async function createCheckoutSession({ items, currency, countryCode }) {
   const siteUrl = getSiteUrl();
   const stripe = getStripe();
 
-  const orderItems = resolved.map(({ product, qty, fulfillmentWarehouse }) => {
+  const orderItems = resolved.map(({ product, variant, qty, fulfillmentWarehouse }) => {
     const price = unitPrice(product, currency);
     if (isDatabaseConfigured()) {
       return buildOrderItemFromCartLine({
         product,
+        variant,
         qty,
         fulfillmentWarehouse,
         unitPriceAmount: price,
@@ -115,10 +126,12 @@ export async function createCheckoutSession({ items, currency, countryCode }) {
     return {
       slug: product.slug,
       name: product.name,
+      variantTitle: variant?.title || "Default",
       qty,
       unitPrice: price,
       image: product.image,
       warehouseId: fulfillmentWarehouse,
+      variantId: variant?.id,
     };
   });
 
@@ -128,18 +141,23 @@ export async function createCheckoutSession({ items, currency, countryCode }) {
     countryCode: countryCode || null,
   });
 
-  const line_items = resolved.map(({ product, qty }) => {
+  const line_items = resolved.map(({ product, variant, qty }) => {
     const amount = unitPrice(product, currency);
+    const name = lineDisplayName(product, variant);
     return {
       quantity: qty,
       price_data: {
         currency: stripeCurrency(currency),
         unit_amount: toStripeAmount(amount, currency),
         product_data: {
-          name: product.name,
+          name,
           description: product.collection,
           images: [absoluteImageUrl(siteUrl, product.image)].filter(Boolean),
-          metadata: { slug: product.slug },
+          metadata: {
+            slug: product.slug,
+            variantId: variant?.id || "",
+            variantTitle: variant?.title || "",
+          },
         },
       },
     };
@@ -205,6 +223,10 @@ export async function fulfillPaidSession(stripeSession, stripeEventId = null) {
     amountShipping: stripeSession.total_details?.amount_shipping ?? null,
     currency: stripeSession.currency?.toUpperCase(),
     shippingCountryCode,
+  });
+
+  sendOrderConfirmationEmail(paid).catch((e) => {
+    console.error("[email] order confirmation failed:", e.message);
   });
 
   return paid;

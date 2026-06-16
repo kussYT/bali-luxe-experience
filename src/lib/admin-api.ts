@@ -106,6 +106,7 @@ export type AdminOrder = {
   stripeSessionId: string | null;
   amountTotal: number | null;
   paidAt: string | null;
+  shippedAt: string | null;
   createdAt: string;
   items: {
     id: string;
@@ -127,6 +128,17 @@ export async function fetchAdminOrder(orderId: string) {
   return request<{ order: AdminOrder; source: string }>(
     `/api/admin/orders/${encodeURIComponent(orderId)}`,
   );
+}
+
+export async function shipAdminOrder(orderId: string) {
+  return request<{ order: AdminOrder; source: string }>(
+    `/api/admin/orders/${encodeURIComponent(orderId)}/ship`,
+    { method: "PATCH" },
+  );
+}
+
+export function adminOrdersExportUrl() {
+  return "/api/admin/orders/export.csv";
 }
 
 export async function updateInventoryQuantity(payload: {

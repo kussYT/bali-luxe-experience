@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { fetchAdminOrder, type AdminOrder } from "@/lib/admin-api";
+import { fetchAdminOrder, shipAdminOrder, type AdminOrder } from "@/lib/admin-api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/admin/orders/$orderId")({
   head: () => ({ meta: [{ title: "Order detail — Bingin Diaries Admin" }] }),
@@ -18,12 +19,27 @@ function AdminOrderDetailPage() {
   const { orderId } = Route.useParams();
   const [order, setOrder] = useState<AdminOrder | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [shipping, setShipping] = useState(false);
 
   useEffect(() => {
     fetchAdminOrder(orderId)
       .then((res) => setOrder(res.order))
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load order"));
   }, [orderId]);
+
+  async function handleShip() {
+    if (!order || order.status !== "paid") return;
+    setShipping(true);
+    setError(null);
+    try {
+      const res = await shipAdminOrder(orderId);
+      setOrder(res.order);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to mark as shipped");
+    } finally {
+      setShipping(false);
+    }
+  }
 
   if (error) {
     return (
@@ -61,6 +77,16 @@ function AdminOrderDetailPage() {
               <p className="text-xs text-muted-foreground mt-1">
                 Paid {new Date(order.paidAt).toLocaleString()}
               </p>
+            )}
+            {order.shippedAt && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Shipped {new Date(order.shippedAt).toLocaleString()}
+              </p>
+            )}
+            {order.status === "paid" && (
+              <Button className="mt-4" size="sm" onClick={handleShip} disabled={shipping}>
+                {shipping ? "Sending…" : "Mark as shipped"}
+              </Button>
             )}
           </CardContent>
         </Card>

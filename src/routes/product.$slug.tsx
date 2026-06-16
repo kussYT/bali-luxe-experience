@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Heart, Plus, Minus } from "lucide-react";
 import { useCatalog } from "@/lib/catalog-context";
 import { useCart } from "@/lib/cart";
 import { useCurrency } from "@/lib/currency";
 import { ProductCard } from "@/components/site/ProductCard";
+import { VariantSelector } from "@/components/site/VariantSelector";
+import { getDefaultVariant, getVariant, maxCartQty } from "@/lib/warehouse-allocation";
 
 export const Route = createFileRoute("/product/$slug")({
   head: ({ params }) => ({
@@ -18,10 +20,25 @@ function ProductPage() {
   const { publishedProducts } = useCatalog();
   const product = publishedProducts.find((p) => p.slug === slug);
   const { add, toggleWish, wishlist } = useCart();
-  const { format } = useCurrency();
+  const { format, shipping } = useCurrency();
   const [qty, setQty] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const wished = wishlist.includes(slug);
+
+  const initialVariantId = useMemo(() => {
+    if (!product?.variants?.length) return null;
+    const inStock = product.variants.find(
+      (v) => (v.inventory?.france ?? 0) + (v.inventory?.bali ?? 0) > 0,
+    );
+    return (inStock ?? getDefaultVariant(product))?.id ?? null;
+  }, [product]);
+
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(initialVariantId);
+
+  useEffect(() => {
+    setSelectedVariantId(initialVariantId);
+    setQty(1);
+  }, [slug, initialVariantId]);
 
   if (!product) {
     return (
@@ -33,6 +50,11 @@ function ProductPage() {
       </div>
     );
   }
+
+  const selectedVariant = getVariant(product, selectedVariantId);
+  const maxQty = maxCartQty(product, shipping.code, selectedVariant?.id);
+  const hasVariants = (product.variants?.length ?? 0) > 1;
+  const canAdd = maxQty > 0 && product.available;
 
   const related = publishedProducts
     .filter((p) => p.slug !== product.slug && p.collectionSlug === product.collectionSlug)
@@ -87,6 +109,16 @@ function ProductPage() {
             )}
           </div>
 
+          <VariantSelector
+            product={product}
+            selectedId={selectedVariantId}
+            countryCode={shipping.code}
+            onSelect={(id) => {
+              setSelectedVariantId(id);
+              setQty(1);
+            }}
+          />
+
           <div className="mt-10 flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-center border border-border rounded-sm w-fit">
               <button
@@ -99,8 +131,8 @@ function ProductPage() {
               <span className="w-10 text-center text-sm">{qty}</span>
               <button
                 type="button"
-                onClick={() => setQty(Math.min(product.stock, qty + 1))}
-                disabled={qty >= product.stock}
+                onClick={() => setQty(Math.min(maxQty, qty + 1))}
+                disabled={qty >= maxQty}
                 className="size-11 flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-40"
               >
                 <Plus className="size-3 stroke-[1.25]" />
@@ -108,11 +140,11 @@ function ProductPage() {
             </div>
             <button
               type="button"
-              onClick={() => add(product.slug, qty)}
-              disabled={!product.available || product.stock <= 0}
+              onClick={() => add(product.slug, qty, selectedVariant?.id)}
+              disabled={!canAdd || (hasVariants && !selectedVariant)}
               className="btn-primary flex-1 sm:flex-none disabled:opacity-45"
             >
-              {product.available ? "Add to bag" : "Sold out"}
+              {canAdd ? "Add to bag" : "Sold out"}
             </button>
             <button
               type="button"
@@ -125,7 +157,9 @@ function ProductPage() {
           </div>
 
           <p className="mt-5 text-caption">
-            {product.stock > 0 ? `${product.stock} in stock — ships from Paris & Bali` : "Out of stock"}
+            {maxQty > 0 ?
+              `${maxQty} in stock${selectedVariant && selectedVariant.title !== "Default" ? ` (${selectedVariant.title})` : ""} — ships from Paris & Bali`
+            : "Out of stock"}
           </p>
         </div>
       </section>

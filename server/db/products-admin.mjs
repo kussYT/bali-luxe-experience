@@ -40,7 +40,23 @@ export function normalizeAdminProductBody(body) {
     origin: body.origin === "France" ? "France" : "Bali",
     stock: Math.max(0, Number(body.stock ?? 0)),
     images,
+    variants: parseAdminVariants(body),
   };
+}
+
+function parseAdminVariants(body) {
+  const raw = Array.isArray(body.variants) ? body.variants : [];
+  const parsed = raw
+    .map((v, i) => ({
+      id: v.id || null,
+      title: String(v.title ?? "").trim() || (i === 0 ? "Default" : ""),
+      stock: Math.max(0, Number(v.stock) || 0),
+    }))
+    .filter((v) => v.title);
+
+  if (parsed.length > 0) return parsed;
+
+  return [{ id: null, title: "Default", stock: Math.max(0, Number(body.stock) || 0) }];
 }
 
 async function upsertCollection(client, { slug, name, season = "" }) {
@@ -64,31 +80,34 @@ async function replaceImages(client, productId, images) {
   }
 }
 
-async function createDefaultVariantWithInventory(client, productId, p) {
+async function createVariantWithInventory(client, productId, p, variant, position, isDefault) {
   const defaultWarehouse = mapOriginToWarehouse(p.origin);
-  const variantSlug = buildVariantSlug(p.slug, "Default", 0);
+  const secondary = defaultWarehouse === "bali" ? "france" : "bali";
+  const variantSlug = buildVariantSlug(p.slug, variant.title, position);
 
   const { rows } = await client.query(
     `INSERT INTO product_variants (
-       product_id, slug, sku, title, price_eur, compare_at_eur, position, is_default
-     ) VALUES ($1, $2, $3, $4, $5, $6, 0, true)
+       product_id, slug, sku, title, option1, price_eur, compare_at_eur, position, is_default
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
      RETURNING id`,
     [
       productId,
       variantSlug,
       p.slug,
-      "Default",
+      variant.title,
+      variant.title === "Default" ? null : variant.title,
       p.priceEUR,
       p.compareAtEUR,
+      position,
+      isDefault,
     ],
   );
   const variantId = rows[0].id;
-  const secondary = defaultWarehouse === "bali" ? "france" : "bali";
 
   await client.query(
     `INSERT INTO product_inventory (variant_id, warehouse_id, quantity, reserved)
      VALUES ($1, $2, $3, 0)`,
-    [variantId, defaultWarehouse, p.stock],
+    [variantId, defaultWarehouse, variant.stock],
   );
   await client.query(
     `INSERT INTO product_inventory (variant_id, warehouse_id, quantity, reserved)
@@ -99,15 +118,84 @@ async function createDefaultVariantWithInventory(client, productId, p) {
   return variantId;
 }
 
-async function getDefaultVariantId(client, productId) {
+async function setVariantPrimaryStock(client, variantId, warehouseId, nextQty, productSlug) {
   const { rows } = await client.query(
-    `SELECT id FROM product_variants
-     WHERE product_id = $1
-     ORDER BY is_default DESC, position ASC
-     LIMIT 1`,
+    `SELECT quantity FROM product_inventory WHERE variant_id = $1 AND warehouse_id = $2`,
+    [variantId, warehouseId],
+  );
+  if (rows.length === 0) {
+    await client.query(
+      `INSERT INTO product_inventory (variant_id, warehouse_id, quantity, reserved)
+       VALUES ($1, $2, $3, 0)`,
+      [variantId, warehouseId, nextQty],
+    );
+    return;
+  }
+  const current = rows[0].quantity;
+  if (current === nextQty) return;
+  await client.query(
+    `UPDATE product_inventory SET quantity = $1, updated_at = now()
+     WHERE variant_id = $2 AND warehouse_id = $3`,
+    [nextQty, variantId, warehouseId],
+  );
+  await client.query(
+    `INSERT INTO inventory_movements (variant_id, warehouse_id, delta, reason, note)
+     VALUES ($1, $2, $3, 'catalog_update', $4)`,
+    [variantId, warehouseId, nextQty - current, `Product edit: ${productSlug}`],
+  );
+}
+
+async function syncProductVariants(client, productId, p) {
+  const defaultWarehouse = mapOriginToWarehouse(p.origin);
+  const { rows: existing } = await client.query(
+    `SELECT id FROM product_variants WHERE product_id = $1 ORDER BY position ASC`,
     [productId],
   );
-  return rows[0]?.id ?? null;
+  const keepIds = new Set();
+
+  for (let i = 0; i < p.variants.length; i++) {
+    const variant = p.variants[i];
+    const isDefault = i === 0;
+    const position = i;
+    const variantSlug = buildVariantSlug(p.slug, variant.title, position);
+    const option1 = variant.title === "Default" ? null : variant.title;
+
+    if (variant.id && existing.some((row) => row.id === variant.id)) {
+      keepIds.add(variant.id);
+      await client.query(
+        `UPDATE product_variants SET
+           slug = $2,
+           title = $3,
+           option1 = $4,
+           price_eur = $5,
+           compare_at_eur = $6,
+           position = $7,
+           is_default = $8,
+           updated_at = now()
+         WHERE id = $1`,
+        [
+          variant.id,
+          variantSlug,
+          variant.title,
+          option1,
+          p.priceEUR,
+          p.compareAtEUR,
+          position,
+          isDefault,
+        ],
+      );
+      await setVariantPrimaryStock(client, variant.id, defaultWarehouse, variant.stock, p.slug);
+    } else {
+      const newId = await createVariantWithInventory(client, productId, p, variant, position, isDefault);
+      keepIds.add(newId);
+    }
+  }
+
+  for (const row of existing) {
+    if (!keepIds.has(row.id)) {
+      await client.query(`DELETE FROM product_variants WHERE id = $1`, [row.id]);
+    }
+  }
 }
 
 export async function createProductInDb(rawBody) {
@@ -165,7 +253,9 @@ export async function createProductInDb(rawBody) {
 
     const productId = rows[0].id;
     await replaceImages(client, productId, p.images);
-    await createDefaultVariantWithInventory(client, productId, p);
+    for (let i = 0; i < p.variants.length; i++) {
+      await createVariantWithInventory(client, productId, p, p.variants[i], i, i === 0);
+    }
 
     return productId;
   });
@@ -252,48 +342,7 @@ export async function updateProductInDb(currentSlug, rawBody) {
     );
 
     await replaceImages(client, productId, p.images);
-
-    let variantId = await getDefaultVariantId(client, productId);
-    if (!variantId) {
-      variantId = await createDefaultVariantWithInventory(client, productId, p);
-    } else {
-      await client.query(
-        `UPDATE product_variants SET
-           slug = $2,
-           price_eur = $3,
-           compare_at_eur = $4,
-           updated_at = now()
-         WHERE id = $1`,
-        [variantId, buildVariantSlug(p.slug, "Default", 0), p.priceEUR, p.compareAtEUR],
-      );
-
-      const { rows: invRows } = await client.query(
-        `SELECT warehouse_id, quantity FROM product_inventory WHERE variant_id = $1`,
-        [variantId],
-      );
-      const hasPrimary = invRows.some((r) => r.warehouse_id === defaultWarehouse);
-      if (!hasPrimary) {
-        await client.query(
-          `INSERT INTO product_inventory (variant_id, warehouse_id, quantity, reserved)
-           VALUES ($1, $2, $3, 0)`,
-          [variantId, defaultWarehouse, p.stock],
-        );
-      } else {
-        const current = invRows.find((r) => r.warehouse_id === defaultWarehouse)?.quantity ?? 0;
-        if (current !== p.stock) {
-          await client.query(
-            `UPDATE product_inventory SET quantity = $1, updated_at = now()
-             WHERE variant_id = $2 AND warehouse_id = $3`,
-            [p.stock, variantId, defaultWarehouse],
-          );
-          await client.query(
-            `INSERT INTO inventory_movements (variant_id, warehouse_id, delta, reason, note)
-             VALUES ($1, $2, $3, 'catalog_update', $4)`,
-            [variantId, defaultWarehouse, p.stock - current, `Product edit: ${p.slug}`],
-          );
-        }
-      }
-    }
+    await syncProductVariants(client, productId, p);
 
     return productId;
   });

@@ -23,9 +23,23 @@ export function getDefaultVariant(product: Product): ProductVariant | null {
   return variants.find((v) => v.isDefault) ?? variants[0];
 }
 
-/** Max qty addable to cart for the customer's shipping country */
-export function maxCartQty(product: Product, countryCode: string | null | undefined): number {
-  const variant = getDefaultVariant(product);
+export function getVariant(product: Product, variantId?: string | null): ProductVariant | null {
+  const variants = product.variants;
+  if (!variants?.length) return null;
+  if (variantId) {
+    const found = variants.find((v) => v.id === variantId);
+    if (found) return found;
+  }
+  return getDefaultVariant(product);
+}
+
+/** Max qty addable to cart for a variant (or product total when no variants). */
+export function maxCartQty(
+  product: Product,
+  countryCode: string | null | undefined,
+  variantId?: string | null,
+): number {
+  const variant = getVariant(product, variantId);
   if (!variant?.inventory) return product.stock ?? 0;
   return (variant.inventory.france ?? 0) + (variant.inventory.bali ?? 0);
 }
@@ -34,16 +48,24 @@ export function availableForCheckout(
   product: Product,
   countryCode: string | null | undefined,
   qty: number,
-): { ok: boolean; available: number } {
-  const variant = getDefaultVariant(product);
+  variantId?: string | null,
+): { ok: boolean; available: number; warehouse: WarehouseId | null } {
+  const variant = getVariant(product, variantId);
   if (!variant?.inventory) {
     const stock = product.stock ?? 0;
-    return { ok: stock >= qty, available: stock };
+    return { ok: stock >= qty, available: stock, warehouse: null };
   }
+
   const primary = preferredWarehouse(countryCode, product);
   const secondary = primary === "france" ? "bali" : "france";
   const primaryQty = variant.inventory[primary] ?? 0;
   const secondaryQty = variant.inventory[secondary] ?? 0;
-  const total = primaryQty + secondaryQty;
-  return { ok: total >= qty, available: total };
+
+  if (primaryQty >= qty) {
+    return { ok: true, available: primaryQty + secondaryQty, warehouse: primary };
+  }
+  if (primaryQty + secondaryQty >= qty) {
+    return { ok: true, available: primaryQty + secondaryQty, warehouse: secondary };
+  }
+  return { ok: false, available: primaryQty + secondaryQty, warehouse: primary };
 }

@@ -1,4 +1,4 @@
-import { useCart } from "@/lib/cart";
+import { useCart, cartLineKey } from "@/lib/cart";
 import { useCurrency } from "@/lib/currency";
 import { useCatalog } from "@/lib/catalog-context";
 import { getUnitPrice, formatMoney } from "@/lib/pricing";
@@ -74,18 +74,21 @@ export function CartDrawer() {
         ) : (
           <>
             <ul className="flex-1 overflow-y-auto divide-y divide-border">
-              {resolved.map(({ product, qty }) => (
-                <li key={product.slug} className="flex gap-4 p-6">
+              {resolved.map(({ product, variant, qty }) => (
+                <li key={cartLineKey({ slug: product.slug, variantId: variant?.id })} className="flex gap-4 p-6">
                   <img src={product.image} alt={product.name} className="size-24 object-cover bg-sand" />
                   <div className="flex-1">
                     <p className="font-display text-lg leading-tight">{product.name}</p>
-                    <p className="text-eyebrow text-muted-foreground mt-1">{product.collection}</p>
+                    <p className="text-eyebrow text-muted-foreground mt-1">
+                      {product.collection}
+                      {variant && variant.title !== "Default" ? ` · ${variant.title}` : ""}
+                    </p>
                     <div className="flex items-center justify-between mt-3 text-sm">
                       <span className="font-mono">Qty {qty}</span>
                       <span>{format(product)}</span>
                     </div>
                   </div>
-                  <button onClick={() => remove(product.slug)} aria-label="Remove">
+                  <button onClick={() => remove(product.slug, variant?.id)} aria-label="Remove">
                     <Minus className="size-4 text-muted-foreground" />
                   </button>
                 </li>

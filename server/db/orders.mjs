@@ -18,6 +18,7 @@ function mapOrderRow(row, items = []) {
     amountShipping: row.amount_shipping ?? null,
     amountTotal: row.amount_total ?? null,
     paidAt: row.paid_at ? new Date(row.paid_at).toISOString() : null,
+    shippedAt: row.shipped_at ? new Date(row.shipped_at).toISOString() : null,
     createdAt: new Date(row.created_at).toISOString(),
     items,
   };
@@ -239,15 +240,99 @@ export async function listOrdersAdmin() {
   return listOrders({ limit: 200 });
 }
 
+export async function markOrderShipped(orderId) {
+  if (!isDatabaseConfigured()) {
+    const err = new Error("Database not configured");
+    err.status = 503;
+    throw err;
+  }
+
+  const { rows } = await query(
+    `UPDATE orders SET status = 'shipped', shipped_at = now(), updated_at = now()
+     WHERE id = $1 AND status IN ('paid', 'shipped')
+     RETURNING id`,
+    [orderId],
+  );
+
+  if (rows.length === 0) {
+    const existing = await findOrderById(orderId);
+    if (!existing) {
+      const err = new Error("Order not found");
+      err.status = 404;
+      throw err;
+    }
+    const err = new Error("Only paid orders can be marked as shipped");
+    err.status = 409;
+    throw err;
+  }
+
+  return findOrderById(orderId);
+}
+
+function csvEscape(value) {
+  const s = value == null ? "" : String(value);
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+export async function exportOrdersCsv() {
+  const orders = await listOrdersAdmin();
+  const headers = [
+    "id",
+    "status",
+    "created_at",
+    "paid_at",
+    "shipped_at",
+    "customer_email",
+    "currency",
+    "amount_total",
+    "shipping_country",
+    "fulfillment_warehouse",
+    "items",
+  ];
+
+  const lines = [headers.join(",")];
+  for (const order of orders) {
+    const itemsSummary = order.items
+      .map((i) => {
+        const label = i.variantTitle && i.variantTitle !== "Default"
+          ? `${i.name} (${i.variantTitle})`
+          : i.name;
+        return `${label} x${i.qty}`;
+      })
+      .join("; ");
+
+    lines.push(
+      [
+        order.id,
+        order.status,
+        order.createdAt,
+        order.paidAt || "",
+        order.shippedAt || "",
+        order.customerEmail || "",
+        order.currency,
+        order.amountTotal ?? "",
+        order.shippingCountryCode || order.countryCode || "",
+        order.fulfillmentWarehouse || "",
+        itemsSummary,
+      ]
+        .map(csvEscape)
+        .join(","),
+    );
+  }
+
+  return lines.join("\n");
+}
+
 /** Resolve catalog line to DB-backed order item fields */
-export function buildOrderItemFromCartLine({ product, qty, fulfillmentWarehouse, unitPriceAmount }) {
-  const variant = getDefaultVariant(product);
+export function buildOrderItemFromCartLine({ product, variant, qty, fulfillmentWarehouse, unitPriceAmount }) {
+  const resolved = variant || getDefaultVariant(product);
   return {
     productId: product.id || null,
-    variantId: variant?.id || null,
+    variantId: resolved?.id || null,
     slug: product.slug,
     name: product.name,
-    variantTitle: variant?.title || "Default",
+    variantTitle: resolved?.title || "Default",
     qty,
     unitPrice: unitPriceAmount,
     warehouseId: fulfillmentWarehouse || "bali",

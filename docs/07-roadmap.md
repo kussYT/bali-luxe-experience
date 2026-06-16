@@ -31,11 +31,9 @@
 
 **Definition of done:** ops can manage Paris and Bali without SQL.
 
-**Follow-up (S3):** per-variant cart lines, Stripe webhook stock decrement in Postgres.
-
 ---
 
-## S3 — Orders + Stripe production ✅
+## S3 — Orders + Stripe ✅
 
 | Deliverable | Status |
 |-------------|--------|
@@ -45,8 +43,11 @@
 | Stock decrement + `inventory_movements` (`sale`) | ✅ |
 | `shipping_country_code` + `fulfillment_warehouse` on order | ✅ |
 | Dev server port **8080** | ✅ |
+| Checkout test validated (Stripe test keys + CLI webhook) | ✅ |
+| Per-variant cart lines (size selection) | ✅ |
+| Admin product multi-size variants | ✅ |
 
-**Follow-up:** order emails, production Worker API, per-variant cart lines.
+**Validation:** [sprint-s3-validation.md](./sprint-s3-validation.md) · [sprint-s3-test-checkout.md](./sprint-s3-test-checkout.md)
 
 ---
 
@@ -57,17 +58,24 @@
 | `POST /api/admin/products` → Postgres | ✅ |
 | `PUT /api/admin/products/:slug` → Postgres | ✅ |
 | `DELETE /api/admin/products/:slug` → Postgres | ✅ |
-| Default variant + primary warehouse stock on create | ✅ |
+| Multi-size variants on create/edit | ✅ |
 | JSON fallback when no `DATABASE_URL` | ✅ |
 
 ---
 
-## S4 — Emails & ops experience
+## S4 — Emails & ops experience 🚧
 
-- Order confirmation, shipped
-- Contact form → email
-- Newsletter Brevo/Resend in prod
-- Order CSV export
+| Deliverable | Status |
+|-------------|--------|
+| Order confirmation email (on payment) | ✅ |
+| Shipped email (admin action) | ✅ |
+| Contact form → email (`POST /api/contact`) | ✅ |
+| Order CSV export (`/api/admin/orders/export.csv`) | ✅ |
+| `shipped` order status + `shipped_at` (`003_order_shipped.sql`) | ✅ |
+| Newsletter Brevo in prod (`NEWSLETTER_PROVIDER=brevo`) | ✅ (existing) |
+| Resend transactional emails (`RESEND_API_KEY`) | ✅ |
+
+**Setup:** [sprint-s4-emails.md](./sprint-s4-emails.md)
 
 ---
 
@@ -93,10 +101,11 @@
 | Item | Target sprint |
 |------|----------------|
 | Admin product CRUD → Postgres | ✅ |
+| Per-variant cart + checkout | ✅ |
 | Orders in `orders.json` (fallback without DATABASE_URL) | JSON legacy |
 | `/api/*` only in Vite middleware | S5 |
-| Checkout stock = product total, not variant/warehouse | S2 |
 | No Stripe Tax / auto VAT | S4+ |
+| Production Stripe webhook (Dashboard, not CLI) | S5 |
 
 ---
 

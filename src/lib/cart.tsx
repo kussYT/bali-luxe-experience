@@ -3,23 +3,28 @@ import type { Product } from "@/lib/catalog-types";
 import { useCatalog } from "@/lib/catalog-context";
 import { useCurrency } from "@/lib/currency";
 import { maxCartQty } from "@/lib/warehouse-allocation";
-
-export type CartItem = { slug: string; qty: number };
+import {
+  type CartItem,
+  type ResolvedCartLine,
+  cartLineKey,
+  normalizeCartItem,
+  resolveCartLine,
+} from "@/lib/cart-lines";
 
 const CART_STORAGE_KEY = "bingin-cart";
 
 type Ctx = {
   items: CartItem[];
   wishlist: string[];
-  add: (slug: string, qty?: number) => void;
-  remove: (slug: string) => void;
-  updateQty: (slug: string, qty: number) => void;
+  add: (slug: string, qty?: number, variantId?: string) => void;
+  remove: (slug: string, variantId?: string) => void;
+  updateQty: (slug: string, qty: number, variantId?: string) => void;
   toggleWish: (slug: string) => void;
   clear: () => void;
   count: number;
   open: boolean;
   setOpen: (b: boolean) => void;
-  resolved: { product: Product; qty: number }[];
+  resolved: ResolvedCartLine[];
 };
 
 const CartContext = createContext<Ctx | null>(null);
@@ -30,10 +35,16 @@ function readStoredCart(): CartItem[] {
     const raw = localStorage.getItem(CART_STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as CartItem[];
-    return Array.isArray(parsed) ? parsed.filter((i) => i.slug && i.qty > 0) : [];
+    return Array.isArray(parsed)
+      ? parsed.filter((i) => i.slug && i.qty > 0).map((i) => ({ ...i, qty: Math.max(1, i.qty) }))
+      : [];
   } catch {
     return [];
   }
+}
+
+function sameLine(a: CartItem, slug: string, variantId?: string) {
+  return a.slug === slug && (a.variantId || undefined) === (variantId || undefined);
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -47,36 +58,41 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
   }, [items]);
 
-  const add = (slug: string, qty = 1) => {
+  const add = (slug: string, qty = 1, variantId?: string) => {
     const product = products.find((p) => p.slug === slug);
-    const max = product ? maxCartQty(product, shipping.code) : qty;
+    const line = normalizeCartItem({ slug, qty, variantId }, product);
+    const max = product ? maxCartQty(product, shipping.code, line.variantId) : qty;
     if (max < 1) {
-      // Out of stock in every warehouse — don't add an empty line
       setOpen(true);
       return;
     }
     setItems((prev) => {
-      const ex = prev.find((i) => i.slug === slug);
+      const ex = prev.find((i) => sameLine(i, line.slug, line.variantId));
       if (ex) {
-        const nextQty = Math.max(1, Math.min(ex.qty + qty, max));
-        return prev.map((i) => (i.slug === slug ? { ...i, qty: nextQty } : i));
+        const nextQty = Math.max(1, Math.min(ex.qty + line.qty, max));
+        return prev.map((i) =>
+          sameLine(i, line.slug, line.variantId) ? { ...i, qty: nextQty } : i,
+        );
       }
-      return [...prev, { slug, qty: Math.max(1, Math.min(qty, max)) }];
+      return [...prev, { ...line, qty: Math.max(1, Math.min(line.qty, max)) }];
     });
     setOpen(true);
   };
 
-  const remove = (slug: string) => setItems((prev) => prev.filter((i) => i.slug !== slug));
+  const remove = (slug: string, variantId?: string) =>
+    setItems((prev) => prev.filter((i) => !sameLine(i, slug, variantId)));
 
-  const updateQty = (slug: string, qty: number) => {
+  const updateQty = (slug: string, qty: number, variantId?: string) => {
     const product = products.find((p) => p.slug === slug);
-    const max = product ? maxCartQty(product, shipping.code) : qty;
+    const max = product ? maxCartQty(product, shipping.code, variantId) : qty;
     if (qty < 1) {
-      remove(slug);
+      remove(slug, variantId);
       return;
     }
     setItems((prev) =>
-      prev.map((i) => (i.slug === slug ? { ...i, qty: Math.min(qty, max) } : i)),
+      prev.map((i) =>
+        sameLine(i, slug, variantId) ? { ...i, qty: Math.min(qty, max) } : i,
+      ),
     );
   };
 
@@ -88,9 +104,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const resolved = items
     .map((i) => {
       const product = products.find((p) => p.slug === i.slug);
-      return product ? { product, qty: i.qty } : null;
+      return product ? resolveCartLine(product, i) : null;
     })
-    .filter(Boolean) as { product: Product; qty: number }[];
+    .filter(Boolean) as ResolvedCartLine[];
 
   const count = items.reduce((s, i) => s + i.qty, 0);
 
@@ -120,3 +136,6 @@ export function useCart() {
   if (!ctx) throw new Error("useCart must be used within CartProvider");
   return ctx;
 }
+
+export type { CartItem };
+export { cartLineKey };

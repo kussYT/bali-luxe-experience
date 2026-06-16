@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { fetchAdminOrders, type AdminOrder } from "@/lib/admin-api";
+import { fetchAdminOrders, adminOrdersExportUrl, type AdminOrder } from "@/lib/admin-api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/admin/orders/")({
   head: () => ({ meta: [{ title: "Orders — Bingin Diaries Admin" }] }),
@@ -33,18 +34,26 @@ function AdminOrdersPage() {
   }, []);
 
   const paidCount = orders.filter((o) => o.status === "paid").length;
+  const shippedCount = orders.filter((o) => o.status === "shipped").length;
 
   return (
     <div className="space-y-8">
-      <div>
-        <p className="text-eyebrow text-muted-foreground">Sprint S3</p>
-        <h2 className="font-display text-4xl mt-2">Orders</h2>
-        <p className="text-sm text-muted-foreground mt-2">
-          Persisted in Postgres · stock decremented on Stripe webhook
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-eyebrow text-muted-foreground">Orders</p>
+          <h2 className="font-display text-4xl mt-2">Orders</h2>
+          <p className="text-sm text-muted-foreground mt-2">
+            Postgres · confirmation &amp; shipped emails (S4)
+          </p>
+        </div>
+        <Button variant="outline" asChild>
+          <a href={adminOrdersExportUrl()} download>
+            Export CSV
+          </a>
+        </Button>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-4 max-w-lg">
+      <div className="grid sm:grid-cols-3 gap-4 max-w-2xl">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-normal text-muted-foreground">Total orders</CardTitle>
@@ -59,6 +68,14 @@ function AdminOrdersPage() {
           </CardHeader>
           <CardContent>
             <p className="font-display text-3xl">{paidCount}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-normal text-muted-foreground">Shipped</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="font-display text-3xl">{shippedCount}</p>
           </CardContent>
         </Card>
       </div>

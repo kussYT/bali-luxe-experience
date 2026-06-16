@@ -12,6 +12,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { uploadProductImages } from "@/lib/admin-api";
+import { Plus, X } from "lucide-react";
+
+export type VariantFormRow = {
+  id?: string;
+  title: string;
+  stock: number;
+};
 
 export type ProductFormValues = {
   slug: string;
@@ -23,7 +30,7 @@ export type ProductFormValues = {
   collectionSlug: string;
   subcategory: string;
   category: ProductCategory;
-  stock: number;
+  variants: VariantFormRow[];
   status: ProductStatus;
   featured: boolean;
   images: string[];
@@ -38,6 +45,30 @@ type ProductFormProps = {
   submitLabel?: string;
 };
 
+const emptyVariant = (): VariantFormRow => ({ title: "", stock: 1 });
+
+function primaryWarehouse(origin: "Bali" | "France") {
+  return origin === "France" ? "france" : "bali";
+}
+
+function variantsFromProduct(initial?: Partial<Product>): VariantFormRow[] {
+  if (!initial?.variants?.length) {
+    const wh = primaryWarehouse(initial?.origin === "France" ? "France" : "Bali");
+    const stock =
+      wh === "france"
+        ? (initial?.stockFrance ?? initial?.stock ?? 1)
+        : (initial?.stockBali ?? initial?.stock ?? 1);
+    return [{ title: "Default", stock }];
+  }
+
+  const wh = primaryWarehouse(initial.origin === "France" ? "France" : "Bali");
+  return initial.variants.map((v) => ({
+    id: v.id,
+    title: v.title,
+    stock: wh === "france" ? (v.inventory?.france ?? 0) : (v.inventory?.bali ?? 0),
+  }));
+}
+
 const empty: ProductFormValues = {
   slug: "",
   name: "",
@@ -48,7 +79,7 @@ const empty: ProductFormValues = {
   collectionSlug: "",
   subcategory: "",
   category: "hats",
-  stock: 1,
+  variants: [{ title: "Default", stock: 1 }],
   status: "published",
   featured: false,
   images: [],
@@ -71,24 +102,36 @@ export function ProductForm({
   onCancel,
   submitLabel = "Save",
 }: ProductFormProps) {
-  const [values, setValues] = useState<ProductFormValues>(() => {
-    const primaryStock =
-      initial?.origin === "France"
-        ? (initial?.stockFrance ?? initial?.stock ?? 0)
-        : (initial?.stockBali ?? initial?.stock ?? 0);
-    return {
-      ...empty,
-      ...initial,
-      stock: initial ? primaryStock : empty.stock,
-      images: initial?.images?.length ? initial.images : initial?.image ? [initial.image] : [],
-    };
-  });
+  const [values, setValues] = useState<ProductFormValues>(() => ({
+    ...empty,
+    ...initial,
+    variants: variantsFromProduct(initial),
+    images: initial?.images?.length ? initial.images : initial?.image ? [initial.image] : [],
+  }));
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const set = <K extends keyof ProductFormValues>(key: K, val: ProductFormValues[K]) => {
     setValues((prev) => ({ ...prev, [key]: val }));
+  };
+
+  const setVariant = (index: number, patch: Partial<VariantFormRow>) => {
+    setValues((prev) => ({
+      ...prev,
+      variants: prev.variants.map((row, i) => (i === index ? { ...row, ...patch } : row)),
+    }));
+  };
+
+  const addVariant = () => {
+    setValues((prev) => ({ ...prev, variants: [...prev.variants, emptyVariant()] }));
+  };
+
+  const removeVariant = (index: number) => {
+    setValues((prev) => ({
+      ...prev,
+      variants: prev.variants.length > 1 ? prev.variants.filter((_, i) => i !== index) : prev.variants,
+    }));
   };
 
   const handleCollectionPick = (slug: string) => {
@@ -124,9 +167,23 @@ export function ProductForm({
     setError(null);
     try {
       const slug = values.slug || slugify(values.name);
+      const variants = values.variants
+        .map((row, i) => ({
+          ...row,
+          title: row.title.trim() || (i === 0 ? "Default" : ""),
+        }))
+        .filter((row) => row.title);
+
+      if (variants.length === 0) {
+        setError("Add at least one size or variant.");
+        setSaving(false);
+        return;
+      }
+
       await onSubmit({
         ...values,
         slug,
+        variants,
         collectionSlug: values.collectionSlug || slugify(values.collection),
         image: values.images[0] || "",
       });
@@ -136,6 +193,9 @@ export function ProductForm({
       setSaving(false);
     }
   };
+
+  const warehouseLabel = values.origin === "France" ? "Paris" : "Bali";
+  const multiSize = values.variants.length > 1 || values.variants.some((v) => v.title && v.title !== "Default");
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 max-w-3xl">
@@ -165,7 +225,7 @@ export function ProductForm({
         <Textarea id="story" rows={5} value={values.story} onChange={(e) => set("story", e.target.value)} />
       </div>
 
-      <div className="grid md:grid-cols-3 gap-5">
+      <div className="grid md:grid-cols-2 gap-5">
         <div className="space-y-2">
           <Label htmlFor="price">Price (EUR) *</Label>
           <Input
@@ -192,18 +252,57 @@ export function ProductForm({
             placeholder="Optional"
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="stock">Stock (primary warehouse)</Label>
-          <Input
-            id="stock"
-            type="number"
-            min={0}
-            value={values.stock}
-            onChange={(e) => set("stock", Number(e.target.value))}
-          />
-          <p className="text-xs text-muted-foreground">
-            Based on origin: Paris for France, Bali for Indonesia. Use Inventory for split stock.
-          </p>
+      </div>
+
+      <div className="space-y-4 border border-border p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <Label>Sizes / variants</Label>
+            <p className="text-xs text-muted-foreground mt-1">
+              One row for a single-size product, or add S / M / L etc. Stock is for the primary warehouse ({warehouseLabel}).
+            </p>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={addVariant}>
+            <Plus className="size-3.5 mr-1" />
+            Add size
+          </Button>
+        </div>
+
+        <div className="space-y-3">
+          {values.variants.map((row, index) => (
+            <div key={row.id || `new-${index}`} className="grid grid-cols-[1fr_7rem_auto] gap-3 items-end">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">
+                  {index === 0 && !multiSize ? "Variant" : `Size ${index + 1}`}
+                </Label>
+                <Input
+                  value={row.title}
+                  onChange={(e) => setVariant(index, { title: e.target.value })}
+                  placeholder={index === 0 ? "Default or S" : "M, L, XL…"}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Stock ({warehouseLabel})</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={row.stock}
+                  onChange={(e) => setVariant(index, { stock: Number(e.target.value) })}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="shrink-0"
+                onClick={() => removeVariant(index)}
+                disabled={values.variants.length <= 1}
+                aria-label="Remove size"
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
+          ))}
         </div>
       </div>
 
