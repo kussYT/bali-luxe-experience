@@ -104,13 +104,4 @@ export async function writeCatalog(catalog) {
   return normalized;
 }
 
-export async function saveUploadedImage(slug, filename, buffer) {
-  const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const dir = path.join(ROOT, "public", "uploads", "products", slug);
-  await mkdir(dir, { recursive: true });
-  const dest = path.join(dir, safeName);
-  await writeFile(dest, buffer);
-  return `/uploads/products/${slug}/${safeName}`;
-}
-
 export { slugify, deriveCollections, CATALOG_PATHS, ROOT };

@@ -21,7 +21,10 @@
     "db:setup": "npm run db:migrate && npm run db:seed-catalog",
     "db:validate-s1": "node scripts/validate-s1.mjs",
     "stripe:webhook": "stripe listen --forward-to localhost:8080/api/stripe/webhook",
-    "stripe:webhook:live": "stripe listen --live --forward-to localhost:8080/api/stripe/webhook"
+    "stripe:webhook:live": "stripe listen --live --forward-to localhost:8080/api/stripe/webhook",
+    "preview:cf": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:secrets": "node scripts/print-wrangler-secrets.mjs"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",
@@ -97,6 +100,7 @@
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "wrangler": "^4.82.2"
   }
 }

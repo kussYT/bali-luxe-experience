@@ -52,8 +52,18 @@ export function parseCookies(header) {
   return out;
 }
 
-export function sessionCookieHeader(token) {
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+function cookieHeaderFromRequest(req) {
+  if (!req?.headers) return undefined;
+  if (typeof req.headers.get === "function") return req.headers.get("cookie") || undefined;
+  return req.headers.cookie;
+}
+
+export function sessionCookieHeader(token, request) {
+  const secure =
+    process.env.NODE_ENV === "production" ||
+    (request?.url && new URL(request.url).protocol === "https:")
+      ? "; Secure"
+      : "";
   return `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${MAX_AGE_SEC}${secure}`;
 }
 
@@ -62,7 +72,7 @@ export function clearSessionCookieHeader() {
 }
 
 export function getSessionFromRequest(req) {
-  const cookies = parseCookies(req.headers.cookie);
+  const cookies = parseCookies(cookieHeaderFromRequest(req));
   return cookies[COOKIE_NAME];
 }
 
