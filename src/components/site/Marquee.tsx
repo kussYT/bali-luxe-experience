@@ -1,10 +1,12 @@
 export function Marquee() {
-  const text = "Worldwide delivery — Crafted between Bali & France — Fall/Winter 2025 — New: The sunburn effect";
+  const text = "Slow-made between Bali & France — Complimentary shipping over €150 — Fall / Winter 2026";
   return (
-    <div className="bg-ink text-bone py-2.5 overflow-hidden border-b border-ink/20">
-      <div className="flex whitespace-nowrap animate-marquee text-eyebrow">
+    <div className="bg-secondary border-b border-border overflow-hidden py-2.5">
+      <div className="flex whitespace-nowrap animate-marquee">
         {Array.from({ length: 4 }).map((_, i) => (
-          <span key={i} className="px-8 shrink-0">{text}</span>
+          <span key={i} className="px-10 shrink-0 text-[0.625rem] font-medium tracking-[0.28em] uppercase text-foreground/85">
+            {text}
+          </span>
         ))}
       </div>
     </div>

@@ -1,10 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import { X } from "lucide-react";
-import { NAV_MAIN } from "@/lib/navigation";
+import type { NavLink } from "@/lib/navigation";
+import { MarketSelector } from "@/components/site/MarketSelector";
+
+type NavSection = { label: string; items: readonly NavLink[] };
 
 type NavMenuProps = {
   open: boolean;
   onClose: () => void;
+  sections: readonly NavSection[];
 };
 
 function NavLinkItem({
@@ -13,13 +17,7 @@ function NavLinkItem({
   search,
   hash,
   onClose,
-}: {
-  label: string;
-  to: string;
-  search?: Record<string, string>;
-  hash?: string;
-  onClose: () => void;
-}) {
+}: NavLink & { onClose: () => void }) {
   return (
     <li>
       <Link
@@ -35,7 +33,7 @@ function NavLinkItem({
   );
 }
 
-export function NavMenu({ open, onClose }: NavMenuProps) {
+export function NavMenu({ open, onClose, sections }: NavMenuProps) {
   if (!open) return null;
 
   return (
@@ -49,7 +47,12 @@ export function NavMenu({ open, onClose }: NavMenuProps) {
         </div>
 
         <nav className="p-6 space-y-10">
-          {NAV_MAIN.map((section) => (
+          <div className="space-y-3 pb-6 border-b border-border">
+            <p className="text-eyebrow text-muted-foreground">Ship to</p>
+            <MarketSelector variant="nav" />
+          </div>
+
+          {sections.map((section) => (
             <div key={section.label} className="space-y-4">
               <p className="text-eyebrow text-muted-foreground">{section.label}</p>
               <ul className="space-y-2.5">

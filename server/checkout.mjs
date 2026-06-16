@@ -1,0 +1,281 @@
+import { readCatalog } from "./catalog-store.mjs";
+import { availableForCheckout, getVariant } from "./warehouse-allocation.mjs";
+import {
+  createPendingOrder,
+  attachStripeSession,
+  findOrderBySessionId,
+  findOrderById,
+  markOrderPaid,
+} from "./orders-store.mjs";
+import { isDatabaseConfigured } from "./db/pool.mjs";
+import { buildOrderItemFromCartLine } from "./db/orders.mjs";
+import { getStripe, getSiteUrl } from "./stripe-client.mjs";
+import {
+  unitPrice,
+  toStripeAmount,
+  stripeCurrency,
+  SHIPPING_FLAT,
+} from "./pricing.mjs";
+import { sendOrderConfirmationEmail } from "./emails/order-emails.mjs";
+
+/** ISO codes for Stripe shipping_address_collection */
+export const SHIPPING_COUNTRY_CODES = [
+  "FR", "DE", "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "ES", "EE", "FI", "GR", "HU", "IE", "IT",
+  "LV", "LT", "LU", "MT", "MC", "NL", "PL", "PT", "RO", "SK", "SI", "SE", "GB", "US", "CA", "AU",
+  "NZ", "SG", "HK", "JP", "KR", "TW", "TH", "AE", "CH", "ID", "GP", "RE", "GF", "MQ", "YT", "BL",
+  "MF", "PM", "NC", "NO", "MX", "BR", "AR", "CL", "CO", "PE", "MY", "MA", "TR", "UA", "VN", "IN",
+];
+
+function absoluteImageUrl(siteUrl, path) {
+  if (!path) return undefined;
+  if (path.startsWith("http")) return path;
+  return `${siteUrl}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+function lineDisplayName(product, variant) {
+  if (variant?.title && variant.title !== "Default") {
+    return `${product.name} — ${variant.title}`;
+  }
+  return product.name;
+}
+
+export function validateCartItems(catalog, lineItems, countryCode) {
+  if (!Array.isArray(lineItems) || lineItems.length === 0) {
+    const err = new Error("Cart is empty");
+    err.status = 400;
+    throw err;
+  }
+
+  const resolved = [];
+  for (const line of lineItems) {
+    const slug = line?.slug;
+    const variantId = line?.variantId || null;
+    const qty = Number(line?.qty);
+    if (!slug || !Number.isFinite(qty) || qty < 1) {
+      const err = new Error("Invalid cart line");
+      err.status = 400;
+      throw err;
+    }
+
+    const product = catalog.products.find((p) => p.slug === slug);
+    if (!product || product.status !== "published") {
+      const err = new Error(`Product not available: ${slug}`);
+      err.status = 400;
+      throw err;
+    }
+
+    const variant = getVariant(product, variantId);
+    const stockCheck = availableForCheckout(product, countryCode, qty, variant?.id);
+    if (!stockCheck.ok) {
+      const label = lineDisplayName(product, variant);
+      const err = new Error(`Insufficient stock for ${label}`);
+      err.status = 409;
+      throw err;
+    }
+
+    if (isDatabaseConfigured()) {
+      if (!variant?.id) {
+        const err = new Error(`Product has no variant in database: ${slug}`);
+        err.status = 500;
+        throw err;
+      }
+      if (!stockCheck.warehouse) {
+        const err = new Error(`Could not determine fulfillment warehouse for ${slug}`);
+        err.status = 500;
+        throw err;
+      }
+    }
+
+    resolved.push({ product, variant, qty, fulfillmentWarehouse: stockCheck.warehouse });
+  }
+  return resolved;
+}
+
+function shippingCountryFromStripeSession(session) {
+  return (
+    session.shipping_details?.address?.country ||
+    session.customer_details?.address?.country ||
+    null
+  )?.toUpperCase() || null;
+}
+
+export async function createCheckoutSession({ items, currency, countryCode }) {
+  const allowed = ["EUR", "USD", "IDR"];
+  if (!allowed.includes(currency)) {
+    const err = new Error("Unsupported currency");
+    err.status = 400;
+    throw err;
+  }
+
+  const catalog = await readCatalog();
+  const resolved = validateCartItems(catalog, items, countryCode);
+  const siteUrl = getSiteUrl();
+  const stripe = getStripe();
+
+  const orderItems = resolved.map(({ product, variant, qty, fulfillmentWarehouse }) => {
+    const price = unitPrice(product, currency);
+    if (isDatabaseConfigured()) {
+      return buildOrderItemFromCartLine({
+        product,
+        variant,
+        qty,
+        fulfillmentWarehouse,
+        unitPriceAmount: price,
+      });
+    }
+    return {
+      slug: product.slug,
+      name: product.name,
+      variantTitle: variant?.title || "Default",
+      qty,
+      unitPrice: price,
+      image: product.image,
+      warehouseId: fulfillmentWarehouse,
+      variantId: variant?.id,
+    };
+  });
+
+  const order = await createPendingOrder({
+    items: orderItems,
+    currency,
+    countryCode: countryCode || null,
+  });
+
+  const line_items = resolved.map(({ product, variant, qty }) => {
+    const amount = unitPrice(product, currency);
+    const name = lineDisplayName(product, variant);
+    return {
+      quantity: qty,
+      price_data: {
+        currency: stripeCurrency(currency),
+        unit_amount: toStripeAmount(amount, currency),
+        product_data: {
+          name,
+          description: product.collection,
+          images: [absoluteImageUrl(siteUrl, product.image)].filter(Boolean),
+          metadata: {
+            slug: product.slug,
+            variantId: variant?.id || "",
+            variantTitle: variant?.title || "",
+          },
+        },
+      },
+    };
+  });
+
+  const shippingAmount = SHIPPING_FLAT[currency];
+  const session = await stripe.checkout.sessions.create({
+    mode: "payment",
+    line_items,
+    client_reference_id: order.id,
+    metadata: { orderId: order.id },
+    success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${siteUrl}/checkout/cancel`,
+    shipping_address_collection: {
+      allowed_countries: SHIPPING_COUNTRY_CODES,
+    },
+    shipping_options: [
+      {
+        shipping_rate_data: {
+          type: "fixed_amount",
+          fixed_amount: {
+            amount: toStripeAmount(shippingAmount, currency),
+            currency: stripeCurrency(currency),
+          },
+          display_name: "Standard shipping",
+          delivery_estimate: {
+            minimum: { unit: "business_day", value: 5 },
+            maximum: { unit: "business_day", value: 14 },
+          },
+        },
+      },
+    ],
+    automatic_tax: { enabled: false },
+    billing_address_collection: "required",
+    phone_number_collection: { enabled: true },
+  });
+
+  await attachStripeSession(order.id, session.id);
+
+  return { url: session.url, sessionId: session.id, orderId: order.id };
+}
+
+export async function fulfillPaidSession(stripeSession, stripeEventId = null) {
+  const orderId = stripeSession.metadata?.orderId || stripeSession.client_reference_id;
+  if (!orderId) throw new Error("Missing order id on Stripe session");
+
+  const existing = await findOrderById(orderId);
+  if (!existing) throw new Error(`Order not found: ${orderId}`);
+  if (existing.status === "paid") return existing;
+
+  const shippingCountryCode = shippingCountryFromStripeSession(stripeSession);
+
+  const paid = await markOrderPaid(orderId, {
+    stripeSessionId: stripeSession.id,
+    stripePaymentIntentId:
+      typeof stripeSession.payment_intent === "string"
+        ? stripeSession.payment_intent
+        : stripeSession.payment_intent?.id,
+    stripeEventId,
+    customerEmail: stripeSession.customer_details?.email || stripeSession.customer_email,
+    amountTotal: stripeSession.amount_total,
+    amountSubtotal: stripeSession.amount_subtotal,
+    amountShipping: stripeSession.total_details?.amount_shipping ?? null,
+    currency: stripeSession.currency?.toUpperCase(),
+    shippingCountryCode,
+  });
+
+  sendOrderConfirmationEmail(paid).catch((e) => {
+    console.error("[email] order confirmation failed:", e.message);
+  });
+
+  return paid;
+}
+
+export async function handleStripeWebhook(rawBody, signature) {
+  const secret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
+  if (!secret) {
+    const err = new Error("STRIPE_WEBHOOK_SECRET is not configured");
+    err.status = 500;
+    throw err;
+  }
+
+  const stripe = getStripe();
+  const event = stripe.webhooks.constructEvent(rawBody, signature, secret);
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+    const orderId = session.metadata?.orderId || session.client_reference_id;
+    if (!orderId) {
+      // Session not created by this app (e.g. `stripe trigger` fixtures) — ack and skip
+      return { received: true, type: event.type, ignored: "no order id on session" };
+    }
+    if (session.payment_status === "paid") {
+      await fulfillPaidSession(session, event.id);
+    }
+  }
+
+  return { received: true, type: event.type };
+}
+
+export async function getCheckoutSessionStatus(sessionId) {
+  if (!sessionId) {
+    const err = new Error("session_id required");
+    err.status = 400;
+    throw err;
+  }
+  const stripe = getStripe();
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  const order = await findOrderBySessionId(sessionId);
+
+  if (session.payment_status === "paid" && order?.status !== "paid") {
+    await fulfillPaidSession(session);
+  }
+
+  const updated = await findOrderBySessionId(sessionId);
+  return {
+    status: session.payment_status,
+    customerEmail: session.customer_details?.email,
+    order: updated,
+  };
+}

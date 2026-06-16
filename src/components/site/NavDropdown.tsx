@@ -44,7 +44,7 @@ export function NavDropdown({ label, items, onNavigate, className = "" }: NavDro
     >
       <button
         type="button"
-        className="text-sm py-2 link-underline"
+        className="text-[0.6875rem] font-medium tracking-[0.22em] uppercase py-2 link-underline text-foreground/80 hover:text-foreground transition-colors duration-[450ms]"
         aria-expanded={open}
         aria-haspopup="true"
         aria-controls={menuId}
@@ -58,7 +58,7 @@ export function NavDropdown({ label, items, onNavigate, className = "" }: NavDro
           <ul
             id={menuId}
             role="menu"
-            className="bg-popover border border-border shadow-xl py-2 animate-fade-in"
+            className="bg-surface border border-border shadow-[0_24px_48px_-16px_rgba(28,26,23,0.12)] py-2 animate-fade-in"
           >
             {items.map((item) => (
               <li key={`${item.label}-${item.to}`} role="none">

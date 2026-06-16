@@ -1,136 +1,133 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Menu } from "lucide-react";
+import { Menu, Search, ShoppingBag } from "lucide-react";
 import { useCart } from "@/lib/cart";
-import { useCurrency, COUNTRIES } from "@/lib/currency";
-import { NAV_MAIN } from "@/lib/navigation";
+import { useCatalog } from "@/lib/catalog-context";
+import { buildNavMain } from "@/lib/navigation";
 import { NavMenu } from "@/components/site/NavMenu";
 import { NavDropdown } from "@/components/site/NavDropdown";
 import { SearchDrawer } from "@/components/site/SearchDrawer";
+import { MarketSelector } from "@/components/site/MarketSelector";
 
-const textLink =
-  "text-sm py-2 link-underline whitespace-nowrap hover:text-ink text-foreground/90 transition-colors";
+const navLink =
+  "text-[0.6875rem] font-medium tracking-[0.22em] uppercase py-2 link-underline text-foreground/80 hover:text-foreground transition-colors duration-[450ms]";
+
+const iconBtn =
+  "flex items-center justify-center size-9 text-foreground/80 hover:text-foreground transition-colors md:hidden";
 
 export function Header() {
   const { count, setOpen } = useCart();
-  const { country, setCountry } = useCurrency();
+  const { collections } = useCatalog();
+  const navMain = buildNavMain(collections);
   const [navOpen, setNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [geo, setGeo] = useState(false);
 
   const closePanels = () => {
     setNavOpen(false);
     setSearchOpen(false);
   };
 
-  const openSearch = () => {
-    closePanels();
-    setSearchOpen(true);
-  };
-
-  const openCart = () => {
-    closePanels();
-    setOpen(true);
-  };
-
   return (
     <>
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/60">
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center px-5 md:px-10 h-16 md:h-20 gap-4">
-          {/* Left — mobile burger + desktop main nav */}
-          <div className="flex items-center gap-4 md:gap-7 min-w-0">
+      <header className="sticky top-0 z-40 bg-surface/85 backdrop-blur-[12px] border-b border-border/80 relative">
+        <div className="page-wrap section-pad grid grid-cols-[1fr_auto_1fr] items-center h-[4.25rem] md:h-[5.25rem] gap-2 md:gap-4">
+          <div className="flex items-center gap-2 md:gap-10 min-w-0">
             <button
               type="button"
               onClick={() => {
                 setSearchOpen(false);
                 setNavOpen(true);
               }}
-              className="md:hidden flex items-center gap-2"
+              className="md:hidden flex items-center justify-center size-9 text-foreground/80"
               aria-label="Open menu"
             >
-              <Menu className="size-5 shrink-0" />
+              <Menu className="size-[1.125rem] stroke-[1.15]" />
             </button>
 
-            <nav className="hidden md:flex items-center gap-6 lg:gap-8" aria-label="Main">
-              {NAV_MAIN.map((section) => (
+            <nav className="hidden md:flex items-center gap-7 lg:gap-9" aria-label="Main">
+              {navMain.map((section) => (
                 <NavDropdown key={section.label} label={section.label} items={[...section.items]} />
               ))}
             </nav>
           </div>
 
-          {/* Center — logo */}
           <Link
             to="/"
             aria-label="Bingin Diaries"
-            className="flex items-center justify-center font-display text-sm md:text-base tracking-[0.08em] uppercase shrink-0"
+            className="flex flex-col items-center shrink-0 text-center min-w-0 max-w-[9.5rem] sm:max-w-none"
           >
-            Bingin Diaries
+            <span className="font-display text-[1.1rem] sm:text-[1.35rem] md:text-[1.65rem] tracking-[0.04em] leading-none truncate">
+              Bingin Diaries
+            </span>
           </Link>
 
-          {/* Right — text actions */}
-          <div className="flex items-center justify-end gap-3 sm:gap-4 md:gap-5 text-sm min-w-0">
-            <button
-              type="button"
-              onClick={() => setGeo((v) => !v)}
-              className={`hidden lg:inline ${textLink}`}
-            >
-              {country.code} / {country.currency}
-            </button>
-
-            <Link to="/account" className={`hidden sm:inline ${textLink}`}>
+          <div className="flex items-center justify-end gap-1.5 sm:gap-3 md:gap-7 min-w-0">
+            <div className="hidden md:block">
+              <MarketSelector variant="header" />
+            </div>
+            <Link to="/account" className={`hidden sm:inline-block ${navLink}`}>
               Account
             </Link>
-
-            <Link
-              to="/account"
-              search={{ tab: "wishlist" } as never}
-              className={`hidden md:inline ${textLink}`}
-            >
+            <Link to="/account" search={{ tab: "wishlist" } as never} className={`hidden lg:inline-block ${navLink}`}>
               Wishlist
             </Link>
-
-            <button type="button" onClick={openSearch} className={textLink}>
+            <button
+              type="button"
+              onClick={() => {
+                closePanels();
+                setSearchOpen(true);
+              }}
+              className={`${navLink} hidden md:inline-block`}
+            >
               Search
             </button>
-
-            <button type="button" onClick={openCart} className={`relative ${textLink}`}>
-              Cart
+            <button
+              type="button"
+              onClick={() => {
+                closePanels();
+                setSearchOpen(true);
+              }}
+              className={iconBtn}
+              aria-label="Search"
+            >
+              <Search className="size-[1.125rem] stroke-[1.15]" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                closePanels();
+                setOpen(true);
+              }}
+              className={`relative hidden md:inline-block ${navLink}`}
+            >
+              Bag
               {count > 0 && (
-                <span className="absolute -top-2 -right-3 bg-ink text-bone text-[10px] rounded-full min-w-4 h-4 px-1 flex items-center justify-center font-mono">
+                <span className="absolute -top-1 -right-2.5 min-w-[1rem] h-4 px-1 flex items-center justify-center bg-accent text-surface text-[8px] tracking-[0.15em] rounded-sm">
+                  {count}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                closePanels();
+                setOpen(true);
+              }}
+              className={`relative ${iconBtn}`}
+              aria-label={`Bag${count > 0 ? `, ${count} items` : ""}`}
+            >
+              <ShoppingBag className="size-[1.125rem] stroke-[1.15]" />
+              {count > 0 && (
+                <span className="absolute top-0.5 right-0.5 min-w-[0.875rem] h-3.5 px-0.5 flex items-center justify-center bg-accent text-surface text-[7px] tracking-[0.1em] rounded-sm">
                   {count}
                 </span>
               )}
             </button>
           </div>
         </div>
-
-        {geo && (
-          <div className="absolute right-5 md:right-10 top-full mt-2 bg-popover border border-border shadow-2xl p-5 w-72 animate-fade-in z-50">
-            <p className="text-eyebrow text-muted-foreground mb-3">Ship to</p>
-            <ul className="space-y-1.5">
-              {COUNTRIES.map((c) => (
-                <li key={c.code}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCountry(c);
-                      setGeo(false);
-                    }}
-                    className={`w-full flex items-center justify-between text-sm py-1.5 px-2 hover:bg-muted transition ${country.code === c.code ? "bg-muted" : ""}`}
-                  >
-                    <span>
-                      {c.flag} {c.name}
-                    </span>
-                    <span className="font-mono text-xs text-muted-foreground">{c.currency}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </header>
 
-      <NavMenu open={navOpen} onClose={() => setNavOpen(false)} />
+      <NavMenu open={navOpen} onClose={() => setNavOpen(false)} sections={navMain} />
       <SearchDrawer open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );

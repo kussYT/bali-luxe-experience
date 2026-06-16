@@ -1,7 +1,12 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "tanstack-start-app",
+  "name": "bingin-diaries",
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
   "main": "@tanstack/react-start/server-entry",
+  "observability": {
+    "enabled": true
+  },
+  // Uncomment after creating the bucket: wrangler r2 bucket create bingin-diaries-uploads
+  // "r2_buckets": [{ "binding": "UPLOADS", "bucket_name": "bingin-diaries-uploads" }]
 }

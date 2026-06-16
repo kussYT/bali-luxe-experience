@@ -1,48 +1,137 @@
 import { Link } from "@tanstack/react-router";
-import { Instagram } from "lucide-react";
+
+import { NewsletterForm } from "@/components/site/NewsletterForm";
+
+import { MarketSelector } from "@/components/site/MarketSelector";
+
+import { CookiePreferencesLink } from "@/components/site/CookieConsent";
+
+
 
 export function Footer() {
+
   return (
-    <footer className="bg-ink text-bone mt-32">
-      <div className="px-5 md:px-10 py-20 grid md:grid-cols-4 gap-12">
-        <div className="md:col-span-2">
-          <p className="text-eyebrow opacity-60">Bingin Club</p>
-          <h2 className="font-display text-3xl md:text-5xl mt-3 mb-6 leading-tight">
-            Diaries from<br />Bali & France.
-          </h2>
-          <form className="flex border-b border-bone/40 pb-2 max-w-md" onSubmit={(e) => e.preventDefault()}>
-            <input
-              type="email"
-              placeholder="Your email address"
-              className="bg-transparent flex-1 outline-none text-sm placeholder:text-bone/50"
-            />
-            <button type="submit" className="text-eyebrow link-underline">Subscribe</button>
-          </form>
+
+    <footer className="mt-20 md:mt-28 bg-foreground text-surface">
+
+      <div className="page-wrap section-pad section-gap grid md:grid-cols-12 gap-12 md:gap-10">
+
+        <div className="md:col-span-5">
+
+          <NewsletterForm source="footer" variant="footer" />
+
         </div>
-        <div className="text-sm space-y-3">
-          <p className="text-eyebrow opacity-60 mb-4">Shop</p>
-          <Link to="/collection" className="block link-underline">All hats</Link>
-          <Link to="/collection" className="block link-underline">Sunburn</Link>
-          <Link to="/collection" className="block link-underline">Endless Summer</Link>
-          <Link to="/account" className="block link-underline">Wishlist</Link>
+
+        <div className="md:col-span-3 md:col-start-7 text-sm space-y-3">
+
+          <p className="text-eyebrow !text-surface/50 mb-5">Shop</p>
+
+          <Link to="/collection" className="block link-underline text-surface/85 hover:text-surface">
+
+            All pieces
+
+          </Link>
+
+          <Link
+
+            to="/collection"
+
+            search={{ sale: "true" } as never}
+
+            className="block link-underline text-surface/85 hover:text-surface"
+
+          >
+
+            Sale
+
+          </Link>
+
+          <Link to="/account" className="block link-underline text-surface/85 hover:text-surface">
+
+            Wishlist
+
+          </Link>
+
         </div>
-        <div className="text-sm space-y-3">
-          <p className="text-eyebrow opacity-60 mb-4">House</p>
-          <Link to="/about" className="block link-underline">Atelier</Link>
-          <Link to="/contact" className="block link-underline">Contact</Link>
-          <a className="block link-underline" href="#">Shipping & returns</a>
-          <a className="block link-underline" href="#">Return portal</a>
-          <a className="block link-underline" href="#">Care guide</a>
-          <a className="block link-underline" href="#">Size guide</a>
+
+        <div className="md:col-span-3 text-sm space-y-3">
+
+          <p className="text-eyebrow !text-surface/50 mb-5">House</p>
+
+          <Link to="/about" className="block link-underline text-surface/85 hover:text-surface">
+
+            Atelier
+
+          </Link>
+
+          <Link to="/find-us" className="block link-underline text-surface/85 hover:text-surface">
+
+            Find us
+
+          </Link>
+
+          <Link to="/shipping" className="block link-underline text-surface/85 hover:text-surface">
+
+            Shipping
+
+          </Link>
+
+          <Link to="/returns" className="block link-underline text-surface/85 hover:text-surface">
+
+            Returns
+
+          </Link>
+
+          <Link to="/contact" className="block link-underline text-surface/85 hover:text-surface">
+
+            Contact
+
+          </Link>
+
+          <div className="pt-2">
+
+            <MarketSelector variant="footer" />
+
+          </div>
+
         </div>
+
       </div>
 
-        <div className="px-5 md:px-10 py-6 border-t border-bone/15 flex flex-col md:flex-row items-center justify-between gap-4">
-        <p className="text-eyebrow opacity-60">© 2026 Bingin Diaries — Canggu / Paris</p>
-        <a href="https://instagram.com" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-eyebrow link-underline">
-          <Instagram className="size-4" /> @bingindiaries
-        </a>
+
+
+      <div className="page-wrap section-pad py-8 border-t border-surface/10 flex flex-col md:flex-row items-center justify-between gap-4">
+
+        <p className="text-eyebrow !text-surface/45">© 2026 Bingin Diaries</p>
+
+        <div className="flex flex-wrap items-center justify-center gap-6">
+
+          <CookiePreferencesLink />
+
+          <a
+
+            href="https://www.instagram.com/bingindiaries/"
+
+            target="_blank"
+
+            rel="noreferrer"
+
+            className="text-eyebrow !text-surface/70 link-underline hover:!text-surface"
+
+          >
+
+            @bingindiaries
+
+          </a>
+
+        </div>
+
       </div>
+
     </footer>
+
   );
+
 }
+
+

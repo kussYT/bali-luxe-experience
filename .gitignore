@@ -15,6 +15,15 @@ dist-ssr
 .tanstack/**
 .nitro
 *.local
+.env
+.env.local
+.env.*.local
+
+# Newsletter subscribers (local dev storage)
+data/newsletter-subscribers.jsonl
+
+# Orders (local dev storage)
+data/orders.json
 
 # Wrangler / Cloudflare
 .wrangler/
