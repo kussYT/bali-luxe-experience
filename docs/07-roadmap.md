@@ -63,28 +63,34 @@
 
 ---
 
-## S4 — Emails & ops experience 🚧
+## S4 — Emails & ops experience ✅
 
 | Deliverable | Status |
 |-------------|--------|
 | Order confirmation email (on payment) | ✅ |
 | Shipped email (admin action) | ✅ |
-| Contact form → email (`POST /api/contact`) | ✅ |
-| Order CSV export (`/api/admin/orders/export.csv`) | ✅ |
-| `shipped` order status + `shipped_at` (`003_order_shipped.sql`) | ✅ |
-| Newsletter Brevo in prod (`NEWSLETTER_PROVIDER=brevo`) | ✅ (existing) |
-| Resend transactional emails (`RESEND_API_KEY`) | ✅ |
+| Contact form → email | ✅ |
+| Order CSV export | ✅ |
+| Resend transactional emails | ✅ |
+| Newsletter Brevo (`NEWSLETTER_PROVIDER=brevo`) | ✅ |
 
 **Setup:** [sprint-s4-emails.md](./sprint-s4-emails.md)
 
 ---
 
-## S5 — Deployment & cutover
+## S5 — Deployment & cutover 🚧
 
-- API on Cloudflare Worker
-- DNS `bingindiaries.com`
-- SEO 301 Shopify → new site
-- Webhook / error monitoring
+| Deliverable | Status |
+|-------------|--------|
+| API on Cloudflare Worker (`src/routes/api/$.ts`) | ✅ |
+| Shared `server/api-router.mjs` (dev + prod) | ✅ |
+| `npm run deploy` / `preview:cf` | ✅ |
+| R2 uploads (optional binding) | ✅ |
+| DNS `bingindiaries.com` | ⏳ manual |
+| Stripe production webhook | ⏳ manual |
+| SEO 301 Shopify → new site | ⏳ manual |
+
+**Guide:** [sprint-s5-deployment.md](./sprint-s5-deployment.md)
 
 ---
 
@@ -103,7 +109,7 @@
 | Admin product CRUD → Postgres | ✅ |
 | Per-variant cart + checkout | ✅ |
 | Orders in `orders.json` (fallback without DATABASE_URL) | JSON legacy |
-| `/api/*` only in Vite middleware | S5 |
+| `/api/*` only in Vite middleware | ✅ (shared api-router on Worker) |
 | No Stripe Tax / auto VAT | S4+ |
 | Production Stripe webhook (Dashboard, not CLI) | S5 |
 
