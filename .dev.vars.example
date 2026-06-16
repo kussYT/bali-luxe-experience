@@ -1,0 +1,10 @@
+# Copy to .dev.vars for `wrangler dev` (never commit real values)
+DATABASE_URL=
+ADMIN_PASSWORD=
+ADMIN_SECRET=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+SITE_URL=http://localhost:8787
+RESEND_API_KEY=
+EMAIL_FROM=
+EMAIL_OPS=
