@@ -1,15 +1,30 @@
-import { useState, type FormEvent } from "react";
-import { isValidEmailInput, subscribeNewsletter } from "@/lib/newsletter";
+import { useEffect, useState, type FormEvent } from "react";
+import { fetchNewsletterCopy, isValidEmailInput, subscribeNewsletter, type NewsletterCopy } from "@/lib/newsletter";
 
 type NewsletterFormProps = {
   source?: string;
   variant?: "footer" | "section";
 };
 
+const FALLBACK_COPY: NewsletterCopy = {
+  eyebrow: "Newsletter",
+  title: "Join the diary",
+  description: "Receive notes from Bali, new drops and summer stories.",
+  placeholder: "Your email",
+  button: "Subscribe",
+  successMessage: "Welcome to the diary. Check your inbox soon.",
+  duplicateMessage: "You're already on the list — thank you for staying close.",
+};
+
 export function NewsletterForm({ source = "website", variant = "footer" }: NewsletterFormProps) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [copy, setCopy] = useState<NewsletterCopy>(FALLBACK_COPY);
+
+  useEffect(() => {
+    fetchNewsletterCopy().then(setCopy).catch(() => {});
+  }, []);
 
   const isSection = variant === "section";
 
@@ -32,11 +47,7 @@ export function NewsletterForm({ source = "website", variant = "footer" }: Newsl
     }
 
     setStatus("success");
-    setMessage(
-      result.duplicate
-        ? "You're already on the list — thank you for staying close."
-        : "Welcome to the diary. Check your inbox soon.",
-    );
+    setMessage(result.duplicate ? copy.duplicateMessage : copy.successMessage);
     setEmail("");
   }
 
@@ -44,19 +55,18 @@ export function NewsletterForm({ source = "website", variant = "footer" }: Newsl
     return (
       <div className="page-wrap section-pad py-20 md:py-28 border-t border-border">
         <div className="max-w-2xl mx-auto text-center">
-          <p className="text-eyebrow">Newsletter</p>
+          <p className="text-eyebrow">{copy.eyebrow}</p>
           <h2 className="font-display text-4xl md:text-5xl lg:text-6xl mt-4 leading-[1.05]">
-            Join the diary
+            {copy.title}
           </h2>
-          <p className="text-caption mt-5 max-w-md mx-auto">
-            Receive notes from Bali, new drops and summer stories.
-          </p>
+          <p className="text-caption mt-5 max-w-md mx-auto">{copy.description}</p>
           <NewsletterFields
             email={email}
             setEmail={setEmail}
             status={status}
             message={message}
             onSubmit={handleSubmit}
+            copy={copy}
             className="mt-10"
             inputClass="text-center"
           />
@@ -67,19 +77,18 @@ export function NewsletterForm({ source = "website", variant = "footer" }: Newsl
 
   return (
     <div>
-      <p className="text-eyebrow !text-surface/50">Newsletter</p>
+      <p className="text-eyebrow !text-surface/50">{copy.eyebrow}</p>
       <h2 className="font-display text-4xl md:text-5xl mt-4 mb-8 leading-[1.05] max-w-md">
-        Join the diary
+        {copy.title}
       </h2>
-      <p className="text-sm text-surface/60 font-light mb-6 max-w-md">
-        Receive notes from Bali, new drops and summer stories.
-      </p>
+      <p className="text-sm text-surface/60 font-light mb-6 max-w-md">{copy.description}</p>
       <NewsletterFields
         email={email}
         setEmail={setEmail}
         status={status}
         message={message}
         onSubmit={handleSubmit}
+        copy={copy}
         dark
       />
     </div>
@@ -92,6 +101,7 @@ function NewsletterFields({
   status,
   message,
   onSubmit,
+  copy,
   className = "",
   inputClass = "",
   dark = false,
@@ -101,6 +111,7 @@ function NewsletterFields({
   status: "idle" | "loading" | "success" | "error";
   message: string;
   onSubmit: (e: FormEvent) => void;
+  copy: NewsletterCopy;
   className?: string;
   inputClass?: string;
   dark?: boolean;
@@ -123,7 +134,7 @@ function NewsletterFields({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={status === "loading"}
-          placeholder="Your email"
+          placeholder={copy.placeholder}
           aria-invalid={status === "error"}
           aria-describedby={message ? "newsletter-status" : undefined}
           className={`bg-transparent w-full outline-none text-sm font-light disabled:opacity-50 ${text} ${inputClass}`}
@@ -143,7 +154,7 @@ function NewsletterFields({
         disabled={status === "loading"}
         className={`text-eyebrow link-underline shrink-0 disabled:opacity-50 ${btn}`}
       >
-        {status === "loading" ? "Sending…" : "Subscribe"}
+        {status === "loading" ? "Sending…" : copy.button}
       </button>
     </form>
   );

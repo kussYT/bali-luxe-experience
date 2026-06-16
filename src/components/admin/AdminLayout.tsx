@@ -9,6 +9,7 @@ const links = [
   { to: "/admin/products", label: "Products" },
   { to: "/admin/inventory", label: "Inventory" },
   { to: "/admin/orders", label: "Orders" },
+  { to: "/admin/newsletter", label: "Newsletter" },
 ] as const;
 
 function AdminNav({

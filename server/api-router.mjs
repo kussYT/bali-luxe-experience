@@ -27,7 +27,15 @@ import {
   getAdminOrderResponse,
   shipAdminOrder,
   getAdminOrdersCsv,
+  postMarketplaceOrder,
 } from "./api/orders.mjs";
+import { getAdminAnalyticsResponse } from "./api/analytics.mjs";
+import {
+  getNewsletterCopyResponse,
+  getAdminNewsletterResponse,
+  patchAdminNewsletter,
+  getAdminNewsletterExportCsv,
+} from "./api/newsletter-admin.mjs";
 import { postContactMessage } from "./api/contact.mjs";
 import {
   createAdminProduct,
@@ -151,6 +159,11 @@ export async function handleApiRequest(request, context = {}) {
       return jsonResponse(200, result);
     }
 
+    if (pathname === "/api/newsletter/copy" && method === "GET") {
+      const result = await getNewsletterCopyResponse();
+      return jsonResponse(200, result);
+    }
+
     if (pathname === "/api/contact" && method === "POST") {
       const body = await readJsonBody(request);
       const result = await postContactMessage(body);
@@ -197,9 +210,43 @@ export async function handleApiRequest(request, context = {}) {
       return jsonResponse(200, result);
     }
 
+    if (pathname === "/api/admin/analytics" && method === "GET") {
+      const analytics = await getAdminAnalyticsResponse();
+      return jsonResponse(200, analytics);
+    }
+
+    if (pathname === "/api/admin/newsletter" && method === "GET") {
+      const newsletter = await getAdminNewsletterResponse();
+      return jsonResponse(200, newsletter);
+    }
+
+    if (pathname === "/api/admin/newsletter" && method === "PATCH") {
+      const body = await readJsonBody(request);
+      const result = await patchAdminNewsletter(body);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/newsletter/export.csv" && method === "GET") {
+      const csv = await getAdminNewsletterExportCsv();
+      return new Response(csv, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": 'attachment; filename="bingin-newsletter-subscribers.csv"',
+        },
+      });
+    }
+
     if (pathname === "/api/admin/orders" && method === "GET") {
-      const orders = await getAdminOrdersResponse();
+      const channel = url.searchParams.get("channel") || undefined;
+      const orders = await getAdminOrdersResponse({ channel });
       return jsonResponse(200, orders);
+    }
+
+    if (pathname === "/api/admin/orders/marketplace" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await postMarketplaceOrder(body);
+      return jsonResponse(201, result);
     }
 
     if (pathname === "/api/admin/orders/export.csv" && method === "GET") {

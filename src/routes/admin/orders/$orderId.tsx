@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { fetchAdminOrder, shipAdminOrder, type AdminOrder } from "@/lib/admin-api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ChannelBadge } from "@/components/admin/ChannelBadge";
 
 export const Route = createFileRoute("/admin/orders/$orderId")({
   head: () => ({ meta: [{ title: "Order detail — Bingin Diaries Admin" }] }),
@@ -72,6 +73,9 @@ function AdminOrderDetailPage() {
             <CardTitle className="text-sm font-normal text-muted-foreground">Status</CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="flex items-center gap-2 mb-2">
+              <ChannelBadge channel={order.channel || "website"} />
+            </div>
             <p className="font-display text-2xl capitalize">{order.status}</p>
             {order.paidAt && (
               <p className="text-xs text-muted-foreground mt-1">
@@ -107,6 +111,16 @@ function AdminOrderDetailPage() {
               <span className="text-muted-foreground">Warehouse:</span>{" "}
               {warehouseLabel(order.fulfillmentWarehouse)}
             </p>
+            {order.externalRef && (
+              <p>
+                <span className="text-muted-foreground">Réf. externe:</span> {order.externalRef}
+              </p>
+            )}
+            {order.notes && (
+              <p>
+                <span className="text-muted-foreground">Notes:</span> {order.notes}
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -134,15 +148,17 @@ function AdminOrderDetailPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-display text-xl">Stripe</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm space-y-1 font-mono text-xs break-all">
-          <p>Session: {order.stripeSessionId || "—"}</p>
-          <p>Email: {order.customerEmail || "—"}</p>
-        </CardContent>
-      </Card>
+      {order.channel === "website" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display text-xl">Stripe</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm space-y-1 font-mono text-xs break-all">
+            <p>Session: {order.stripeSessionId || "—"}</p>
+            <p>Email: {order.customerEmail || "—"}</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

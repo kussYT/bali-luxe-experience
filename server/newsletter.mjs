@@ -1,8 +1,9 @@
 import { appendSubscriber, hasSubscriber, isValidEmail } from "./newsletter-store.mjs";
+import { getNewsletterSettings } from "./db/settings-store.mjs";
 
 /**
  * Subscribe via configured ESP or local JSONL fallback.
- * Env: NEWSLETTER_PROVIDER=brevo|mailchimp|klaviyo|local (default local)
+ * Provider/list ID: admin settings with env fallback.
  */
 export async function subscribeNewsletter({ email, source }) {
   const normalized = email.trim().toLowerCase();
@@ -16,10 +17,11 @@ export async function subscribeNewsletter({ email, source }) {
     return { ok: true, duplicate: true, provider: "local" };
   }
 
-  const provider = (process.env.NEWSLETTER_PROVIDER || "local").toLowerCase();
+  const settings = await getNewsletterSettings();
+  const provider = (settings.provider || "local").toLowerCase();
 
   if (provider === "brevo") {
-    await subscribeBrevo(normalized, source);
+    await subscribeBrevo(normalized, source, settings.brevoListId);
     await appendSubscriber({ email: normalized, source });
     return { ok: true, provider: "brevo" };
   }
@@ -40,10 +42,10 @@ export async function subscribeNewsletter({ email, source }) {
   return { ok: true, provider: "local" };
 }
 
-async function subscribeBrevo(email, source) {
+async function subscribeBrevo(email, source, listIdFromSettings) {
   const apiKey = process.env.BREVO_API_KEY;
-  const listId = process.env.BREVO_LIST_ID;
-  if (!apiKey || !listId) throw missingEnv("BREVO_API_KEY", "BREVO_LIST_ID");
+  const listId = listIdFromSettings || process.env.BREVO_LIST_ID;
+  if (!apiKey || !listId) throw missingEnv("BREVO_API_KEY", "BREVO_LIST_ID or admin brevoListId");
 
   const res = await fetch("https://api.brevo.com/v3/contacts", {
     method: "POST",
