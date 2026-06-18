@@ -78,6 +78,21 @@
 
 ---
 
+## S7 — Admin analytics & multi-channel ✅
+
+| Deliverable | Status |
+|-------------|--------|
+| Dashboard charts (sales, channels, countries, stock) | ✅ |
+| World map — orders by shipping country | ✅ |
+| `GET /api/admin/analytics` | ✅ |
+| Admin `/admin/newsletter` (settings + subscribers) | ✅ |
+| Public newsletter copy via `/api/newsletter/copy` | ✅ |
+| Multi-channel orders (`website`, `wolf_badger`, `other`) | ✅ |
+| Manual marketplace order entry (W&B) | ✅ |
+| Migration `004_admin_analytics_multichannel.sql` | ✅ |
+
+---
+
 ## S5 — Deployment & cutover 🚧
 
 | Deliverable | Status |
@@ -86,7 +101,8 @@
 | Shared `server/api-router.mjs` (dev + prod) | ✅ |
 | `npm run deploy` / `preview:cf` | ✅ |
 | R2 uploads (optional binding) | ✅ |
-| DNS `bingindiaries.com` | ⏳ manual |
+| Staging on `*.workers.dev` | ⏳ manual |
+| DNS `bingindiaries.com` | ⏳ manual (go-live only) |
 | Stripe production webhook | ⏳ manual |
 | SEO 301 Shopify → new site | ⏳ manual |
 

@@ -40,9 +40,12 @@
 
 | Milestone | Status |
 |-----------|--------|
-| S1 — Postgres schema + catalog API | ✅ Shipped (validate) |
-| S2 — France/Bali inventory admin + allocation | 🔜 |
-| S3 — Orders + Stripe production | 🔜 |
-| S4 — Emails + production deploy | 🔜 |
+| S1 — Postgres schema + catalog API | ✅ |
+| S2 — France/Bali inventory admin + allocation | ✅ |
+| S3 — Orders + Stripe checkout | ✅ |
+| S4 — Emails (Resend) + ops (CSV, shipped) | ✅ |
+| S7 — Admin analytics, newsletter, multi-canal (W&B) | ✅ |
+| S5 — Cloudflare deploy + DNS cutover | 🚧 en cours |
+| S6 — Customer accounts | Optional |
 
 See [07-roadmap.md](./07-roadmap.md).

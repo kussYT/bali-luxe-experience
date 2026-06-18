@@ -27,6 +27,21 @@ Local dev still uses Vite middleware (`vite.admin-api.mjs`) which calls the same
 
 ---
 
+## Staging first (recommended)
+
+Deploy to the default `*.workers.dev` URL **before** attaching `bingindiaries.com`. The Shopify site stays live until DNS cutover.
+
+1. `npx wrangler login`
+2. Set secrets (see below) with `SITE_URL` = your `workers.dev` URL after first deploy
+3. `npm run deploy`
+4. Stripe **test** webhook → `https://bingin-diaries.<account>.workers.dev/api/stripe/webhook`
+5. Validate admin, checkout, emails on staging
+6. Only then attach custom domain for go-live
+
+Optional: add `staging.bingindiaries.com` in Cloudflare without changing root DNS.
+
+---
+
 ## First deploy
 
 ```bash
@@ -34,7 +49,7 @@ npm install
 npm run build
 npx wrangler login
 npm run deploy:secrets   # lists secret put commands
-# Paste each production value:
+# Paste each value when prompted:
 npx wrangler secret put DATABASE_URL
 npx wrangler secret put ADMIN_PASSWORD
 # ... etc.
