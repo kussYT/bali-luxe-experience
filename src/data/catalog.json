@@ -1,65 +1,214 @@
 {
-  "generatedAt": "2026-05-19T09:42:46.777Z",
+  "generatedAt": "2026-06-18T07:59:17.735Z",
   "store": "https://bingindiaries.com",
-  "productCount": 53,
+  "productCount": 45,
   "collections": [
     {
       "slug": "90s-fisher",
-      "name": "90's Fisherman",
-      "season": ""
+      "name": "90's Fisherman Hat",
+      "season": "",
+      "description": "Meet the 90's Fisherman Hat ! Bring back the coolness of the 90’s fisherman hat and meet our bestseller. It’s a downward-sloping brim hat with a twist of cotton strings on each side. Find this beautiful sun hat in 6 different colours and 1 print. A perfect timeless summer hat.",
+      "sortOrder": 0
     },
     {
-      "slug": "casquette",
-      "name": "Casquette",
-      "season": ""
+      "slug": "best-sellers",
+      "name": "Bestsellers",
+      "season": "",
+      "description": "SHOP OUR ICONIC HATS",
+      "sortOrder": 1
+    },
+    {
+      "slug": "boater",
+      "name": "BOATER",
+      "season": "",
+      "description": "",
+      "sortOrder": 2
+    },
+    {
+      "slug": "galore-capsule-collection",
+      "name": "Galore Capsule Collection",
+      "season": "",
+      "description": "",
+      "sortOrder": 3
+    },
+    {
+      "slug": "new-collection-2023",
+      "name": "Heat Wave",
+      "season": "",
+      "description": "SHOP OUR HEAT WAVE COLLECTION TO STAY COOL INSPIRED BY SUN AND WANDERLUST AND FREEDOM",
+      "sortOrder": 4
+    },
+    {
+      "slug": "juicy-record",
+      "name": "Juicy Records",
+      "season": "",
+      "description": "",
+      "sortOrder": 5
+    },
+    {
+      "slug": "mi-paradisio-collection",
+      "name": "Mi Paradisio",
+      "season": "",
+      "description": "Summer 2026 esentials",
+      "sortOrder": 6
+    },
+    {
+      "slug": "archives",
+      "name": "Outlet",
+      "season": "",
+      "description": "SHOP OUR TIMELESS SHAPES POCKET FRIENDLY",
+      "sortOrder": 7
+    },
+    {
+      "slug": "paille",
+      "name": "Paille",
+      "season": "",
+      "description": "SHOP PAILLE A CUTTING-EDGE HAT COLLECTION CRAFTED FROM SUSTAINABLE BANANA FIBERS - EACH PIECE ADORNED WITH UNIQUE DESIGNS INSPIRED BY THE SUN AND CAPTIVATING ROUND PATTERNS",
+      "sortOrder": 8
+    },
+    {
+      "slug": "retro-safari",
+      "name": "Retro Safari",
+      "season": "",
+      "description": "SHOP OUR RETRO SAFARI COLLECTION WITH A CAPTIVATING BLEND OF VINTAGE AESTHETICS AND ADVENTUROUS SPIRIT, PERFECT FOR THE MODERN EXPLORER WITH A TASTE OF NOSTALGIA",
+      "sortOrder": 9
     },
     {
       "slug": "the-rimba",
-      "name": "The Rimba",
-      "season": ""
+      "name": "Rimba Hat",
+      "season": "",
+      "description": "Meet the Rimba! Our Rimba hat is more flared up and provides wider skin protection from the face to the mid shoulder area. Perfect for a long day under the sun. The inside of the hat is made of cotton with brimnes interiors for better support and humidity absorption. Two metal buttons allow you to play with your style and wear it on any occasion.",
+      "sortOrder": 10
     },
     {
-      "slug": "bucket-hat",
-      "name": "Bucket Hat",
-      "season": ""
+      "slug": "special-occasions",
+      "name": "SPECIAL OCCASIONS",
+      "season": "",
+      "description": "Des mariages aux déjeuners d'été, découvrez une sélection d'accessoires artisanaux façonnés à la main, souvent produits en pièces uniques ou en très petites séries, pour accompagner les célébrations, les grandes occasions et les souvenirs inoubliables.",
+      "sortOrder": 11
+    },
+    {
+      "slug": "sunburn",
+      "name": "sunburn",
+      "season": "",
+      "description": "Soft, sun-faded pieces inspired by golden hours and salt-kissed days. Handmade with natural, materials, each piece carries the warmth of slow craftsmanship and the spirit of summer. A quiet celebration of freedom, lightness, and the beauty of simple moments.",
+      "sortOrder": 12
     },
     {
       "slug": "the-knits",
       "name": "The knits",
-      "season": ""
+      "season": "",
+      "description": "Collection d’accessoires d’hiver tricotée uniquement à la main dans un atelier du sud de la france dans des matières de qualité cachemire, mohair soie, alpaca.",
+      "sortOrder": 13
     },
     {
-      "slug": "accessories",
-      "name": "Accessories",
-      "season": ""
+      "slug": "wild-kids",
+      "name": "WILD KIDS",
+      "season": "",
+      "description": "",
+      "sortOrder": 14
     },
     {
-      "slug": "galore-capsule-collection",
-      "name": "Galore",
-      "season": ""
-    },
-    {
-      "slug": "cow-boy",
-      "name": "Cow-boy",
-      "season": ""
-    },
-    {
-      "slug": "boater",
-      "name": "Boater",
-      "season": ""
+      "slug": "fallwinter-2023-2024",
+      "name": "WINTER COLLECTION",
+      "season": "FW",
+      "description": "",
+      "sortOrder": 15
     }
   ],
   "products": [
     {
+      "slug": "the-rimba-chocolate",
+      "name": "The Rimba | Chocolate",
+      "collection": "Retro Safari",
+      "collectionSlug": "retro-safari",
+      "collectionSlugs": [
+        "best-sellers",
+        "retro-safari",
+        "the-rimba",
+        "sunburn"
+      ],
+      "category": "hats",
+      "productType": "summer hat",
+      "priceEUR": 69,
+      "onSale": false,
+      "available": false,
+      "priceUSD": 76,
+      "priceIDR": 1173000,
+      "image": "/shopify-import/the-rimba-chocolate/01.jpg",
+      "images": [
+        "/shopify-import/the-rimba-chocolate/01.jpg"
+      ],
+      "story": "Le Rimba Sand en 100% Coton ! Découvrez notre forme de chapeau The Rimba, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau se porte avec les bords large pour bien couvrir la tête du soleil, les jours d'été ou en mode \"cow-boy\" est idéal pour toutes vos aventures ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne connaissez pas votre tail…",
+      "details": [
+        "summer hat"
+      ],
+      "tags": [
+        "the",
+        "rimba",
+        "chocolate",
+        "retro",
+        "safari",
+        "summer",
+        "hat",
+        "the-rimba-chocolate"
+      ],
+      "outlet": false,
+      "featured": true,
+      "status": "published",
+      "stock": 1,
+      "origin": "Bali"
+    },
+    {
+      "slug": "oyster-single-earring",
+      "name": "Oyster single earring",
+      "collection": "Mi Paradisio",
+      "collectionSlug": "mi-paradisio-collection",
+      "collectionSlugs": [
+        "mi-paradisio-collection",
+        "special-occasions",
+        "sunburn"
+      ],
+      "category": "accessories",
+      "productType": "",
+      "priceEUR": 80,
+      "onSale": false,
+      "available": true,
+      "priceUSD": 88,
+      "priceIDR": 1360000,
+      "image": "/shopify-import/oyster-single-earring/01.jpg",
+      "images": [
+        "/shopify-import/oyster-single-earring/01.jpg"
+      ],
+      "story": "Boucle d’oreille huitre savage nacré XL. Conçue pour se poser élégamment sur l’oreille, cette pièce statement transforme une simple chemise en look éditorial assumé, parfait pour vos escapades en bord de mer ou vos soirées d’été. Diametre : 8cm",
+      "details": [],
+      "tags": [
+        "oyster",
+        "single",
+        "earring",
+        "paradisio",
+        "oyster-single-earring"
+      ],
+      "outlet": false,
+      "featured": false,
+      "status": "published",
+      "stock": 1,
+      "origin": "Bali"
+    },
+    {
       "slug": "90s-fisherman-black",
       "name": "90's Fisherman | Black",
-      "story": "Le 90's Fisherman BLACK en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur noir, est idéal pour parfaire vos looks estivaux. Il peut être porté e…",
-      "collection": "90's Fisherman",
-      "collectionSlug": "90s-fisher",
-      "subcategory": "",
+      "collection": "Outlet",
+      "collectionSlug": "archives",
+      "collectionSlugs": [
+        "archives"
+      ],
       "category": "hats",
       "productType": "Hats",
-      "priceEUR": 42,
+      "priceEUR": 61,
+      "compareAtEUR": 42,
+      "onSale": true,
+      "available": true,
       "priceUSD": 46,
       "priceIDR": 714000,
       "image": "/shopify-import/90s-fisherman-black/01.png",
@@ -68,98 +217,37 @@
         "/shopify-import/90s-fisherman-black/02.jpg",
         "/shopify-import/90s-fisherman-black/03.jpg"
       ],
+      "story": "Le 90's Fisherman BLACK en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur noir, est idéal pour parfaire vos looks estivaux. Il peut être porté en bandoulière dans toutes vos aventures ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne co…",
       "details": [
         "Hats"
       ],
       "tags": [
         "fisherman",
         "black",
+        "outlet",
         "hats",
         "90s-fisherman-black"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": true,
       "featured": false,
-      "onSale": false,
-      "available": true,
-      "origin": "Bali"
-    },
-    {
-      "slug": "butter-yellow-winter-beanie",
-      "name": "Butter Yellow Winter Beanie",
-      "story": "Bonnet crocheté en Mohair Soie Un bonnet d’hiver tout en douceur, crocheté à la main dans un fil mohair-soie léger, chaud et vaporeux. Son aspect délicatement texturé et son fini artisanal lui donnent un charme authentique et intemporel. Confortable et facile à porter au quotidien, il apporte une touche bohème et él…",
-      "collection": "The knits",
-      "collectionSlug": "the-knits",
-      "subcategory": "",
-      "category": "hats",
-      "productType": "",
-      "priceEUR": 45,
-      "priceUSD": 50,
-      "priceIDR": 765000,
-      "image": "/shopify-import/butter-yellow-winter-beanie/01.jpg",
-      "images": [
-        "/shopify-import/butter-yellow-winter-beanie/01.jpg"
-      ],
-      "details": [],
-      "tags": [
-        "butter",
-        "yellow",
-        "winter",
-        "beanie",
-        "the",
-        "knits",
-        "butter-yellow-winter-beanie"
-      ],
-      "stock": 1,
       "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": true,
-      "origin": "Bali"
-    },
-    {
-      "slug": "brown-winter-beanie",
-      "name": "Brown Winter Beanie",
-      "story": "Bonnet crocheté en Mohair Soie Un bonnet d’hiver tout en douceur, crocheté à la main dans un fil mohair-soie léger, chaud et vaporeux. Son aspect délicatement texturé et son fini artisanal lui donnent un charme authentique et intemporel. Confortable et facile à porter au quotidien, il apporte une touche bohème et él…",
-      "collection": "The knits",
-      "collectionSlug": "the-knits",
-      "subcategory": "",
-      "category": "hats",
-      "productType": "",
-      "priceEUR": 45,
-      "priceUSD": 50,
-      "priceIDR": 765000,
-      "image": "/shopify-import/brown-winter-beanie/01.jpg",
-      "images": [
-        "/shopify-import/brown-winter-beanie/01.jpg",
-        "/shopify-import/brown-winter-beanie/02.jpg"
-      ],
-      "details": [],
-      "tags": [
-        "brown",
-        "winter",
-        "beanie",
-        "the",
-        "knits",
-        "brown-winter-beanie"
-      ],
       "stock": 1,
-      "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": true,
       "origin": "Bali"
     },
     {
       "slug": "cap008-1",
       "name": "CAP008",
-      "story": "CAP007 Casquette en coton marron et logo marron glacé Ajustable Apostrophe blanche brodée Made in Indonesia",
-      "collection": "Casquette",
-      "collectionSlug": "casquette",
-      "subcategory": "",
+      "collection": "WINTER COLLECTION",
+      "collectionSlug": "fallwinter-2023-2024",
+      "collectionSlugs": [
+        "best-sellers",
+        "fallwinter-2023-2024"
+      ],
       "category": "hats",
       "productType": "Cap",
       "priceEUR": 42,
+      "onSale": false,
+      "available": true,
       "priceUSD": 46,
       "priceIDR": 714000,
       "image": "/shopify-import/cap008-1/01.jpg",
@@ -168,32 +256,36 @@
         "/shopify-import/cap008-1/02.jpg",
         "/shopify-import/cap008-1/03.jpg"
       ],
+      "story": "CAP007 Casquette en coton marron et logo marron glacé Ajustable Apostrophe blanche brodée Made in Indonesia",
       "details": [
         "Cap"
       ],
       "tags": [
         "cap008",
-        "casquette",
+        "winter",
+        "collection",
         "cap",
         "cap008-1"
       ],
-      "stock": 1,
+      "outlet": false,
+      "featured": true,
       "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": true,
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "cap007",
       "name": "CAP007",
-      "story": "CAP007 Casquette en coton bleu marine et logo blanc cassé Ajustable Apostrophe blanche brodée Made in Indonesia",
-      "collection": "Casquette",
-      "collectionSlug": "casquette",
-      "subcategory": "",
+      "collection": "WINTER COLLECTION",
+      "collectionSlug": "fallwinter-2023-2024",
+      "collectionSlugs": [
+        "fallwinter-2023-2024"
+      ],
       "category": "hats",
       "productType": "Cap",
       "priceEUR": 42,
+      "onSale": false,
+      "available": true,
       "priceUSD": 46,
       "priceIDR": 714000,
       "image": "/shopify-import/cap007/01.jpg",
@@ -202,31 +294,36 @@
         "/shopify-import/cap007/02.jpg",
         "/shopify-import/cap007/03.jpg"
       ],
+      "story": "CAP007 Casquette en coton bleu marine et logo blanc cassé Ajustable Apostrophe blanche brodée Made in Indonesia",
       "details": [
         "Cap"
       ],
       "tags": [
         "cap007",
-        "casquette",
+        "winter",
+        "collection",
         "cap"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": true,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "cap006",
       "name": "CAP006",
-      "story": "CAP006 Casquette en coton ivoire et logo rouge Ajustable Apostrophe blanche brodée Made in Indonesia",
-      "collection": "Casquette",
-      "collectionSlug": "casquette",
-      "subcategory": "",
+      "collection": "WINTER COLLECTION",
+      "collectionSlug": "fallwinter-2023-2024",
+      "collectionSlugs": [
+        "best-sellers",
+        "fallwinter-2023-2024"
+      ],
       "category": "hats",
       "productType": "Cap",
       "priceEUR": 42,
+      "onSale": false,
+      "available": true,
       "priceUSD": 46,
       "priceIDR": 714000,
       "image": "/shopify-import/cap006/01.jpg",
@@ -235,31 +332,35 @@
         "/shopify-import/cap006/02.jpg",
         "/shopify-import/cap006/03.jpg"
       ],
+      "story": "CAP006 Casquette en coton ivoire et logo rouge Ajustable Apostrophe blanche brodée Made in Indonesia",
       "details": [
         "Cap"
       ],
       "tags": [
         "cap006",
-        "casquette",
+        "winter",
+        "collection",
         "cap"
       ],
-      "stock": 1,
+      "outlet": false,
+      "featured": true,
       "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": true,
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "cap010-rider-of-what",
       "name": "CAP011 RIDER OF WHAT",
-      "story": "CAP011 Casquette en coton Ivoire \"Rider of what\" Ajustable Apostrophe blanche brodée Made in Indonesia",
-      "collection": "Casquette",
-      "collectionSlug": "casquette",
-      "subcategory": "",
+      "collection": "WINTER COLLECTION",
+      "collectionSlug": "fallwinter-2023-2024",
+      "collectionSlugs": [
+        "fallwinter-2023-2024"
+      ],
       "category": "hats",
       "productType": "Cap",
       "priceEUR": 42,
+      "onSale": false,
+      "available": true,
       "priceUSD": 46,
       "priceIDR": 714000,
       "image": "/shopify-import/cap010-rider-of-what/01.jpg",
@@ -268,6 +369,7 @@
         "/shopify-import/cap010-rider-of-what/02.jpg",
         "/shopify-import/cap010-rider-of-what/03.jpg"
       ],
+      "story": "CAP011 Casquette en coton Ivoire \"Rider of what\" Ajustable Apostrophe blanche brodée Made in Indonesia",
       "details": [
         "Cap"
       ],
@@ -275,27 +377,30 @@
         "cap011",
         "rider",
         "what",
-        "casquette",
+        "winter",
+        "collection",
         "cap",
         "cap010-rider-of-what"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": true,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "cap010-low-effort-love",
       "name": "CAP010 LOW EFFORT LOVE",
-      "story": "CAP010 Casquette en coton Ivoire \"Low Effort Love\" Ajustable Apostrophe blanche brodée Made in Indonesia",
-      "collection": "Casquette",
-      "collectionSlug": "casquette",
-      "subcategory": "",
+      "collection": "WINTER COLLECTION",
+      "collectionSlug": "fallwinter-2023-2024",
+      "collectionSlugs": [
+        "fallwinter-2023-2024"
+      ],
       "category": "hats",
       "productType": "Cap",
       "priceEUR": 42,
+      "onSale": false,
+      "available": true,
       "priceUSD": 46,
       "priceIDR": 714000,
       "image": "/shopify-import/cap010-low-effort-love/01.jpg",
@@ -304,6 +409,7 @@
         "/shopify-import/cap010-low-effort-love/02.jpg",
         "/shopify-import/cap010-low-effort-love/03.jpg"
       ],
+      "story": "CAP010 Casquette en coton Ivoire \"Low Effort Love\" Ajustable Apostrophe blanche brodée Made in Indonesia",
       "details": [
         "Cap"
       ],
@@ -312,27 +418,30 @@
         "low",
         "effort",
         "love",
-        "casquette",
+        "winter",
+        "collection",
         "cap",
         "cap010-low-effort-love"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": true,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "cap008",
       "name": "CAP009 NO SUNBURN CLUB",
-      "story": "CAP009 Casquette en coton Ivoire \"No Sunburn Club\" Ajustable Apostrophe blanche brodée Made in Indonesia",
-      "collection": "Casquette",
-      "collectionSlug": "casquette",
-      "subcategory": "",
+      "collection": "WINTER COLLECTION",
+      "collectionSlug": "fallwinter-2023-2024",
+      "collectionSlugs": [
+        "fallwinter-2023-2024"
+      ],
       "category": "hats",
       "productType": "Cap",
       "priceEUR": 42,
+      "onSale": false,
+      "available": true,
       "priceUSD": 46,
       "priceIDR": 714000,
       "image": "/shopify-import/cap008/01.jpg",
@@ -341,6 +450,7 @@
         "/shopify-import/cap008/02.jpg",
         "/shopify-import/cap008/03.jpg"
       ],
+      "story": "CAP009 Casquette en coton Ivoire \"No Sunburn Club\" Ajustable Apostrophe blanche brodée Made in Indonesia",
       "details": [
         "Cap"
       ],
@@ -348,61 +458,30 @@
         "cap009",
         "sunburn",
         "club",
-        "casquette",
+        "winter",
+        "collection",
         "cap",
         "cap008"
       ],
+      "outlet": false,
+      "featured": false,
+      "status": "published",
       "stock": 1,
-      "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": true,
-      "origin": "Bali"
-    },
-    {
-      "slug": "bientot-disponible-90s-fisherman-pale-pink",
-      "name": "90's Fisherman | Pale Pink",
-      "story": "Le 90's Fisherman PALE PINK en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur rose pâle, est idéal pour parfaire vos looks estivaux. Il peut êtr…",
-      "collection": "90's Fisherman",
-      "collectionSlug": "90s-fisher",
-      "subcategory": "",
-      "category": "hats",
-      "productType": "Hats",
-      "priceEUR": 61,
-      "priceUSD": 67,
-      "priceIDR": 1037000,
-      "image": "/shopify-import/bientot-disponible-90s-fisherman-pale-pink/01.jpg",
-      "images": [
-        "/shopify-import/bientot-disponible-90s-fisherman-pale-pink/01.jpg",
-        "/shopify-import/bientot-disponible-90s-fisherman-pale-pink/02.jpg"
-      ],
-      "details": [
-        "Hats"
-      ],
-      "tags": [
-        "fisherman",
-        "pale",
-        "pink",
-        "hats",
-        "bientot-disponible-90s-fisherman-pale-pink"
-      ],
-      "stock": 0,
-      "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": false,
       "origin": "Bali"
     },
     {
       "slug": "dark-brown-summer-beanie",
       "name": "Dark brown summer beanie",
-      "story": "Bonnet crocheté à la main avec sequins – Édition limitée Une pièce vibrante et facile à porter, faite à la main à Bali pour accompagner votre quotidien avec style et liberté. Chaque bonnet est soigneusement crocheté par des artisanes locales avec un fil doux, puis délicatement orné de sequins. Cette capsule en éditi…",
-      "collection": "The knits",
-      "collectionSlug": "the-knits",
-      "subcategory": "",
+      "collection": "sunburn",
+      "collectionSlug": "sunburn",
+      "collectionSlugs": [
+        "sunburn"
+      ],
       "category": "hats",
       "productType": "",
       "priceEUR": 45,
+      "onSale": false,
+      "available": true,
       "priceUSD": 50,
       "priceIDR": 765000,
       "image": "/shopify-import/dark-brown-summer-beanie/01.jpg",
@@ -410,33 +489,37 @@
         "/shopify-import/dark-brown-summer-beanie/01.jpg",
         "/shopify-import/dark-brown-summer-beanie/02.jpg"
       ],
+      "story": "Bonnet crocheté à la main avec sequins – Édition limitée Une pièce vibrante et facile à porter, faite à la main à Bali pour accompagner votre quotidien avec style et liberté. Chaque bonnet est soigneusement crocheté par des artisanes locales avec un fil doux, puis délicatement orné de sequins. Cette capsule en édition limitée célèbre l’artisanat en transformant des matières simples en un accessoire unique que vous aurez envie de porter tous les jours. Léger, confortable et…",
       "details": [],
       "tags": [
         "dark",
         "brown",
         "summer",
         "beanie",
-        "the",
-        "knits",
+        "sunburn",
         "dark-brown-summer-beanie"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": true,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "gree-brown-single-earring",
       "name": "Gree Brown single earring",
-      "story": "Boucle d’oreille coquillage nacré XL. Conçue pour se poser élégamment sur l’oreille, cette pièce statement transforme une simple chemise en look éditorial assumé, parfait pour vos escapades en bord de mer ou vos soirées d’été. Diametre : 6cm",
-      "collection": "Accessories",
-      "collectionSlug": "accessories",
-      "subcategory": "",
+      "collection": "Mi Paradisio",
+      "collectionSlug": "mi-paradisio-collection",
+      "collectionSlugs": [
+        "mi-paradisio-collection",
+        "special-occasions",
+        "sunburn"
+      ],
       "category": "accessories",
       "productType": "",
       "priceEUR": 65,
+      "onSale": false,
+      "available": true,
       "priceUSD": 72,
       "priceIDR": 1105000,
       "image": "/shopify-import/gree-brown-single-earring/01.jpg",
@@ -444,64 +527,74 @@
         "/shopify-import/gree-brown-single-earring/01.jpg",
         "/shopify-import/gree-brown-single-earring/02.jpg"
       ],
+      "story": "Boucle d’oreille coquillage nacré XL. Conçue pour se poser élégamment sur l’oreille, cette pièce statement transforme une simple chemise en look éditorial assumé, parfait pour vos escapades en bord de mer ou vos soirées d’été. Diametre : 6cm",
       "details": [],
       "tags": [
         "gree",
         "brown",
         "single",
         "earring",
-        "accessories",
+        "paradisio",
         "gree-brown-single-earring"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": true,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "moe-yellow-single-earring-copy",
       "name": "Urchin Shadow single earring",
-      "story": "Boucle d’oreille coquillage nacré XL. Conçue pour se poser élégamment sur l’oreille, cette pièce statement transforme une simple chemise en look éditorial assumé, parfait pour vos escapades en bord de mer ou vos soirées d’été. Diametre : 8cm",
-      "collection": "Accessories",
-      "collectionSlug": "accessories",
-      "subcategory": "",
+      "collection": "Mi Paradisio",
+      "collectionSlug": "mi-paradisio-collection",
+      "collectionSlugs": [
+        "mi-paradisio-collection",
+        "special-occasions",
+        "sunburn"
+      ],
       "category": "accessories",
       "productType": "",
       "priceEUR": 75,
+      "onSale": false,
+      "available": true,
       "priceUSD": 83,
       "priceIDR": 1275000,
       "image": "/shopify-import/moe-yellow-single-earring-copy/01.jpg",
       "images": [
         "/shopify-import/moe-yellow-single-earring-copy/01.jpg"
       ],
+      "story": "Boucle d’oreille coquillage nacré XL. Conçue pour se poser élégamment sur l’oreille, cette pièce statement transforme une simple chemise en look éditorial assumé, parfait pour vos escapades en bord de mer ou vos soirées d’été. Diametre : 8cm",
       "details": [],
       "tags": [
         "urchin",
         "shadow",
         "single",
         "earring",
-        "accessories",
+        "paradisio",
         "moe-yellow-single-earring-copy"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": true,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "moe-yellow-single-earring",
       "name": "Moe Yellow single earring",
-      "story": "Boucle d’oreille coquillage nacré XL. Conçue pour se poser élégamment sur l’oreille, cette pièce statement transforme une simple chemise en look éditorial assumé, parfait pour vos escapades en bord de mer ou vos soirées d’été. Diametre : 6cm",
-      "collection": "Accessories",
-      "collectionSlug": "accessories",
-      "subcategory": "",
+      "collection": "Mi Paradisio",
+      "collectionSlug": "mi-paradisio-collection",
+      "collectionSlugs": [
+        "mi-paradisio-collection",
+        "special-occasions",
+        "sunburn"
+      ],
       "category": "accessories",
       "productType": "",
       "priceEUR": 65,
+      "onSale": false,
+      "available": true,
       "priceUSD": 72,
       "priceIDR": 1105000,
       "image": "/shopify-import/moe-yellow-single-earring/01.jpg",
@@ -509,32 +602,35 @@
         "/shopify-import/moe-yellow-single-earring/01.jpg",
         "/shopify-import/moe-yellow-single-earring/02.jpg"
       ],
+      "story": "Boucle d’oreille coquillage nacré XL. Conçue pour se poser élégamment sur l’oreille, cette pièce statement transforme une simple chemise en look éditorial assumé, parfait pour vos escapades en bord de mer ou vos soirées d’été. Diametre : 6cm",
       "details": [],
       "tags": [
         "moe",
         "yellow",
         "single",
         "earring",
-        "accessories",
+        "paradisio",
         "moe-yellow-single-earring"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": true,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "brown-summer-beanie-with-shell",
       "name": "Brown summer beanie with shell",
-      "story": "Bonnet crocheté avec des coquillages Un bonnet qui sent le sel, le sable et la liberté. Crocheté à la main à Bali dans un fil marron doux et léger, puis orné de coquillages soigneusement cousus un à un, il capture l’esprit de l’île et le souffle de la mer. Facile à porter au quotidien, il apporte une touche bohème e…",
-      "collection": "The knits",
-      "collectionSlug": "the-knits",
-      "subcategory": "",
+      "collection": "sunburn",
+      "collectionSlug": "sunburn",
+      "collectionSlugs": [
+        "sunburn"
+      ],
       "category": "hats",
       "productType": "",
       "priceEUR": 45,
+      "onSale": false,
+      "available": false,
       "priceUSD": 50,
       "priceIDR": 765000,
       "image": "/shopify-import/brown-summer-beanie-with-shell/01.jpg",
@@ -544,6 +640,7 @@
         "/shopify-import/brown-summer-beanie-with-shell/03.jpg",
         "/shopify-import/brown-summer-beanie-with-shell/04.jpg"
       ],
+      "story": "Bonnet crocheté avec des coquillages Un bonnet qui sent le sel, le sable et la liberté. Crocheté à la main à Bali dans un fil marron doux et léger, puis orné de coquillages soigneusement cousus un à un, il capture l’esprit de l’île et le souffle de la mer. Facile à porter au quotidien, il apporte une touche bohème et solaire à vos tenues, que ce soit en ville ou au bord de l’eau. Chaque bonnet est unique, réalisé en petites séries, dans le respect du geste artisanal. Détai…",
       "details": [],
       "tags": [
         "brown",
@@ -551,27 +648,28 @@
         "beanie",
         "with",
         "shell",
-        "the",
-        "knits",
+        "sunburn",
         "brown-summer-beanie-with-shell"
       ],
-      "stock": 0,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": false,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "soft-pink-summer-beanie",
       "name": "Soft pink summer beanie",
-      "story": "Bonnet crocheté à la main avec sequins – Édition limitée Une pièce vibrante et facile à porter, faite à la main à Bali pour accompagner votre quotidien avec style et liberté. Chaque bonnet est soigneusement crocheté par des artisanes locales avec un fil doux, puis délicatement orné de sequins. Cette capsule en éditi…",
-      "collection": "The knits",
-      "collectionSlug": "the-knits",
-      "subcategory": "",
-      "category": "hats",
+      "collection": "sunburn",
+      "collectionSlug": "sunburn",
+      "collectionSlugs": [
+        "sunburn"
+      ],
+      "category": "accessories",
       "productType": "",
       "priceEUR": 45,
+      "onSale": false,
+      "available": true,
       "priceUSD": 50,
       "priceIDR": 765000,
       "image": "/shopify-import/soft-pink-summer-beanie/01.jpg",
@@ -580,73 +678,45 @@
         "/shopify-import/soft-pink-summer-beanie/02.jpg",
         "/shopify-import/soft-pink-summer-beanie/03.jpg"
       ],
+      "story": "Bonnet crocheté à la main avec sequins – Édition limitée Une pièce vibrante et facile à porter, faite à la main à Bali pour accompagner votre quotidien avec style et liberté. Chaque bonnet est soigneusement crocheté par des artisanes locales avec un fil doux, puis délicatement orné de sequins. Cette capsule en édition limitée célèbre l’artisanat en transformant des matières simples en un accessoire unique que vous aurez envie de porter tous les jours. Léger, confortable et…",
       "details": [],
       "tags": [
         "soft",
         "pink",
         "summer",
         "beanie",
-        "the",
-        "knits",
+        "sunburn",
         "soft-pink-summer-beanie"
       ],
+      "outlet": false,
+      "featured": false,
+      "status": "published",
       "stock": 1,
-      "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": true,
-      "origin": "Bali"
-    },
-    {
-      "slug": "the-rimba-chocolate",
-      "name": "The Rimba | Chocolate",
-      "story": "Le Rimba Sand en 100% Coton ! Découvrez notre forme de chapeau The Rimba, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau se porte avec les bords large pour bien couvrir la tête du soleil, les jours d'été ou en mode \"cow-boy\" est idéal pour tout…",
-      "collection": "The Rimba",
-      "collectionSlug": "the-rimba",
-      "subcategory": "",
-      "category": "hats",
-      "productType": "summer hat",
-      "priceEUR": 69,
-      "priceUSD": 76,
-      "priceIDR": 1173000,
-      "image": "/shopify-import/the-rimba-chocolate/01.jpg",
-      "images": [
-        "/shopify-import/the-rimba-chocolate/01.jpg"
-      ],
-      "details": [
-        "summer hat"
-      ],
-      "tags": [
-        "the",
-        "rimba",
-        "chocolate",
-        "summer",
-        "hat",
-        "the-rimba-chocolate"
-      ],
-      "stock": 0,
-      "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": false,
       "origin": "Bali"
     },
     {
       "slug": "the-rimba-rooibos",
       "name": "The Rimba | Rooibos",
-      "story": "Le Rimba Sand en 100% Coton ! Découvrez notre forme de chapeau The Rimba, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau se porte avec les bords large pour bien couvrir la tête du soleil, les jours d'été ou en mode \"cow-boy\" est idéal pour tout…",
-      "collection": "The Rimba",
-      "collectionSlug": "the-rimba",
-      "subcategory": "",
+      "collection": "Retro Safari",
+      "collectionSlug": "retro-safari",
+      "collectionSlugs": [
+        "best-sellers",
+        "retro-safari",
+        "the-rimba",
+        "sunburn"
+      ],
       "category": "hats",
       "productType": "summer hat",
       "priceEUR": 69,
+      "onSale": false,
+      "available": false,
       "priceUSD": 76,
       "priceIDR": 1173000,
       "image": "/shopify-import/the-rimba-rooibos/01.jpg",
       "images": [
         "/shopify-import/the-rimba-rooibos/01.jpg"
       ],
+      "story": "Le Rimba Sand en 100% Coton ! Découvrez notre forme de chapeau The Rimba, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau se porte avec les bords large pour bien couvrir la tête du soleil, les jours d'été ou en mode \"cow-boy\" est idéal pour toutes vos aventures ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne connaissez pas votre tail…",
       "details": [
         "summer hat"
       ],
@@ -654,33 +724,40 @@
         "the",
         "rimba",
         "rooibos",
+        "retro",
+        "safari",
         "summer",
         "hat",
         "the-rimba-rooibos"
       ],
-      "stock": 0,
+      "outlet": false,
+      "featured": true,
       "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": false,
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "galore-hat-blue-sky",
       "name": "Galore Hat Sky Blue",
-      "story": "Galore hat Découvrez notre forme Fedora, un incontournable confectionné dans le coeur du Portugal, dans la région de Porto . Ce chapeau élégant, de couleur Sky Blue, est idéal pour parfaire vos looks. Taille et Entretien : Disponible en M & L est ajustable à l'intérieur à l'aide d'un petit ruban. Ce produit taille n…",
-      "collection": "Galore",
+      "collection": "Galore Capsule Collection",
       "collectionSlug": "galore-capsule-collection",
-      "subcategory": "",
+      "collectionSlugs": [
+        "best-sellers",
+        "galore-capsule-collection",
+        "fallwinter-2023-2024"
+      ],
       "category": "hats",
       "productType": "Hats",
       "priceEUR": 220,
+      "onSale": false,
+      "available": true,
       "priceUSD": 242,
       "priceIDR": 3740000,
       "image": "/shopify-import/galore-hat-blue-sky/01.jpg",
       "images": [
         "/shopify-import/galore-hat-blue-sky/01.jpg"
       ],
+      "story": "Galore hat Découvrez notre forme Fedora, un incontournable confectionné dans le coeur du Portugal, dans la région de Porto . Ce chapeau élégant, de couleur Sky Blue, est idéal pour parfaire vos looks. Taille et Entretien : Disponible en M & L est ajustable à l'intérieur à l'aide d'un petit ruban. Ce produit taille normalement, prenez votre taille habituelle. Vous ne connaissez pas votre taille? Vérifiez ici , ou écrivez nous sur instagram . Pour préserver la beauté de votr…",
       "details": [
         "Hats"
       ],
@@ -689,32 +766,39 @@
         "hat",
         "sky",
         "blue",
+        "capsule",
+        "collection",
         "hats",
         "galore-hat-blue-sky"
       ],
-      "stock": 1,
+      "outlet": false,
+      "featured": true,
       "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": true,
-      "origin": "Bali"
+      "stock": 1,
+      "origin": "France"
     },
     {
       "slug": "galore-hat-green-olive",
       "name": "Galore Hat Green Olive",
-      "story": "Galore hat Découvrez notre forme Fedora, un incontournable confectionné dans le coeur du Portugal, dans la région de Porto . Ce chapeau élégant, de couleur Green Olive, est idéal pour parfaire vos looks. Taille et Entretien : Disponible en M & L est ajustable à l'intérieur à l'aide d'un petit ruban. Ce produit taill…",
-      "collection": "Galore",
+      "collection": "Galore Capsule Collection",
       "collectionSlug": "galore-capsule-collection",
-      "subcategory": "",
+      "collectionSlugs": [
+        "best-sellers",
+        "galore-capsule-collection",
+        "fallwinter-2023-2024"
+      ],
       "category": "hats",
       "productType": "Hats",
       "priceEUR": 220,
+      "onSale": false,
+      "available": true,
       "priceUSD": 242,
       "priceIDR": 3740000,
       "image": "/shopify-import/galore-hat-green-olive/01.jpg",
       "images": [
         "/shopify-import/galore-hat-green-olive/01.jpg"
       ],
+      "story": "Galore hat Découvrez notre forme Fedora, un incontournable confectionné dans le coeur du Portugal, dans la région de Porto . Ce chapeau élégant, de couleur Green Olive, est idéal pour parfaire vos looks. Taille et Entretien : Disponible en M & L est ajustable à l'intérieur à l'aide d'un petit ruban. Ce produit taille normalement, prenez votre taille habituelle. Vous ne connaissez pas votre taille? Vérifiez ici , ou écrivez nous sur instagram . Pour préserver la beauté de v…",
       "details": [
         "Hats"
       ],
@@ -723,32 +807,38 @@
         "hat",
         "green",
         "olive",
+        "capsule",
+        "collection",
         "hats",
         "galore-hat-green-olive"
       ],
-      "stock": 1,
+      "outlet": false,
+      "featured": true,
       "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": true,
-      "origin": "Bali"
+      "stock": 1,
+      "origin": "France"
     },
     {
       "slug": "galore-hat-midnight-blue",
       "name": "Galore Hat midnight blue",
-      "story": "Galore hat Découvrez notre forme Fedora, un incontournable confectionné dans le coeur du Portugal, dans la région de Porto . Ce chapeau élégant, de couleur bleu nuit, est idéal pour parfaire vos looks. Taille et Entretien : Disponible en M & L est ajustable à l'intérieur à l'aide d'un petit ruban. Ce produit taille …",
-      "collection": "Galore",
+      "collection": "Galore Capsule Collection",
       "collectionSlug": "galore-capsule-collection",
-      "subcategory": "",
+      "collectionSlugs": [
+        "galore-capsule-collection",
+        "fallwinter-2023-2024"
+      ],
       "category": "hats",
       "productType": "Hats",
       "priceEUR": 220,
+      "onSale": false,
+      "available": true,
       "priceUSD": 242,
       "priceIDR": 3740000,
       "image": "/shopify-import/galore-hat-midnight-blue/01.jpg",
       "images": [
         "/shopify-import/galore-hat-midnight-blue/01.jpg"
       ],
+      "story": "Galore hat Découvrez notre forme Fedora, un incontournable confectionné dans le coeur du Portugal, dans la région de Porto . Ce chapeau élégant, de couleur bleu nuit, est idéal pour parfaire vos looks. Taille et Entretien : Disponible en M & L est ajustable à l'intérieur à l'aide d'un petit ruban. Ce produit taille normalement, prenez votre taille habituelle. Vous ne connaissez pas votre taille? Vérifiez ici , ou écrivez nous sur instagram . Pour préserver la beauté de vot…",
       "details": [
         "Hats"
       ],
@@ -757,26 +847,32 @@
         "hat",
         "midnight",
         "blue",
+        "capsule",
+        "collection",
         "hats",
         "galore-hat-midnight-blue"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": true,
-      "origin": "Bali"
+      "status": "published",
+      "stock": 1,
+      "origin": "France"
     },
     {
       "slug": "galore-hat-beige",
       "name": "Galore Hat beige",
-      "story": "Galore hat Découvrez notre forme Fedora, un incontournable confectionné dans le coeur du Portugal, dans la région de Porto . Ce chapeau élégant, de couleur cream, est idéal pour parfaire vos looks. Taille et Entretien : Disponible en M & L est ajustable à l'intérieur à l'aide d'un petit ruban. Ce produit taille norm…",
-      "collection": "Galore",
+      "collection": "Galore Capsule Collection",
       "collectionSlug": "galore-capsule-collection",
-      "subcategory": "",
+      "collectionSlugs": [
+        "best-sellers",
+        "galore-capsule-collection",
+        "fallwinter-2023-2024"
+      ],
       "category": "hats",
       "productType": "Hats",
       "priceEUR": 220,
+      "onSale": false,
+      "available": true,
       "priceUSD": 242,
       "priceIDR": 3740000,
       "image": "/shopify-import/galore-hat-beige/01.jpg",
@@ -785,6 +881,7 @@
         "/shopify-import/galore-hat-beige/02.jpg",
         "/shopify-import/galore-hat-beige/03.jpg"
       ],
+      "story": "Galore hat Découvrez notre forme Fedora, un incontournable confectionné dans le coeur du Portugal, dans la région de Porto . Ce chapeau élégant, de couleur cream, est idéal pour parfaire vos looks. Taille et Entretien : Disponible en M & L est ajustable à l'intérieur à l'aide d'un petit ruban. Ce produit taille normalement, prenez votre taille habituelle. Vous ne connaissez pas votre taille? Vérifiez ici , ou écrivez nous sur instagram . Pour préserver la beauté de votre c…",
       "details": [
         "Hats"
       ],
@@ -792,90 +889,31 @@
         "galore",
         "hat",
         "beige",
+        "capsule",
+        "collection",
         "hats",
         "galore-hat-beige"
       ],
+      "outlet": false,
+      "featured": true,
+      "status": "published",
       "stock": 1,
-      "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": true,
-      "origin": "Bali"
-    },
-    {
-      "slug": "cow-boy-ice-pink",
-      "name": "Cow-boy | Ice pink",
-      "story": "CAPSULE COLLECTION | COW-BOY ICE PINK Le Cow-boy Ice Pink Premium, fabriqué avec soin au Portugal, est bien plus qu'un simple chapeau. Son design, inspiré du Texas, ajoute une touche résolument fashion à vos tenues. Sa qualité exceptionnelle et son ajustement parfait en font un accessoire de luxe intemporel. Chaque …",
-      "collection": "Cow-boy",
-      "collectionSlug": "cow-boy",
-      "subcategory": "",
-      "category": "hats",
-      "productType": "",
-      "priceEUR": 175,
-      "priceUSD": 193,
-      "priceIDR": 2975000,
-      "image": "/shopify-import/cow-boy-ice-pink/01.jpg",
-      "images": [
-        "/shopify-import/cow-boy-ice-pink/01.jpg",
-        "/shopify-import/cow-boy-ice-pink/02.jpg",
-        "/shopify-import/cow-boy-ice-pink/03.jpg"
-      ],
-      "details": [],
-      "tags": [
-        "cow-boy",
-        "ice",
-        "pink",
-        "cow-boy-ice-pink"
-      ],
-      "stock": 0,
-      "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": false,
-      "origin": "Bali"
-    },
-    {
-      "slug": "cow-boy-desert-mist",
-      "name": "Cow-boy | Desert Mist",
-      "story": "CAPSULE COLLECTION | COW-BOY DESERT MIST Le Cow-boy Desert Mist, un chapeau en laine 100% premium de style Cow-boy, fabriqué avec soin au Portugal. Son design inspiré du Texas apporte à vos looks une touche très fashion. Sa qualité exceptionnelle et son ajustement parfait en font un accessoire de luxe intemporel. Co…",
-      "collection": "Cow-boy",
-      "collectionSlug": "cow-boy",
-      "subcategory": "",
-      "category": "hats",
-      "productType": "",
-      "priceEUR": 175,
-      "priceUSD": 193,
-      "priceIDR": 2975000,
-      "image": "/shopify-import/cow-boy-desert-mist/01.jpg",
-      "images": [
-        "/shopify-import/cow-boy-desert-mist/01.jpg",
-        "/shopify-import/cow-boy-desert-mist/02.jpg",
-        "/shopify-import/cow-boy-desert-mist/03.jpg"
-      ],
-      "details": [],
-      "tags": [
-        "cow-boy",
-        "desert",
-        "mist",
-        "cow-boy-desert-mist"
-      ],
-      "stock": 0,
-      "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": false,
-      "origin": "Bali"
+      "origin": "France"
     },
     {
       "slug": "90s-fisherman-kid-sky-copie",
       "name": "90s Fisherman Kid Matcha",
-      "story": "Notre iconique bob, The 90's pour enfant couleur matcha, délicatement brodé de petites apostrophes rose pale. Ce chapeau est parfait pour protéger votre petit du soleil tout en ajoutant une touche de mode à sa tenue. Fabriqué avec amour à Bali. Tailles Disponibles : Baby : 49 cm Kiddo : 55 cm Matière : 100% Coton, d…",
-      "collection": "90's Fisherman",
-      "collectionSlug": "90s-fisher",
-      "subcategory": "",
+      "collection": "WILD KIDS",
+      "collectionSlug": "wild-kids",
+      "collectionSlugs": [
+        "wild-kids"
+      ],
       "category": "hats",
       "productType": "summer hat",
-      "priceEUR": 30,
+      "priceEUR": 35,
+      "compareAtEUR": 30,
+      "onSale": true,
+      "available": true,
       "priceUSD": 33,
       "priceIDR": 510000,
       "image": "/shopify-import/90s-fisherman-kid-sky-copie/01.jpg",
@@ -886,6 +924,7 @@
         "/shopify-import/90s-fisherman-kid-sky-copie/04.jpg",
         "/shopify-import/90s-fisherman-kid-sky-copie/05.jpg"
       ],
+      "story": "Notre iconique bob, The 90's pour enfant couleur matcha, délicatement brodé de petites apostrophes rose pale. Ce chapeau est parfait pour protéger votre petit du soleil tout en ajoutant une touche de mode à sa tenue. Fabriqué avec amour à Bali. Tailles Disponibles : Baby : 49 cm Kiddo : 55 cm Matière : 100% Coton, doux et respirant",
       "details": [
         "summer hat"
       ],
@@ -894,27 +933,32 @@
         "fisherman",
         "kid",
         "matcha",
+        "wild",
+        "kids",
         "summer",
         "hat",
         "90s-fisherman-kid-sky-copie"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": true,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "90s-fisherman-kid-sky",
       "name": "90s Fisherman Kid Sky",
-      "story": "Notre iconique bob, The 90's pour enfant couleur bleu, délicatement brodé de petites apostrophes blanches. Ce chapeau est parfait pour protéger votre petit du soleil tout en ajoutant une touche de mode à sa tenue. Fabriqué avec amour à Bali. Tailles Disponibles : Baby : 49 cm Kiddo : 55 cm Matière : 100% Coton, doux…",
-      "collection": "90's Fisherman",
-      "collectionSlug": "90s-fisher",
-      "subcategory": "",
+      "collection": "WILD KIDS",
+      "collectionSlug": "wild-kids",
+      "collectionSlugs": [
+        "wild-kids"
+      ],
       "category": "hats",
       "productType": "summer hat",
-      "priceEUR": 30,
+      "priceEUR": 35,
+      "compareAtEUR": 30,
+      "onSale": true,
+      "available": true,
       "priceUSD": 33,
       "priceIDR": 510000,
       "image": "/shopify-import/90s-fisherman-kid-sky/01.jpg",
@@ -925,6 +969,7 @@
         "/shopify-import/90s-fisherman-kid-sky/04.jpg",
         "/shopify-import/90s-fisherman-kid-sky/05.jpg"
       ],
+      "story": "Notre iconique bob, The 90's pour enfant couleur bleu, délicatement brodé de petites apostrophes blanches. Ce chapeau est parfait pour protéger votre petit du soleil tout en ajoutant une touche de mode à sa tenue. Fabriqué avec amour à Bali. Tailles Disponibles : Baby : 49 cm Kiddo : 55 cm Matière : 100% Coton, doux et respirant",
       "details": [
         "summer hat"
       ],
@@ -933,27 +978,32 @@
         "fisherman",
         "kid",
         "sky",
+        "wild",
+        "kids",
         "summer",
         "hat",
         "90s-fisherman-kid-sky"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": true,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "softoathat",
       "name": "90's Fisherman | Soft Oat",
-      "story": "Le 90's Fisherman Soft Oat en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur blanc cassé, est idéal pour parfaire vos looks estivaux. Il peut au…",
-      "collection": "90's Fisherman",
-      "collectionSlug": "90s-fisher",
-      "subcategory": "",
+      "collection": "Outlet",
+      "collectionSlug": "archives",
+      "collectionSlugs": [
+        "archives"
+      ],
       "category": "hats",
       "productType": "Hats",
-      "priceEUR": 31,
+      "priceEUR": 61,
+      "compareAtEUR": 31,
+      "onSale": true,
+      "available": true,
       "priceUSD": 34,
       "priceIDR": 527000,
       "image": "/shopify-import/softoathat/01.jpg",
@@ -962,6 +1012,7 @@
         "/shopify-import/softoathat/02.jpg",
         "/shopify-import/softoathat/03.jpg"
       ],
+      "story": "Le 90's Fisherman Soft Oat en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur blanc cassé, est idéal pour parfaire vos looks estivaux. Il peut aussi être porté en bandoulière dans toutes vos aventures ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habitu…",
       "details": [
         "Hats"
       ],
@@ -969,26 +1020,32 @@
         "fisherman",
         "soft",
         "oat",
+        "outlet",
         "hats",
         "softoathat"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": true,
       "featured": false,
-      "onSale": false,
-      "available": true,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "the-rimba-green-military",
       "name": "The Rimba Green Military",
-      "story": "Le Rimba Green Military en 100% Coton ! Découvrez notre forme de chapeau The Rimba, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau se porte avec les bords large pour bien couvrir la tête du soleil, les jours d'été ou en mode \"cow-boy\" est idéal…",
-      "collection": "The Rimba",
+      "collection": "Rimba Hat",
       "collectionSlug": "the-rimba",
-      "subcategory": "",
+      "collectionSlugs": [
+        "best-sellers",
+        "juicy-record",
+        "the-rimba",
+        "fallwinter-2023-2024"
+      ],
       "category": "hats",
       "productType": "summer hat",
       "priceEUR": 69,
+      "onSale": false,
+      "available": true,
       "priceUSD": 76,
       "priceIDR": 1173000,
       "image": "/shopify-import/the-rimba-green-military/01.jpg",
@@ -996,6 +1053,7 @@
         "/shopify-import/the-rimba-green-military/01.jpg",
         "/shopify-import/the-rimba-green-military/02.jpg"
       ],
+      "story": "Le Rimba Green Military en 100% Coton ! Découvrez notre forme de chapeau The Rimba, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau se porte avec les bords large pour bien couvrir la tête du soleil, les jours d'été ou en mode \"cow-boy\" est idéal pour toutes vos aventures ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne connaissez pas …",
       "details": [
         "summer hat"
       ],
@@ -1004,98 +1062,32 @@
         "rimba",
         "green",
         "military",
-        "summer",
         "hat",
+        "summer",
         "the-rimba-green-military"
       ],
+      "outlet": false,
+      "featured": true,
+      "status": "published",
       "stock": 1,
-      "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": true,
-      "origin": "Bali"
-    },
-    {
-      "slug": "cow-boy-classic-brown",
-      "name": "Cow-boy | Classical Brown",
-      "story": "Le Cow-boy Classical Brown Premium, fabriqué avec soin au Portugal, est bien plus qu'un simple chapeau. Son design, inspiré du Texas, ajoute une touche résolument fashion à vos tenues. Sa qualité exceptionnelle et son ajustement parfait en font un accessoire de luxe intemporel. Chaque chapeau est vendu avec une lani…",
-      "collection": "Cow-boy",
-      "collectionSlug": "cow-boy",
-      "subcategory": "",
-      "category": "hats",
-      "productType": "Hats",
-      "priceEUR": 175,
-      "priceUSD": 193,
-      "priceIDR": 2975000,
-      "image": "/shopify-import/cow-boy-classic-brown/01.jpg",
-      "images": [
-        "/shopify-import/cow-boy-classic-brown/01.jpg",
-        "/shopify-import/cow-boy-classic-brown/02.jpg",
-        "/shopify-import/cow-boy-classic-brown/03.jpg",
-        "/shopify-import/cow-boy-classic-brown/04.jpg",
-        "/shopify-import/cow-boy-classic-brown/05.jpg"
-      ],
-      "details": [
-        "Hats"
-      ],
-      "tags": [
-        "cow-boy",
-        "classical",
-        "brown",
-        "hats",
-        "cow-boy-classic-brown"
-      ],
-      "stock": 0,
-      "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": false,
-      "origin": "Bali"
-    },
-    {
-      "slug": "cow-boy-soft-as-fuzz",
-      "name": "Cow-boy | Soft as Fuzz",
-      "story": "Le Cow-boy Soft as Fuzz Premium, fabriqué avec soin au Portugal, est bien plus qu'un simple chapeau. Son design, inspiré du Texas, ajoute une touche résolument fashion à vos tenues. Sa qualité exceptionnelle et son ajustement parfait en font un accessoire de luxe intemporel. Chaque chapeau est vendu avec une lanière…",
-      "collection": "Cow-boy",
-      "collectionSlug": "cow-boy",
-      "subcategory": "",
-      "category": "hats",
-      "productType": "Hats",
-      "priceEUR": 175,
-      "priceUSD": 193,
-      "priceIDR": 2975000,
-      "image": "/shopify-import/cow-boy-soft-as-fuzz/01.jpg",
-      "images": [
-        "/shopify-import/cow-boy-soft-as-fuzz/01.jpg",
-        "/shopify-import/cow-boy-soft-as-fuzz/02.jpg"
-      ],
-      "details": [
-        "Hats"
-      ],
-      "tags": [
-        "cow-boy",
-        "soft",
-        "fuzz",
-        "hats",
-        "cow-boy-soft-as-fuzz"
-      ],
-      "stock": 1,
-      "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": true,
       "origin": "Bali"
     },
     {
       "slug": "copie-de-the-rimba-sand",
       "name": "The Original Denim",
-      "story": "Le Rimba Denim en 100% Coton ! Découvrez notre forme de chapeau The Rimba, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau se porte avec les bords large pour bien couvrir la tête du soleil, les jours d'été ou en mode \"cow-boy\" est idéal pour tou…",
-      "collection": "The Rimba",
+      "collection": "Rimba Hat",
       "collectionSlug": "the-rimba",
-      "subcategory": "",
+      "collectionSlugs": [
+        "best-sellers",
+        "juicy-record",
+        "the-rimba",
+        "fallwinter-2023-2024"
+      ],
       "category": "hats",
       "productType": "summer hat",
       "priceEUR": 69,
+      "onSale": false,
+      "available": true,
       "priceUSD": 76,
       "priceIDR": 1173000,
       "image": "/shopify-import/copie-de-the-rimba-sand/01.jpg",
@@ -1103,6 +1095,7 @@
         "/shopify-import/copie-de-the-rimba-sand/01.jpg",
         "/shopify-import/copie-de-the-rimba-sand/02.jpg"
       ],
+      "story": "Le Rimba Denim en 100% Coton ! Découvrez notre forme de chapeau The Rimba, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau se porte avec les bords large pour bien couvrir la tête du soleil, les jours d'été ou en mode \"cow-boy\" est idéal pour toutes vos aventures ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne connaissez pas votre tai…",
       "details": [
         "summer hat"
       ],
@@ -1111,27 +1104,29 @@
         "original",
         "denim",
         "rimba",
-        "summer",
         "hat",
+        "summer",
         "copie-de-the-rimba-sand"
       ],
-      "stock": 1,
+      "outlet": false,
+      "featured": true,
       "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": true,
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "cap-01",
       "name": "CAP 01",
-      "story": "CAP 01 Casquette en velour côtelé Ajustable Apostrophe blanche brodée Made in Portugal",
-      "collection": "Casquette",
-      "collectionSlug": "casquette",
-      "subcategory": "",
+      "collection": "WINTER COLLECTION",
+      "collectionSlug": "fallwinter-2023-2024",
+      "collectionSlugs": [
+        "fallwinter-2023-2024"
+      ],
       "category": "hats",
       "productType": "Cap",
       "priceEUR": 49,
+      "onSale": false,
+      "available": true,
       "priceUSD": 54,
       "priceIDR": 833000,
       "image": "/shopify-import/cap-01/01.jpg",
@@ -1140,31 +1135,36 @@
         "/shopify-import/cap-01/02.jpg",
         "/shopify-import/cap-01/03.jpg"
       ],
+      "story": "CAP 01 Casquette en velour côtelé Ajustable Apostrophe blanche brodée Made in Portugal",
       "details": [
         "Cap"
       ],
       "tags": [
         "cap",
-        "casquette",
+        "winter",
+        "collection",
         "cap-01"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": true,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "boater-the-slang",
       "name": "Boater | The Slang",
-      "story": "\"THE SLANG\", un chapeau d'hiver en laine 100% premium de style Boater kaki, fabriqué avec soin au Portugal. Son design neutre complète tous vos looks, tandis que sa qualité exceptionnelle et son ajustement parfait en font un accessoire de luxe intemporel. Commandez maintenant pour une livraison rapide. Stock disponi…",
-      "collection": "Boater",
-      "collectionSlug": "boater",
-      "subcategory": "",
+      "collection": "Mi Paradisio",
+      "collectionSlug": "mi-paradisio-collection",
+      "collectionSlugs": [
+        "mi-paradisio-collection",
+        "special-occasions"
+      ],
       "category": "hats",
       "productType": "",
       "priceEUR": 189,
+      "onSale": false,
+      "available": true,
       "priceUSD": 208,
       "priceIDR": 3213000,
       "image": "/shopify-import/boater-the-slang/01.jpg",
@@ -1175,30 +1175,35 @@
         "/shopify-import/boater-the-slang/04.jpg",
         "/shopify-import/boater-the-slang/05.jpg"
       ],
+      "story": "\"THE SLANG\", un chapeau d'hiver en laine 100% premium de style Boater kaki, fabriqué avec soin au Portugal. Son design neutre complète tous vos looks, tandis que sa qualité exceptionnelle et son ajustement parfait en font un accessoire de luxe intemporel. Commandez maintenant pour une livraison rapide. Stock disponible en France.",
       "details": [],
       "tags": [
         "boater",
         "the",
         "slang",
+        "paradisio",
         "boater-the-slang"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": true,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "90s-fisherman-cedar",
       "name": "90's Fisherman | Cedar",
-      "story": "Le 90's Fisherman Cedar en 70% Laine 30% coton ! Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur Kaki, est idéal pour parfaire vos looks d'hiver Il peut êtr…",
-      "collection": "90's Fisherman",
-      "collectionSlug": "90s-fisher",
-      "subcategory": "",
+      "collection": "WINTER COLLECTION",
+      "collectionSlug": "fallwinter-2023-2024",
+      "collectionSlugs": [
+        "fallwinter-2023-2024"
+      ],
       "category": "hats",
       "productType": "",
-      "priceEUR": 42,
+      "priceEUR": 61,
+      "compareAtEUR": 42,
+      "onSale": true,
+      "available": true,
       "priceUSD": 46,
       "priceIDR": 714000,
       "image": "/shopify-import/90s-fisherman-cedar/01.jpg",
@@ -1208,29 +1213,35 @@
         "/shopify-import/90s-fisherman-cedar/03.jpg",
         "/shopify-import/90s-fisherman-cedar/04.jpg"
       ],
+      "story": "Le 90's Fisherman Cedar en 70% Laine 30% coton ! Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur Kaki, est idéal pour parfaire vos looks d'hiver Il peut être porté en bandoulière dans toutes vos aventures ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. V…",
       "details": [],
       "tags": [
         "fisherman",
         "cedar",
+        "winter",
+        "collection",
         "90s-fisherman-cedar"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": true,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "copy-of-90s-fisherman-roiboos",
       "name": "90's Fisherman | Rooibos",
-      "story": "Le 90's Fisherman ROOIBOS en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur rouge rooibos, est idéal pour parfaire vos looks estivaux. Il peut ê…",
-      "collection": "90's Fisherman",
+      "collection": "90's Fisherman Hat",
       "collectionSlug": "90s-fisher",
-      "subcategory": "",
+      "collectionSlugs": [
+        "90s-fisher",
+        "new-collection-2023"
+      ],
       "category": "hats",
       "productType": "Hats",
       "priceEUR": 61,
+      "onSale": false,
+      "available": false,
       "priceUSD": 67,
       "priceIDR": 1037000,
       "image": "/shopify-import/copy-of-90s-fisherman-roiboos/01.jpg",
@@ -1240,32 +1251,38 @@
         "/shopify-import/copy-of-90s-fisherman-roiboos/03.jpg",
         "/shopify-import/copy-of-90s-fisherman-roiboos/04.jpg"
       ],
+      "story": "Le 90's Fisherman ROOIBOS en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur rouge rooibos, est idéal pour parfaire vos looks estivaux. Il peut être porté en bandoulière dans toutes vos aventures ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle.…",
       "details": [
         "Hats"
       ],
       "tags": [
         "fisherman",
         "rooibos",
+        "hat",
         "hats",
         "copy-of-90s-fisherman-roiboos"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": true,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "copy-of-le-bucket-radio-soleil",
       "name": "Le Bucket | Radio Soleil",
-      "story": "Le RADIO SOLEIL en FIBRE DE BANANE ! Découvrez notre forme de chapeau Bucket 100% eco-responsable, une forme de \"bob\" classique confectionné en fibre de banane dans le coeur de Bali par des artisans que nous connaissons personnellement ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, pre…",
-      "collection": "Bucket Hat",
-      "collectionSlug": "bucket-hat",
-      "subcategory": "",
+      "collection": "Heat Wave",
+      "collectionSlug": "new-collection-2023",
+      "collectionSlugs": [
+        "best-sellers",
+        "new-collection-2023",
+        "paille"
+      ],
       "category": "hats",
       "productType": "Hats",
       "priceEUR": 75,
+      "onSale": false,
+      "available": false,
       "priceUSD": 83,
       "priceIDR": 1275000,
       "image": "/shopify-import/copy-of-le-bucket-radio-soleil/01.jpg",
@@ -1275,6 +1292,7 @@
         "/shopify-import/copy-of-le-bucket-radio-soleil/03.jpg",
         "/shopify-import/copy-of-le-bucket-radio-soleil/04.jpg"
       ],
+      "story": "Le RADIO SOLEIL en FIBRE DE BANANE ! Découvrez notre forme de chapeau Bucket 100% eco-responsable, une forme de \"bob\" classique confectionné en fibre de banane dans le coeur de Bali par des artisans que nous connaissons personnellement ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne connaissez pas votre taille? Vérifiez ici , ou écrivez nous sur instagram . Pour préserver la beauté de votre chapeau, nous…",
       "details": [
         "Hats"
       ],
@@ -1282,64 +1300,32 @@
         "bucket",
         "radio",
         "soleil",
-        "hat",
+        "heat",
+        "wave",
         "hats",
         "copy-of-le-bucket-radio-soleil"
       ],
+      "outlet": false,
+      "featured": true,
+      "status": "published",
       "stock": 1,
-      "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": true,
-      "origin": "Bali"
-    },
-    {
-      "slug": "the-rimba-slightly-pink",
-      "name": "The Rimba | Slightly Pink",
-      "story": "Le Rimba Slightly Pink en 100% Coton ! Découvrez notre forme de chapeau The Rimba, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau se porte avec les bords large pour bien couvrir la tête du soleil, les jours d'été ou en mode \"cow-boy\" est idéal …",
-      "collection": "The Rimba",
-      "collectionSlug": "the-rimba",
-      "subcategory": "",
-      "category": "hats",
-      "productType": "Hats",
-      "priceEUR": 69,
-      "priceUSD": 76,
-      "priceIDR": 1173000,
-      "image": "/shopify-import/the-rimba-slightly-pink/01.png",
-      "images": [
-        "/shopify-import/the-rimba-slightly-pink/01.png",
-        "/shopify-import/the-rimba-slightly-pink/02.jpg",
-        "/shopify-import/the-rimba-slightly-pink/03.jpg",
-        "/shopify-import/the-rimba-slightly-pink/04.jpg"
-      ],
-      "details": [
-        "Hats"
-      ],
-      "tags": [
-        "the",
-        "rimba",
-        "slightly",
-        "pink",
-        "hats",
-        "the-rimba-slightly-pink"
-      ],
-      "stock": 0,
-      "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": false,
       "origin": "Bali"
     },
     {
       "slug": "the-rimba-sand",
       "name": "The Rimba | Sand",
-      "story": "Le Rimba Sand en 100% Coton ! Découvrez notre forme de chapeau The Rimba, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau se porte avec les bords large pour bien couvrir la tête du soleil, les jours d'été ou en mode \"cow-boy\" est idéal pour tout…",
-      "collection": "The Rimba",
-      "collectionSlug": "the-rimba",
-      "subcategory": "",
+      "collection": "Retro Safari",
+      "collectionSlug": "retro-safari",
+      "collectionSlugs": [
+        "best-sellers",
+        "retro-safari",
+        "the-rimba"
+      ],
       "category": "hats",
       "productType": "summer hat",
       "priceEUR": 69,
+      "onSale": false,
+      "available": true,
       "priceUSD": 76,
       "priceIDR": 1173000,
       "image": "/shopify-import/the-rimba-sand/01.png",
@@ -1351,6 +1337,7 @@
         "/shopify-import/the-rimba-sand/05.jpg",
         "/shopify-import/the-rimba-sand/06.jpg"
       ],
+      "story": "Le Rimba Sand en 100% Coton ! Découvrez notre forme de chapeau The Rimba, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau se porte avec les bords large pour bien couvrir la tête du soleil, les jours d'été ou en mode \"cow-boy\" est idéal pour toutes vos aventures ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne connaissez pas votre tail…",
       "details": [
         "summer hat"
       ],
@@ -1358,27 +1345,32 @@
         "the",
         "rimba",
         "sand",
+        "retro",
+        "safari",
         "summer",
         "hat",
         "the-rimba-sand"
       ],
-      "stock": 1,
+      "outlet": false,
+      "featured": true,
       "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": true,
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "the-rimba-sky",
       "name": "The Rimba | Sky",
-      "story": "Le Rimba Sky en 100% Coton ! Découvrez notre forme de chapeau The Rimba, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau se porte avec les bords large pour bien couvrir la tête du soleil, les jours d'été ou en mode \"cow-boy\" est idéal pour toute…",
-      "collection": "The Rimba",
+      "collection": "Rimba Hat",
       "collectionSlug": "the-rimba",
-      "subcategory": "",
+      "collectionSlugs": [
+        "the-rimba",
+        "sunburn"
+      ],
       "category": "hats",
       "productType": "Hats",
       "priceEUR": 69,
+      "onSale": false,
+      "available": true,
       "priceUSD": 76,
       "priceIDR": 1173000,
       "image": "/shopify-import/the-rimba-sky/01.png",
@@ -1388,6 +1380,7 @@
         "/shopify-import/the-rimba-sky/03.jpg",
         "/shopify-import/the-rimba-sky/04.jpg"
       ],
+      "story": "Le Rimba Sky en 100% Coton ! Découvrez notre forme de chapeau The Rimba, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau se porte avec les bords large pour bien couvrir la tête du soleil, les jours d'été ou en mode \"cow-boy\" est idéal pour toutes vos aventures ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne connaissez pas votre taill…",
       "details": [
         "Hats"
       ],
@@ -1395,26 +1388,30 @@
         "the",
         "rimba",
         "sky",
+        "hat",
         "hats",
         "the-rimba-sky"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": true,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "le-bucket-sugar-daddy",
       "name": "Le Bucket | Sugar Daddy",
-      "story": "Le Bucket SUGAR DADDY en 100% Coton ! Découvrez notre forme de chapeau Bucket, une forme de \"bob\" classique confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne co…",
-      "collection": "Bucket Hat",
-      "collectionSlug": "bucket-hat",
-      "subcategory": "",
+      "collection": "Outlet",
+      "collectionSlug": "archives",
+      "collectionSlugs": [
+        "archives"
+      ],
       "category": "hats",
       "productType": "",
-      "priceEUR": 34,
+      "priceEUR": 49,
+      "compareAtEUR": 34,
+      "onSale": true,
+      "available": false,
       "priceUSD": 37,
       "priceIDR": 578000,
       "image": "/shopify-import/le-bucket-sugar-daddy/01.jpg",
@@ -1424,31 +1421,35 @@
         "/shopify-import/le-bucket-sugar-daddy/03.jpg",
         "/shopify-import/le-bucket-sugar-daddy/04.jpg"
       ],
+      "story": "Le Bucket SUGAR DADDY en 100% Coton ! Découvrez notre forme de chapeau Bucket, une forme de \"bob\" classique confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne connaissez pas votre taille? Vérifiez ici , ou écrivez nous sur instagram . Pour préserver la beauté de votre chapeau, nous vous recommandons de le nettoyer à sec…",
       "details": [],
       "tags": [
         "bucket",
         "sugar",
         "daddy",
-        "hat",
+        "outlet",
         "le-bucket-sugar-daddy"
       ],
-      "stock": 0,
-      "status": "published",
+      "outlet": true,
       "featured": false,
-      "onSale": false,
-      "available": false,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "copy-of-le-bucket-lsd",
       "name": "Le Bucket | LSD",
-      "story": "Le Bucket LSD en 100% Coton ! Découvrez notre forme de chapeau Bucket, une forme de \"bob\" classique confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne connaissez…",
-      "collection": "Bucket Hat",
-      "collectionSlug": "bucket-hat",
-      "subcategory": "",
+      "collection": "Outlet",
+      "collectionSlug": "archives",
+      "collectionSlugs": [
+        "archives"
+      ],
       "category": "hats",
       "productType": "Hats",
-      "priceEUR": 34,
+      "priceEUR": 49,
+      "compareAtEUR": 34,
+      "onSale": true,
+      "available": false,
       "priceUSD": 37,
       "priceIDR": 578000,
       "image": "/shopify-import/copy-of-le-bucket-lsd/01.jpg",
@@ -1458,33 +1459,38 @@
         "/shopify-import/copy-of-le-bucket-lsd/03.jpg",
         "/shopify-import/copy-of-le-bucket-lsd/04.jpg"
       ],
+      "story": "Le Bucket LSD en 100% Coton ! Découvrez notre forme de chapeau Bucket, une forme de \"bob\" classique confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne connaissez pas votre taille? Vérifiez ici , ou écrivez nous sur instagram . Pour préserver la beauté de votre chapeau, nous vous recommandons de le nettoyer à sec . Comma…",
       "details": [
         "Hats"
       ],
       "tags": [
         "bucket",
         "lsd",
-        "hat",
+        "outlet",
         "hats",
         "copy-of-le-bucket-lsd"
       ],
-      "stock": 0,
-      "status": "published",
+      "outlet": true,
       "featured": false,
-      "onSale": false,
-      "available": false,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "le-bucket-ranger",
       "name": "Le Bucket | Ranger",
-      "story": "Le Bucket RANGER en 100% Coton ! Découvrez notre forme de chapeau Bucket, une forme de \"bob\" classique confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne connais…",
-      "collection": "Bucket Hat",
-      "collectionSlug": "bucket-hat",
-      "subcategory": "",
+      "collection": "Bestsellers",
+      "collectionSlug": "best-sellers",
+      "collectionSlugs": [
+        "best-sellers",
+        "archives"
+      ],
       "category": "hats",
       "productType": "",
-      "priceEUR": 35,
+      "priceEUR": 49,
+      "compareAtEUR": 35,
+      "onSale": true,
+      "available": true,
       "priceUSD": 39,
       "priceIDR": 595000,
       "image": "/shopify-import/le-bucket-ranger/01.jpg",
@@ -1494,30 +1500,33 @@
         "/shopify-import/le-bucket-ranger/03.jpg",
         "/shopify-import/le-bucket-ranger/04.jpg"
       ],
+      "story": "Le Bucket RANGER en 100% Coton ! Découvrez notre forme de chapeau Bucket, une forme de \"bob\" classique confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne connaissez pas votre taille? Vérifiez ici , ou écrivez nous sur instagram . Pour préserver la beauté de votre chapeau, nous vous recommandons de le nettoyer à sec . Co…",
       "details": [],
       "tags": [
         "bucket",
         "ranger",
-        "hat",
+        "bestsellers",
         "le-bucket-ranger"
       ],
-      "stock": 1,
+      "outlet": true,
+      "featured": true,
       "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": true,
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "le-bucket-low-tide-1",
       "name": "Le Bucket | Low Tide",
-      "story": "Le Bucket Low tide en 100% Coton ! Découvrez notre forme de chapeau Bucket, une forme de \"bob\" classique confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne conna…",
-      "collection": "Bucket Hat",
-      "collectionSlug": "bucket-hat",
-      "subcategory": "",
+      "collection": "Bestsellers",
+      "collectionSlug": "best-sellers",
+      "collectionSlugs": [
+        "best-sellers"
+      ],
       "category": "hats",
       "productType": "Hats",
       "priceEUR": 49,
+      "onSale": false,
+      "available": true,
       "priceUSD": 54,
       "priceIDR": 833000,
       "image": "/shopify-import/le-bucket-low-tide-1/01.jpg",
@@ -1527,6 +1536,7 @@
         "/shopify-import/le-bucket-low-tide-1/03.jpg",
         "/shopify-import/le-bucket-low-tide-1/04.jpg"
       ],
+      "story": "Le Bucket Low tide en 100% Coton ! Découvrez notre forme de chapeau Bucket, une forme de \"bob\" classique confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne connaissez pas votre taille? Vérifiez ici , ou écrivez nous sur instagram . Pour préserver la beauté de votre chapeau, nous vous recommandons de le nettoyer à sec . …",
       "details": [
         "Hats"
       ],
@@ -1534,27 +1544,30 @@
         "bucket",
         "low",
         "tide",
-        "hat",
+        "bestsellers",
         "hats",
         "le-bucket-low-tide-1"
       ],
-      "stock": 1,
+      "outlet": false,
+      "featured": true,
       "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": true,
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "le-bucket-denim-me",
       "name": "Le Bucket | Denim me",
-      "story": "Le Bucket Denim-me en 100% Coton ! Découvrez notre forme de chapeau Bucket, une forme de \"bob\" classique confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne conna…",
-      "collection": "Bucket Hat",
-      "collectionSlug": "bucket-hat",
-      "subcategory": "",
+      "collection": "Outlet",
+      "collectionSlug": "archives",
+      "collectionSlugs": [
+        "archives"
+      ],
       "category": "hats",
       "productType": "",
-      "priceEUR": 30,
+      "priceEUR": 49,
+      "compareAtEUR": 30,
+      "onSale": true,
+      "available": true,
       "priceUSD": 33,
       "priceIDR": 510000,
       "image": "/shopify-import/le-bucket-denim-me/01.jpg",
@@ -1564,30 +1577,34 @@
         "/shopify-import/le-bucket-denim-me/03.jpg",
         "/shopify-import/le-bucket-denim-me/04.jpg"
       ],
+      "story": "Le Bucket Denim-me en 100% Coton ! Découvrez notre forme de chapeau Bucket, une forme de \"bob\" classique confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne connaissez pas votre taille? Vérifiez ici , ou écrivez nous sur instagram . Pour préserver la beauté de votre chapeau, nous vous recommandons de le nettoyer à sec . …",
       "details": [],
       "tags": [
         "bucket",
         "denim",
-        "hat",
+        "outlet",
         "le-bucket-denim-me"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": true,
       "featured": false,
-      "onSale": false,
-      "available": true,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "le-bucket-black-soul",
       "name": "Le Bucket | Black Soul",
-      "story": "Le Bucket Black Soul en 100% Coton ! Découvrez notre forme de chapeau Bucket, une forme de \"bob\" classique confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne con…",
-      "collection": "Bucket Hat",
-      "collectionSlug": "bucket-hat",
-      "subcategory": "",
+      "collection": "Outlet",
+      "collectionSlug": "archives",
+      "collectionSlugs": [
+        "archives"
+      ],
       "category": "hats",
       "productType": "Hats",
-      "priceEUR": 39,
+      "priceEUR": 49,
+      "compareAtEUR": 39,
+      "onSale": true,
+      "available": true,
       "priceUSD": 43,
       "priceIDR": 663000,
       "image": "/shopify-import/le-bucket-black-soul/01.png",
@@ -1596,6 +1613,7 @@
         "/shopify-import/le-bucket-black-soul/02.png",
         "/shopify-import/le-bucket-black-soul/03.jpg"
       ],
+      "story": "Le Bucket Black Soul en 100% Coton ! Découvrez notre forme de chapeau Bucket, une forme de \"bob\" classique confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne connaissez pas votre taille? Vérifiez ici , ou écrivez nous sur instagram . Pour préserver la beauté de votre chapeau, nous vous recommandons de le nettoyer à sec …",
       "details": [
         "Hats"
       ],
@@ -1603,29 +1621,31 @@
         "bucket",
         "black",
         "soul",
-        "hat",
+        "outlet",
         "hats",
         "le-bucket-black-soul"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": true,
       "featured": false,
-      "onSale": false,
-      "available": true,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "90s-fisherman-yellow",
       "name": "90's Fisherman | Yellow",
-      "story": "Le 90's Fisherman YELLOW en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur jaune, est idéal pour parfaire vos looks estivaux. Il peut être porté…",
-      "collection": "90's Fisherman",
+      "collection": "90's Fisherman Hat",
       "collectionSlug": "90s-fisher",
-      "subcategory": "",
+      "collectionSlugs": [
+        "90s-fisher"
+      ],
       "category": "hats",
       "productType": "Hats",
-      "priceEUR": 49,
-      "priceUSD": 54,
-      "priceIDR": 833000,
+      "priceEUR": 61,
+      "onSale": false,
+      "available": false,
+      "priceUSD": 67,
+      "priceIDR": 1037000,
       "image": "/shopify-import/90s-fisherman-yellow/01.jpg",
       "images": [
         "/shopify-import/90s-fisherman-yellow/01.jpg",
@@ -1633,32 +1653,36 @@
         "/shopify-import/90s-fisherman-yellow/03.jpg",
         "/shopify-import/90s-fisherman-yellow/04.jpg"
       ],
+      "story": "Le 90's Fisherman YELLOW en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur jaune, est idéal pour parfaire vos looks estivaux. Il peut être porté en bandoulière dans toutes vos aventures ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne …",
       "details": [
         "Hats"
       ],
       "tags": [
         "fisherman",
         "yellow",
+        "hat",
         "hats",
         "90s-fisherman-yellow"
       ],
-      "stock": 0,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": false,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "90s-fisherman-spritz",
       "name": "90's Fisherman | Spritz",
-      "story": "Le 90's Fisherman SPRITZ en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur orange, est idéal pour parfaire vos looks estivaux. Il peut être port…",
-      "collection": "90's Fisherman",
+      "collection": "90's Fisherman Hat",
       "collectionSlug": "90s-fisher",
-      "subcategory": "",
+      "collectionSlugs": [
+        "90s-fisher"
+      ],
       "category": "hats",
       "productType": "Hats",
       "priceEUR": 61,
+      "onSale": false,
+      "available": true,
       "priceUSD": 67,
       "priceIDR": 1037000,
       "image": "/shopify-import/90s-fisherman-spritz/01.jpg",
@@ -1668,100 +1692,73 @@
         "/shopify-import/90s-fisherman-spritz/03.jpg",
         "/shopify-import/90s-fisherman-spritz/04.jpg"
       ],
+      "story": "Le 90's Fisherman SPRITZ en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur orange, est idéal pour parfaire vos looks estivaux. Il peut être porté en bandoulière dans toutes vos aventures ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne…",
       "details": [
         "Hats"
       ],
       "tags": [
         "fisherman",
         "spritz",
+        "hat",
         "hats",
         "90s-fisherman-spritz"
       ],
+      "outlet": false,
+      "featured": false,
+      "status": "published",
       "stock": 1,
-      "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": true,
-      "origin": "Bali"
-    },
-    {
-      "slug": "copy-of-90s-fisherman-pink",
-      "name": "90's Fisherman | Pink",
-      "story": "Le 90's Fisherman PINK en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur rose, est idéal pour parfaire vos looks estivaux. Il peut être porté en…",
-      "collection": "90's Fisherman",
-      "collectionSlug": "90s-fisher",
-      "subcategory": "",
-      "category": "hats",
-      "productType": "Hats",
-      "priceEUR": 61,
-      "priceUSD": 67,
-      "priceIDR": 1037000,
-      "image": "/shopify-import/copy-of-90s-fisherman-pink/01.jpg",
-      "images": [
-        "/shopify-import/copy-of-90s-fisherman-pink/01.jpg",
-        "/shopify-import/copy-of-90s-fisherman-pink/02.jpg",
-        "/shopify-import/copy-of-90s-fisherman-pink/03.jpg"
-      ],
-      "details": [
-        "Hats"
-      ],
-      "tags": [
-        "fisherman",
-        "pink",
-        "hats",
-        "copy-of-90s-fisherman-pink"
-      ],
-      "stock": 0,
-      "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": false,
       "origin": "Bali"
     },
     {
       "slug": "90s-fisherman-lavender",
       "name": "90's Fisherman | Lavender",
-      "story": "Le 90's Fisherman LAVENDER en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur lilas, est idéal pour parfaire vos looks estivaux. Il peut être por…",
-      "collection": "90's Fisherman",
-      "collectionSlug": "90s-fisher",
-      "subcategory": "",
+      "collection": "Shop",
+      "collectionSlug": "all-products",
+      "collectionSlugs": [],
       "category": "hats",
       "productType": "Hats",
-      "priceEUR": 49,
-      "priceUSD": 54,
-      "priceIDR": 833000,
+      "priceEUR": 61,
+      "onSale": false,
+      "available": true,
+      "priceUSD": 67,
+      "priceIDR": 1037000,
       "image": "/shopify-import/90s-fisherman-lavender/01.jpg",
       "images": [
         "/shopify-import/90s-fisherman-lavender/01.jpg",
         "/shopify-import/90s-fisherman-lavender/02.jpg",
         "/shopify-import/90s-fisherman-lavender/03.jpg"
       ],
+      "story": "Le 90's Fisherman LAVENDER en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur lilas, est idéal pour parfaire vos looks estivaux. Il peut être porté en bandoulière dans toutes vos aventures ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous n…",
       "details": [
         "Hats"
       ],
       "tags": [
         "fisherman",
         "lavender",
+        "shop",
         "hats",
         "90s-fisherman-lavender"
       ],
-      "stock": 1,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": true,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "90s-fisherman-ecru",
       "name": "90's Fisherman | Ecru",
-      "story": "Le 90's Fisherman ECRU en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur blanc cassé, est idéal pour parfaire vos looks estivaux. Il peut être p…",
-      "collection": "90's Fisherman",
+      "collection": "90's Fisherman Hat",
       "collectionSlug": "90s-fisher",
-      "subcategory": "",
+      "collectionSlugs": [
+        "90s-fisher",
+        "best-sellers"
+      ],
       "category": "hats",
       "productType": "Hats",
       "priceEUR": 61,
+      "onSale": false,
+      "available": false,
       "priceUSD": 67,
       "priceIDR": 1037000,
       "image": "/shopify-import/90s-fisherman-ecru/01.png",
@@ -1771,32 +1768,38 @@
         "/shopify-import/90s-fisherman-ecru/03.jpg",
         "/shopify-import/90s-fisherman-ecru/04.jpg"
       ],
+      "story": "Le 90's Fisherman ECRU en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur blanc cassé, est idéal pour parfaire vos looks estivaux. Il peut être porté en bandoulière dans toutes vos aventures ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous…",
       "details": [
         "Hats"
       ],
       "tags": [
         "fisherman",
         "ecru",
+        "hat",
         "hats",
         "90s-fisherman-ecru"
       ],
-      "stock": 0,
+      "outlet": false,
+      "featured": true,
       "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": false,
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "90s-fisherman-chocolate",
       "name": "90's Fisherman | Chocolate",
-      "story": "Le 90's Fisherman CHOCOLATE en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur marron, est idéal pour parfaire vos looks estivaux. Il peut être p…",
-      "collection": "90's Fisherman",
+      "collection": "90's Fisherman Hat",
       "collectionSlug": "90s-fisher",
-      "subcategory": "",
+      "collectionSlugs": [
+        "90s-fisher",
+        "best-sellers",
+        "retro-safari"
+      ],
       "category": "hats",
       "productType": "Hats",
       "priceEUR": 61,
+      "onSale": false,
+      "available": true,
       "priceUSD": 67,
       "priceIDR": 1037000,
       "image": "/shopify-import/90s-fisherman-chocolate/01.png",
@@ -1806,34 +1809,36 @@
         "/shopify-import/90s-fisherman-chocolate/03.jpg",
         "/shopify-import/90s-fisherman-chocolate/04.jpg"
       ],
+      "story": "Le 90's Fisherman CHOCOLATE en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur marron, est idéal pour parfaire vos looks estivaux. Il peut être porté en bandoulière dans toutes vos aventures ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous…",
       "details": [
         "Hats"
       ],
       "tags": [
         "fisherman",
         "chocolate",
+        "hat",
         "hats",
         "90s-fisherman-chocolate"
       ],
-      "stock": 1,
+      "outlet": false,
+      "featured": true,
       "status": "published",
-      "featured": false,
-      "onSale": false,
-      "available": true,
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "90s-fisherman-bean",
       "name": "90's Fisherman | Bean",
-      "story": "Le 90's Fisherman BEAN en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur vert, est idéal pour parfaire vos looks estivaux. Il peut être porté en…",
-      "collection": "90's Fisherman",
-      "collectionSlug": "90s-fisher",
-      "subcategory": "",
+      "collection": "Shop",
+      "collectionSlug": "all-products",
+      "collectionSlugs": [],
       "category": "hats",
       "productType": "Hats",
-      "priceEUR": 49,
-      "priceUSD": 54,
-      "priceIDR": 833000,
+      "priceEUR": 61,
+      "onSale": false,
+      "available": true,
+      "priceUSD": 67,
+      "priceIDR": 1037000,
       "image": "/shopify-import/90s-fisherman-bean/01.png",
       "images": [
         "/shopify-import/90s-fisherman-bean/01.png",
@@ -1841,32 +1846,37 @@
         "/shopify-import/90s-fisherman-bean/03.jpg",
         "/shopify-import/90s-fisherman-bean/04.jpg"
       ],
+      "story": "Le 90's Fisherman BEAN en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur vert, est idéal pour parfaire vos looks estivaux. Il peut être porté en bandoulière dans toutes vos aventures ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille habituelle. Vous ne con…",
       "details": [
         "Hats"
       ],
       "tags": [
         "fisherman",
         "bean",
+        "shop",
         "hats",
         "90s-fisherman-bean"
       ],
-      "stock": 0,
-      "status": "published",
+      "outlet": false,
       "featured": false,
-      "onSale": false,
-      "available": false,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     },
     {
       "slug": "90s-fisherman-oasis",
       "name": "90's Fisherman | Oasis",
-      "story": "Le 90's Fisherman O A S I S en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur écru avec un pattern, est idéal pour parfaire vos looks estivaux. …",
-      "collection": "90's Fisherman",
-      "collectionSlug": "90s-fisher",
-      "subcategory": "",
+      "collection": "Outlet",
+      "collectionSlug": "archives",
+      "collectionSlugs": [
+        "archives"
+      ],
       "category": "hats",
       "productType": "Hats",
-      "priceEUR": 31,
+      "priceEUR": 61,
+      "compareAtEUR": 31,
+      "onSale": true,
+      "available": false,
       "priceUSD": 34,
       "priceIDR": 527000,
       "image": "/shopify-import/90s-fisherman-oasis/01.png",
@@ -1874,21 +1884,26 @@
         "/shopify-import/90s-fisherman-oasis/01.png",
         "/shopify-import/90s-fisherman-oasis/02.jpg"
       ],
+      "story": "Le 90's Fisherman O A S I S en 100% Coton Découvrez notre forme de chapeau 90's Fisherman, un incontournable confectionné dans le coeur de Bali par des artisans que nous connaissons personnellement . Ce chapeau de style bob des années 90 , de couleur écru avec un pattern, est idéal pour parfaire vos looks estivaux. Il peut être porté en bandoulière dans toutes vos aventures ! Taille et Entretien : Disponible en S, M & L Ce produit taille normalement, prenez votre taille ha…",
       "details": [
         "Hats"
       ],
       "tags": [
         "fisherman",
         "oasis",
+        "outlet",
         "hats",
         "90s-fisherman-oasis"
       ],
-      "stock": 0,
-      "status": "published",
+      "outlet": true,
       "featured": false,
-      "onSale": false,
-      "available": false,
+      "status": "published",
+      "stock": 1,
       "origin": "Bali"
     }
-  ]
+  ],
+  "snapshot": {
+    "saleCount": 11,
+    "outletCount": 8
+  }
 }

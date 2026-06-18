@@ -1,0 +1,166 @@
+{
+  "about": {
+    "eyebrow": "La marque",
+    "title": "LA MARQUE",
+    "youtubeId": "Ol56ZDhtlnY",
+    "sections": [
+      {
+        "id": "vision",
+        "eyebrow": "01 — Attitude",
+        "title": "Une attitude, une singularité",
+        "body": "S’offrir un chapeau, c’est avant tout s’offrir une attitude, une authenticité, de l’audace et une singularité… Attachés à des moments qui se collectent, des souvenirs indélébiles et pour cultiver sa différence, chez Bingin Diaries, nous dessinons, créons et pensons nos collections pour qu’elles soient singulières & mémorables."
+      },
+      {
+        "id": "artisans",
+        "eyebrow": "02 — Artisans",
+        "title": "Une marque juste & humaine",
+        "body": "BINGIN DIARIES EST UNE MARQUE juste & humaine et impliquée dans les communautés qui confectionnent nos chapeaux. Derrière chaque pièce que vous portez, il y a un homme ou une femme, UNE HISTOIRE. NOUS entretenons des relations étroites avec NOS artisans. Nous engageons la marque envers le respect des droits des travailleurs, DES CONDITIONS DE TRAVAIL équitables et une volonté de contribuer positivement au développement des communautés locales À BALI ET AU PORTUGAL."
+      },
+      {
+        "id": "quality",
+        "eyebrow": "03 — Matières",
+        "title": "Qualité, durabilité & éco-responsabilité",
+        "body": "Nos chapeaux sont le reflet de notre engagement envers la qualité et la durabilité. Nous apportons une grande importance aux matériaux utilisés dans la fabrication des chapeaux, ET VEILLONS JOUR APRÈS JOUR À NOUS RAPPROCHER DE CHAPEAUX 100% ÉCO-RESPONSABLE. Les chapeaux sont dessinés et stockés en France."
+      },
+      {
+        "id": "france",
+        "eyebrow": "04 — France",
+        "title": "Dessinés & stockés en France",
+        "body": "Avec Bingin Diaries, vos chapeaux s’emportent au rythme de vos souvenirs et vos styles s’exportent au tempo de votre authenticité."
+      }
+    ],
+    "values": [
+      {
+        "n": "01",
+        "t": "Artisans connus",
+        "d": "Bali & Portugal — une histoire derrière chaque pièce."
+      },
+      {
+        "n": "02",
+        "t": "Matières durables",
+        "d": "Vers des chapeaux de plus en plus éco-responsables."
+      },
+      {
+        "n": "03",
+        "t": "Slow fashion",
+        "d": "Collections singulières, mémorables, faites pour durer."
+      }
+    ]
+  },
+  "care": {
+    "eyebrow": "Entretien",
+    "title": "Guide d'entretien",
+    "intro": "A well-cared-for hat stays beautiful for a long time. Our pieces are made to last with a few simple habits, you can keep their shape, texture, and style season after season.",
+    "sections": [
+      {
+        "title": "Coton",
+        "tips": [
+          "• Dry clean is best",
+          "• Or clean by hand only on the stain",
+          "• Do not machine wash"
+        ]
+      },
+      {
+        "title": "Wool",
+        "tips": [
+          "• Hand wash only",
+          "• Use cold water",
+          "• Do not rub or twist",
+          "• Do not use a dryer",
+          "• Dry flat in open air"
+        ]
+      },
+      {
+        "title": "Cashmere",
+        "tips": [
+          "• Use a soft brush",
+          "• Brush anti-clockwise",
+          "• Brush from top to bottom",
+          "• Keep away from water"
+        ]
+      },
+      {
+        "title": "Beanies",
+        "tips": [
+          "• Hand wash only",
+          "• Use cold water",
+          "• Do not use a dryer",
+          "• Dry flat in open air"
+        ]
+      },
+      {
+        "title": "Caps",
+        "tips": [
+          "• Hand wash",
+          "• Cold water only",
+          "• Do not twist",
+          "• Air dry"
+        ]
+      },
+      {
+        "title": "Le bucket / radio soleil",
+        "tips": [
+          "• Keep away from water",
+          "• Do not wash",
+          "• Clean gently with a dry cloth if needed"
+        ]
+      },
+      {
+        "title": "General",
+        "tips": [
+          "General tip: Store your hat flat or on a stand to keep its shape. Keep it away from humidity and heat."
+        ]
+      }
+    ]
+  },
+  "sizing": {
+    "eyebrow": "Fit",
+    "title": "Guide des tailles",
+    "image": "https://cdn.shopify.com/s/files/1/0437/5992/7449/files/Bingin-Sizing-edit_for_web_1.png?v=1755161480",
+    "body": [
+      "Most Bingin Diaries hats are adjustable with an interior ribbon (sizes M & L).",
+      "Refer to the chart below for brim and crown measurements."
+    ]
+  },
+  "shippingReturns": {
+    "shipping": {
+      "title": "Livraisons",
+      "eyebrow": "Customer care",
+      "body": [
+        "LIVRAISONS & RETOURS",
+        "Nous expédions depuis la France.",
+        "Nos chapeaux sont le reflet de notre engagement envers la qualité et la durabilité.",
+        "Notre approche aux matières, mais aussi nos liens de proximité avec les hommes et les femmes qui confectionnent nos collections embrassent, jour après jour la volonté d’une marque juste, humaine et impliquée dans nos communautés.",
+        "LIVRAISON",
+        "France",
+        "Standard : 2 à 5 jours ouvrés",
+        "Express : 1 à 3 jours ouvrés",
+        "Europe",
+        "2 à 5 jours ouvrés",
+        "Reste du monde",
+        "5 à 15 jours ouvrés"
+      ]
+    },
+    "returns": {
+      "title": "Livraisons & retours",
+      "eyebrow": "Customer care",
+      "body": [
+        "RETOUR",
+        "Nous espérons que vous aimez votre chapeau.Si toutefois vous souhaitez effectuer un retour, vous disposez de 14 jours après réception de votre commande pour en faire la demande.",
+        "Veuillez noter que nous n’effectuons pas d’échanges, uniquement des remboursements.",
+        "Pour être éligible à un retour, votre article doit être ;",
+        "- Dans le même état que celui où vous l'avez reçu",
+        "- Non porté ou non utilisé et dans son emballage d'origine.",
+        "Voyageur : Le moyen le plus rapide d'avoir votre chapeau en temps est de retourner l'article indésiré et de re-faire un achat séparé pour le nouvel article.",
+        "SOLDES",
+        "Les articles en solde finale, les accessoires, les commandes personnalisées et les articles modifiés ne peuvent pas être retournés.Sont considérés en solde final tous les articles bénéficiant d’une remise de 30 % ou plus, ou marqués comme étant en solde final.Veuillez faire vos achats en toute conscience.",
+        "DOMMAGES & PROBLÈMES",
+        "Veuillez inspecter votre commande dès réception et nous contacter immédiatement si l'article est défectueux, endommagé ou si vous recevez le mauvais article, afin que nous puissions évaluer le problème et y remédier : info@bingindiaries.com",
+        "REMBOURSEMENTS",
+        "Une fois votre retour reçu et inspecté, nous vous confirmerons si le remboursement est accepté.S’il est approuvé, le montant sera automatiquement reversé sur votre méthode de paiement initiale.",
+        "Veuillez noter que le délai de traitement peut varier en fonction de votre banque ou de votre société de carte de crédit.",
+        "Pour toute question supplémentaire info@bingindiaries.com"
+      ]
+    }
+  }
+}

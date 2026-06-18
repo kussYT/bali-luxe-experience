@@ -11,12 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TravelDiariesRouteImport } from './routes/travel-diaries'
 import { Route as StockistsRouteImport } from './routes/stockists'
+import { Route as SizingRouteImport } from './routes/sizing'
 import { Route as ShippingRouteImport } from './routes/shipping'
 import { Route as ReturnsRouteImport } from './routes/returns'
 import { Route as FindUsRouteImport } from './routes/find-us'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CollectionRouteImport } from './routes/collection'
 import { Route as CartRouteImport } from './routes/cart'
+import { Route as CareRouteImport } from './routes/care'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AboutRouteImport } from './routes/about'
@@ -53,6 +55,11 @@ const StockistsRoute = StockistsRouteImport.update({
   path: '/stockists',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SizingRoute = SizingRouteImport.update({
+  id: '/sizing',
+  path: '/sizing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShippingRoute = ShippingRouteImport.update({
   id: '/shipping',
   path: '/shipping',
@@ -81,6 +88,11 @@ const CollectionRoute = CollectionRouteImport.update({
 const CartRoute = CartRouteImport.update({
   id: '/cart',
   path: '/cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CareRoute = CareRouteImport.update({
+  id: '/care',
+  path: '/care',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -214,12 +226,14 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRouteWithChildren
+  '/care': typeof CareRoute
   '/cart': typeof CartRoute
   '/collection': typeof CollectionRoute
   '/contact': typeof ContactRoute
   '/find-us': typeof FindUsRoute
   '/returns': typeof ReturnsRoute
   '/shipping': typeof ShippingRoute
+  '/sizing': typeof SizingRoute
   '/stockists': typeof StockistsRoute
   '/travel-diaries': typeof TravelDiariesRoute
   '/admin/content': typeof AdminContentRoute
@@ -248,12 +262,14 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/account': typeof AccountRoute
+  '/care': typeof CareRoute
   '/cart': typeof CartRoute
   '/collection': typeof CollectionRoute
   '/contact': typeof ContactRoute
   '/find-us': typeof FindUsRoute
   '/returns': typeof ReturnsRoute
   '/shipping': typeof ShippingRoute
+  '/sizing': typeof SizingRoute
   '/stockists': typeof StockistsRoute
   '/travel-diaries': typeof TravelDiariesRoute
   '/admin/content': typeof AdminContentRoute
@@ -284,12 +300,14 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRouteWithChildren
+  '/care': typeof CareRoute
   '/cart': typeof CartRoute
   '/collection': typeof CollectionRoute
   '/contact': typeof ContactRoute
   '/find-us': typeof FindUsRoute
   '/returns': typeof ReturnsRoute
   '/shipping': typeof ShippingRoute
+  '/sizing': typeof SizingRoute
   '/stockists': typeof StockistsRoute
   '/travel-diaries': typeof TravelDiariesRoute
   '/admin/content': typeof AdminContentRoute
@@ -321,12 +339,14 @@ export interface FileRouteTypes {
     | '/about'
     | '/account'
     | '/admin'
+    | '/care'
     | '/cart'
     | '/collection'
     | '/contact'
     | '/find-us'
     | '/returns'
     | '/shipping'
+    | '/sizing'
     | '/stockists'
     | '/travel-diaries'
     | '/admin/content'
@@ -355,12 +375,14 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/account'
+    | '/care'
     | '/cart'
     | '/collection'
     | '/contact'
     | '/find-us'
     | '/returns'
     | '/shipping'
+    | '/sizing'
     | '/stockists'
     | '/travel-diaries'
     | '/admin/content'
@@ -390,12 +412,14 @@ export interface FileRouteTypes {
     | '/about'
     | '/account'
     | '/admin'
+    | '/care'
     | '/cart'
     | '/collection'
     | '/contact'
     | '/find-us'
     | '/returns'
     | '/shipping'
+    | '/sizing'
     | '/stockists'
     | '/travel-diaries'
     | '/admin/content'
@@ -426,12 +450,14 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRouteWithChildren
+  CareRoute: typeof CareRoute
   CartRoute: typeof CartRoute
   CollectionRoute: typeof CollectionRoute
   ContactRoute: typeof ContactRoute
   FindUsRoute: typeof FindUsRoute
   ReturnsRoute: typeof ReturnsRoute
   ShippingRoute: typeof ShippingRoute
+  SizingRoute: typeof SizingRoute
   StockistsRoute: typeof StockistsRoute
   TravelDiariesRoute: typeof TravelDiariesRoute
   ApiSplatRoute: typeof ApiSplatRoute
@@ -456,6 +482,13 @@ declare module '@tanstack/react-router' {
       path: '/stockists'
       fullPath: '/stockists'
       preLoaderRoute: typeof StockistsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sizing': {
+      id: '/sizing'
+      path: '/sizing'
+      fullPath: '/sizing'
+      preLoaderRoute: typeof SizingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shipping': {
@@ -498,6 +531,13 @@ declare module '@tanstack/react-router' {
       path: '/cart'
       fullPath: '/cart'
       preLoaderRoute: typeof CartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/care': {
+      id: '/care'
+      path: '/care'
+      fullPath: '/care'
+      preLoaderRoute: typeof CareRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -721,12 +761,14 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AccountRoute: AccountRoute,
   AdminRoute: AdminRouteWithChildren,
+  CareRoute: CareRoute,
   CartRoute: CartRoute,
   CollectionRoute: CollectionRoute,
   ContactRoute: ContactRoute,
   FindUsRoute: FindUsRoute,
   ReturnsRoute: ReturnsRoute,
   ShippingRoute: ShippingRoute,
+  SizingRoute: SizingRoute,
   StockistsRoute: StockistsRoute,
   TravelDiariesRoute: TravelDiariesRoute,
   ApiSplatRoute: ApiSplatRoute,
