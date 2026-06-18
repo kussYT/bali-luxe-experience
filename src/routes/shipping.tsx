@@ -2,18 +2,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { InfoPage } from "@/components/site/InfoPage";
 import { useSiteContent } from "@/lib/content-context";
+import { BRAND_CONTENT } from "@/data/brand-content";
 import type { CmsPage } from "@/lib/content-types";
 
 const FALLBACK: CmsPage = {
   slug: "shipping",
-  title: "Shipping",
-  eyebrow: "Customer care",
+  title: BRAND_CONTENT.shippingReturns.shipping.title,
+  eyebrow: BRAND_CONTENT.shippingReturns.shipping.eyebrow,
   metaDescription: "",
-  body: [
-    "We ship worldwide from our ateliers in Canggu and Paris. Orders are dispatched within 2–4 business days.",
-    "Delivery times vary by destination — typically 3–7 days within Europe, 7–14 days internationally.",
-    "You'll receive tracking details by email once your order leaves the atelier.",
-  ],
+  body: BRAND_CONTENT.shippingReturns.shipping.body,
 };
 
 export const Route = createFileRoute("/shipping")({

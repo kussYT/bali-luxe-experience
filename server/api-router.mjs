@@ -60,7 +60,7 @@ import {
   seedCmsContent,
 } from "./api/content-admin.mjs";
 import { getAdminCmsStatusResponse } from "./api/cms-status.mjs";
-import { sanitizeInstagramFeed } from "./instagram-utils.mjs";
+import { mergeFeedWithLocalImages, sanitizeInstagramFeed } from "./instagram-utils.mjs";
 import {
   createAdminProduct,
   updateAdminProduct,
@@ -100,7 +100,10 @@ async function instagramResponse(request) {
   let liveError = null;
   try {
     const live = await fetchInstagramFeed();
-    if (live) return jsonResponse(200, live);
+    if (live) {
+      const merged = mergeFeedWithLocalImages(live, getStaticInstagramFeed());
+      return jsonResponse(200, merged);
+    }
   } catch (e) {
     liveError = e;
     console.warn("[api/instagram]", e.message);

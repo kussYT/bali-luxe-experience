@@ -1,58 +1,103 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { BRAND_CONTENT } from "@/data/brand-content";
 import { IMG } from "@/data/lifestyle-content";
+
+const { about } = BRAND_CONTENT;
 
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "Atelier — Bingin Diaries" },
-      { name: "description", content: "A small house woven between Bali and France." },
-      { property: "og:image", content: IMG.editorial },
+      { title: "La marque — Bingin Diaries" },
+      {
+        name: "description",
+        content: "L'histoire de Bingin Diaries — chapeaux artisanaux entre Bali, le Portugal et la France.",
+      },
+      { property: "og:image", content: IMG.craft.hands },
     ],
   }),
   component: About,
 });
 
+const SUBNAV = [
+  { label: "Vision", hash: "vision" },
+  { label: "Artisans", hash: "artisans" },
+  { label: "Matières", hash: "quality" },
+  { label: "France", hash: "france" },
+  { label: "Entretien", to: "/care" as const },
+  { label: "Tailles", to: "/sizing" as const },
+];
+
 function About() {
   return (
     <>
-      <section className="page-wrap section-pad pt-24 pb-20 max-w-5xl">
-        <p className="text-eyebrow text-muted-foreground">The atelier</p>
+      <section className="page-wrap section-pad pt-24 pb-12 max-w-5xl">
+        <p className="text-eyebrow text-muted-foreground">{about.eyebrow}</p>
         <h1 className="font-display text-5xl md:text-8xl mt-4 leading-[0.95] tracking-tight">
-          Two homes,
-          <br />
-          one diary.
+          {about.title}
         </h1>
+        <nav className="mt-10 flex flex-wrap gap-x-6 gap-y-2 text-eyebrow">
+          {SUBNAV.map((item) =>
+            item.to ? (
+              <Link key={item.label} to={item.to} className="link-underline">
+                {item.label}
+              </Link>
+            ) : (
+              <a key={item.label} href={`#${item.hash}`} className="link-underline">
+                {item.label}
+              </a>
+            ),
+          )}
+        </nav>
       </section>
 
-      <section id="atelier" className="grid md:grid-cols-2 gap-px bg-border scroll-mt-24">
-        <img
-          src={IMG.craft.hands}
-          alt="Hand weaving"
-          className="size-full object-cover aspect-[4/5] image-editorial"
-          loading="lazy"
-        />
-        <div className="bg-background p-8 md:p-16 flex flex-col justify-center">
-          <p className="text-eyebrow text-muted-foreground">Origin</p>
-          <h2 className="font-display text-3xl md:text-4xl mt-4 leading-tight">
-            Born from a long, slow ride between Canggu and the South of France.
-          </h2>
-          <p className="mt-6 text-muted-foreground leading-relaxed">
-            Bingin Diaries is a small house of hand-woven hats — designed in France, made in Bali, finished by hand. We
-            work with a few artisans we know by name, in a rhythm that lets each piece breathe.
-          </p>
-          <p className="mt-4 text-muted-foreground leading-relaxed">
-            We believe in a quieter kind of fashion. One that travels well, that ages well, and that carries the memory
-            of the place it came from.
-          </p>
-        </div>
-      </section>
+      {about.youtubeId && (
+        <section className="page-wrap section-pad pb-16">
+          <div className="aspect-video max-w-4xl bg-muted overflow-hidden">
+            <iframe
+              title="Bingin Diaries — la marque"
+              src={`https://www.youtube.com/embed/${about.youtubeId}`}
+              className="size-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        </section>
+      )}
+
+      {about.sections.map((section, i) => (
+        <section
+          key={section.id}
+          id={section.id}
+          className={`scroll-mt-24 ${i % 2 === 0 ? "bg-background" : "bg-secondary/30"}`}
+        >
+          <div className="page-wrap section-pad py-16 md:py-24 grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+            {i % 2 === 0 && (
+              <img
+                src={[IMG.craft.hands, IMG.craft.fabric, IMG.editorial, IMG.craft.travel][i] ?? IMG.craft.hands}
+                alt={section.title}
+                className="w-full aspect-[4/5] object-cover image-editorial order-2 md:order-1"
+                loading="lazy"
+              />
+            )}
+            <div className={i % 2 === 0 ? "order-1 md:order-2" : ""}>
+              <p className="text-eyebrow text-muted-foreground">{section.eyebrow}</p>
+              <h2 className="font-display text-3xl md:text-4xl mt-4 leading-tight">{section.title}</h2>
+              <p className="mt-6 text-muted-foreground leading-relaxed">{section.body}</p>
+            </div>
+            {i % 2 !== 0 && (
+              <img
+                src={[IMG.craft.hands, IMG.craft.fabric, IMG.editorial, IMG.craft.travel][i] ?? IMG.craft.fabric}
+                alt={section.title}
+                className="w-full aspect-[4/5] object-cover image-editorial"
+                loading="lazy"
+              />
+            )}
+          </div>
+        </section>
+      ))}
 
       <section className="page-wrap section-pad py-24 grid md:grid-cols-3 gap-12">
-        {[
-          { n: "01", t: "Hand-woven", d: "Each hat is woven by a single artisan, start to finish." },
-          { n: "02", t: "Two ateliers", d: "Designed in France. Hand-made in Bali. Shipped from both." },
-          { n: "03", t: "Slow by design", d: "Small drops, considered details, no waste." },
-        ].map((b) => (
+        {about.values.map((b) => (
           <div key={b.n}>
             <p className="font-mono text-accent">{b.n}</p>
             <h3 className="font-display text-2xl mt-3">{b.t}</h3>
@@ -61,19 +106,16 @@ function About() {
         ))}
       </section>
 
-      <section className="relative h-[70vh] overflow-hidden">
-        <img
-          src={IMG.editorial}
-          alt="Bali rice fields"
-          className="absolute inset-0 size-full object-cover image-editorial"
-          loading="lazy"
-        />
-        <div className="absolute inset-0 bg-foreground/30" />
-        <div className="relative h-full flex items-end page-wrap section-pad pb-10 md:pb-14 text-surface">
-          <p className="font-display text-3xl md:text-5xl max-w-3xl leading-tight">
-            From the rice fields of Ubud to the limestone cliffs of Cassis — every piece is a small diary entry.
-          </p>
-        </div>
+      <section className="page-wrap section-pad pb-24 flex flex-wrap gap-4 text-sm">
+        <Link to="/care" className="btn-secondary">
+          Guide d'entretien
+        </Link>
+        <Link to="/sizing" className="btn-secondary">
+          Guide des tailles
+        </Link>
+        <Link to="/find-us" className="btn-secondary">
+          Find us
+        </Link>
       </section>
     </>
   );

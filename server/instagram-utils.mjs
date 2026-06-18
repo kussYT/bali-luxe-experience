@@ -34,6 +34,25 @@ export function sanitizeInstagramFeed(feed, fallbackImages = LIFESTYLE_FALLBACK_
   return { ...feed, posts };
 }
 
+/** Prefer bundled /instagram/* paths when we already synced a post. */
+export function mergeFeedWithLocalImages(liveFeed, staticFeed) {
+  if (!liveFeed?.posts?.length) return liveFeed;
+  const localById = new Map();
+  for (const post of staticFeed?.posts ?? []) {
+    if (post?.id && typeof post.image === "string" && post.image.startsWith("/instagram/")) {
+      localById.set(post.id, post.image);
+    }
+  }
+  if (localById.size === 0) return liveFeed;
+  return {
+    ...liveFeed,
+    posts: liveFeed.posts.map((post) => ({
+      ...post,
+      image: localById.get(post.id) ?? post.image,
+    })),
+  };
+}
+
 export function summarizeInstagramFeed(feed) {
   const posts = feed?.posts ?? [];
   const localImages = posts.filter((p) => p.image?.startsWith("/")).length;

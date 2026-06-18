@@ -51,6 +51,7 @@ function normalizeProduct(raw) {
     story: raw.story || "",
     collection: raw.collection || "Shop",
     collectionSlug: raw.collectionSlug || slugify(raw.collection || "shop"),
+    collectionSlugs: Array.isArray(raw.collectionSlugs) ? raw.collectionSlugs : undefined,
     subcategory: raw.subcategory || "",
     category: raw.category || "hats",
     productType: raw.productType || "",
@@ -66,6 +67,7 @@ function normalizeProduct(raw) {
     status,
     featured: Boolean(raw.featured),
     onSale,
+    outlet: Boolean(raw.outlet),
     available: stock > 0 && status === "published",
     origin: raw.origin === "France" ? "France" : "Bali",
   };

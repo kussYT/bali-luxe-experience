@@ -27,6 +27,8 @@ export type Collection = {
   slug: string;
   name: string;
   season: string;
+  description?: string;
+  sortOrder?: number;
 };
 
 export type Product = {
@@ -37,6 +39,8 @@ export type Product = {
   story: string;
   collection: string;
   collectionSlug: string;
+  /** All Shopify collection handles this product belongs to */
+  collectionSlugs?: string[];
   subcategory: string;
   category: ProductCategory;
   productType: string;
@@ -55,6 +59,7 @@ export type Product = {
   status: ProductStatus;
   featured: boolean;
   onSale?: boolean;
+  outlet?: boolean;
   available: boolean;
   origin: ProductOrigin;
   defaultWarehouse?: WarehouseId;
