@@ -1,8 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { fetchAdminCatalog, fetchAdminInventory } from "@/lib/admin-api";
+import {
+  fetchAdminCatalog,
+  fetchAdminInventory,
+  fetchAdminAnalytics,
+  type AdminAnalytics,
+} from "@/lib/admin-api";
 import type { Catalog } from "@/lib/catalog-types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardCharts } from "@/components/admin/DashboardCharts";
+import { OrdersWorldMap } from "@/components/admin/OrdersWorldMap";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Admin dashboard — Bingin Diaries" }] }),
@@ -14,6 +21,8 @@ function AdminDashboard() {
   const [stockParis, setStockParis] = useState<number | null>(null);
   const [stockBali, setStockBali] = useState<number | null>(null);
   const [lowStockWh, setLowStockWh] = useState<number | null>(null);
+  const [analytics, setAnalytics] = useState<AdminAnalytics | null>(null);
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAdminCatalog().then(setCatalog).catch(console.error);
@@ -24,6 +33,9 @@ function AdminDashboard() {
         setLowStockWh(inv.lowStockCount);
       })
       .catch(() => {});
+    fetchAdminAnalytics()
+      .then((res) => setAnalytics(res.analytics))
+      .catch((e) => setAnalyticsError(e instanceof Error ? e.message : "Analytics unavailable"));
   }, []);
 
   const published = catalog?.products.filter((p) => p.status === "published").length ?? 0;
@@ -58,6 +70,25 @@ function AdminDashboard() {
         ))}
       </div>
 
+      {analyticsError && (
+        <p className="text-sm text-muted-foreground">
+          Graphiques indisponibles : {analyticsError} (lancez <code className="text-xs">npm run db:migrate</code> si besoin).
+        </p>
+      )}
+
+      {analytics && <DashboardCharts analytics={analytics} />}
+
+      {analytics && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display text-xl">Carte des commandes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <OrdersWorldMap data={analytics.ordersByCountry} />
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -67,14 +98,14 @@ function AdminDashboard() {
             <Link to="/admin/products/new" className="link-underline w-fit">
               Add a new product
             </Link>
-            <Link to="/admin/products" className="link-underline w-fit">
-              Manage all products
+            <Link to="/admin/orders" className="link-underline w-fit">
+              View orders &amp; marketplace
+            </Link>
+            <Link to="/admin/newsletter" className="link-underline w-fit">
+              Newsletter settings
             </Link>
             <Link to="/admin/inventory" className="link-underline w-fit">
               France / Bali inventory
-            </Link>
-            <Link to="/admin/orders" className="link-underline w-fit">
-              View orders
             </Link>
             <Link to="/collection" className="link-underline w-fit text-muted-foreground">
               View public shop
@@ -94,10 +125,7 @@ function AdminDashboard() {
               <strong className="text-foreground">Categories</strong> — {catalog?.collections.length ?? 0} collections
             </p>
             <p>
-              <strong className="text-foreground">Images</strong> — managed per product
-            </p>
-            <p>
-              <strong className="text-foreground">Sales</strong> — products with a sale price appear in Sales
+              <strong className="text-foreground">Sales</strong> — {analytics?.summary.paidOrders ?? 0} paid orders
             </p>
             <p>
               <strong className="text-foreground">Warehouses</strong> —{" "}
@@ -109,5 +137,3 @@ function AdminDashboard() {
     </div>
   );
 }
-
-

@@ -1,3 +1,34 @@
+export type NewsletterCopy = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  placeholder: string;
+  button: string;
+  successMessage: string;
+  duplicateMessage: string;
+};
+
+const DEFAULT_COPY: NewsletterCopy = {
+  eyebrow: "Newsletter",
+  title: "Join the diary",
+  description: "Receive notes from Bali, new drops and summer stories.",
+  placeholder: "Your email",
+  button: "Subscribe",
+  successMessage: "Welcome to the diary. Check your inbox soon.",
+  duplicateMessage: "You're already on the list — thank you for staying close.",
+};
+
+export async function fetchNewsletterCopy(): Promise<NewsletterCopy> {
+  try {
+    const res = await fetch("/api/newsletter/copy");
+    if (!res.ok) return DEFAULT_COPY;
+    const data = (await res.json()) as { copy?: Partial<NewsletterCopy> };
+    return { ...DEFAULT_COPY, ...(data.copy || {}) };
+  } catch {
+    return DEFAULT_COPY;
+  }
+}
+
 export type NewsletterResult =
   | { ok: true; duplicate?: boolean }
   | { ok: false; error: string };

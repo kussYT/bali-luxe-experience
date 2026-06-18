@@ -98,6 +98,9 @@ export async function fetchAdminInventory() {
 export type AdminOrder = {
   id: string;
   status: string;
+  channel: string;
+  externalRef: string | null;
+  notes: string | null;
   currency: string;
   countryCode: string | null;
   shippingCountryCode: string | null;
@@ -120,8 +123,42 @@ export type AdminOrder = {
   }[];
 };
 
-export async function fetchAdminOrders() {
-  return request<{ orders: AdminOrder[]; count: number; source: string }>("/api/admin/orders");
+export type AdminAnalytics = {
+  summary: {
+    totalOrders: number;
+    paidOrders: number;
+    shippedOrders: number;
+    revenueEurCents: number;
+  };
+  salesByWeek: { weekStart: string; orders: number; revenueCents: number }[];
+  ordersByCountry: { country: string; orders: number; revenueCents: number }[];
+  ordersByChannel: { channel: string; orders: number }[];
+  stockByWarehouse: { france: number; bali: number };
+};
+
+export type NewsletterCopy = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  placeholder: string;
+  button: string;
+  successMessage: string;
+  duplicateMessage: string;
+};
+
+export type AdminNewsletterSettings = {
+  provider: string;
+  brevoListId: string;
+  copy: NewsletterCopy;
+  envProvider: string | null;
+  hasBrevoKey: boolean;
+  hasMailchimpKey: boolean;
+  hasKlaviyoKey: boolean;
+};
+
+export async function fetchAdminOrders(channel?: string) {
+  const qs = channel ? `?channel=${encodeURIComponent(channel)}` : "";
+  return request<{ orders: AdminOrder[]; count: number; source: string }>(`/api/admin/orders${qs}`);
 }
 
 export async function fetchAdminOrder(orderId: string) {
@@ -139,6 +176,49 @@ export async function shipAdminOrder(orderId: string) {
 
 export function adminOrdersExportUrl() {
   return "/api/admin/orders/export.csv";
+}
+
+export async function fetchAdminAnalytics() {
+  return request<{ analytics: AdminAnalytics; source: string }>("/api/admin/analytics");
+}
+
+export async function fetchAdminNewsletter() {
+  return request<{
+    settings: AdminNewsletterSettings;
+    stats: { total: number; bySource: Record<string, number> };
+    subscribers: { email: string; source: string; subscribedAt: string | null }[];
+    source: string;
+  }>("/api/admin/newsletter");
+}
+
+export async function updateAdminNewsletter(payload: {
+  provider?: string;
+  brevoListId?: string;
+  copy?: Partial<NewsletterCopy>;
+}) {
+  return request<{ settings: AdminNewsletterSettings }>("/api/admin/newsletter", {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function adminNewsletterExportUrl() {
+  return "/api/admin/newsletter/export.csv";
+}
+
+export async function createMarketplaceOrder(payload: {
+  channel: "wolf_badger" | "other";
+  externalRef?: string;
+  customerEmail?: string;
+  shippingCountryCode: string;
+  currency?: string;
+  items: { productSlug: string; variantSlug?: string; qty: number; unitPrice: number }[];
+  notes?: string;
+}) {
+  return request<{ order: AdminOrder; source: string }>("/api/admin/orders/marketplace", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function updateInventoryQuantity(payload: {

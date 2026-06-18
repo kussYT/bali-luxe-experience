@@ -28,6 +28,7 @@ import { Route as JournalSlugRouteImport } from './routes/journal.$slug'
 import { Route as CheckoutSuccessRouteImport } from './routes/checkout.success'
 import { Route as CheckoutCancelRouteImport } from './routes/checkout.cancel'
 import { Route as ApiSplatRouteImport } from './routes/api/$'
+import { Route as AdminNewsletterRouteImport } from './routes/admin/newsletter'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminInventoryRouteImport } from './routes/admin/inventory'
 import { Route as AdminProductsIndexRouteImport } from './routes/admin/products/index'
@@ -131,6 +132,11 @@ const ApiSplatRoute = ApiSplatRouteImport.update({
   path: '/api/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminNewsletterRoute = AdminNewsletterRouteImport.update({
+  id: '/newsletter',
+  path: '/newsletter',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -182,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/travel-diaries': typeof TravelDiariesRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/newsletter': typeof AdminNewsletterRoute
   '/api/$': typeof ApiSplatRoute
   '/checkout/cancel': typeof CheckoutCancelRoute
   '/checkout/success': typeof CheckoutSuccessRoute
@@ -209,6 +216,7 @@ export interface FileRoutesByTo {
   '/travel-diaries': typeof TravelDiariesRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/newsletter': typeof AdminNewsletterRoute
   '/api/$': typeof ApiSplatRoute
   '/checkout/cancel': typeof CheckoutCancelRoute
   '/checkout/success': typeof CheckoutSuccessRoute
@@ -238,6 +246,7 @@ export interface FileRoutesById {
   '/travel-diaries': typeof TravelDiariesRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/newsletter': typeof AdminNewsletterRoute
   '/api/$': typeof ApiSplatRoute
   '/checkout/cancel': typeof CheckoutCancelRoute
   '/checkout/success': typeof CheckoutSuccessRoute
@@ -268,6 +277,7 @@ export interface FileRouteTypes {
     | '/travel-diaries'
     | '/admin/inventory'
     | '/admin/login'
+    | '/admin/newsletter'
     | '/api/$'
     | '/checkout/cancel'
     | '/checkout/success'
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
     | '/travel-diaries'
     | '/admin/inventory'
     | '/admin/login'
+    | '/admin/newsletter'
     | '/api/$'
     | '/checkout/cancel'
     | '/checkout/success'
@@ -323,6 +334,7 @@ export interface FileRouteTypes {
     | '/travel-diaries'
     | '/admin/inventory'
     | '/admin/login'
+    | '/admin/newsletter'
     | '/api/$'
     | '/checkout/cancel'
     | '/checkout/success'
@@ -493,6 +505,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/newsletter': {
+      id: '/admin/newsletter'
+      path: '/newsletter'
+      fullPath: '/admin/newsletter'
+      preLoaderRoute: typeof AdminNewsletterRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/login'
@@ -548,6 +567,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminNewsletterRoute: typeof AdminNewsletterRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminOrdersOrderIdRoute: typeof AdminOrdersOrderIdRoute
   AdminProductsSlugRoute: typeof AdminProductsSlugRoute
@@ -559,6 +579,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminInventoryRoute: AdminInventoryRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminNewsletterRoute: AdminNewsletterRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminOrdersOrderIdRoute: AdminOrdersOrderIdRoute,
   AdminProductsSlugRoute: AdminProductsSlugRoute,

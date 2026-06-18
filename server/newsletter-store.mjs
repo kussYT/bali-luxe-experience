@@ -40,3 +40,44 @@ export async function hasSubscriber(email) {
     return false;
   }
 }
+
+export async function listSubscribers({ limit = 500 } = {}) {
+  try {
+    const raw = await readFile(SUBSCRIBERS_FILE, "utf8");
+    const rows = raw
+      .split("\n")
+      .filter((line) => line.trim())
+      .map((line) => {
+        try {
+          return JSON.parse(line);
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean)
+      .reverse();
+
+    return rows.slice(0, limit).map((row) => ({
+      email: row.email,
+      source: row.source || "website",
+      subscribedAt: row.subscribedAt || null,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function csvEscape(value) {
+  const s = value == null ? "" : String(value);
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+export async function exportSubscribersCsv() {
+  const subscribers = await listSubscribers({ limit: 10000 });
+  const lines = ["email,source,subscribed_at"];
+  for (const row of subscribers) {
+    lines.push([row.email, row.source, row.subscribedAt || ""].map(csvEscape).join(","));
+  }
+  return lines.join("\n");
+}
