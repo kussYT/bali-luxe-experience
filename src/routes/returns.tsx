@@ -1,5 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { InfoPage } from "@/components/site/InfoPage";
+import { useSiteContent } from "@/lib/content-context";
+import { BRAND_CONTENT } from "@/data/brand-content";
+import type { CmsPage } from "@/lib/content-types";
+
+const FALLBACK: CmsPage = {
+  slug: "returns",
+  title: BRAND_CONTENT.shippingReturns.returns.title,
+  eyebrow: BRAND_CONTENT.shippingReturns.returns.eyebrow,
+  metaDescription: "",
+  body: BRAND_CONTENT.shippingReturns.returns.body,
+};
 
 export const Route = createFileRoute("/returns")({
   head: () => ({ meta: [{ title: "Returns — Bingin Diaries" }] }),
@@ -7,11 +19,20 @@ export const Route = createFileRoute("/returns")({
 });
 
 function ReturnsPage() {
+  const { fetchPage } = useSiteContent();
+  const [page, setPage] = useState<CmsPage>(FALLBACK);
+
+  useEffect(() => {
+    fetchPage("returns").then((p) => {
+      if (p) setPage(p);
+    });
+  }, [fetchPage]);
+
   return (
-    <InfoPage eyebrow="Customer care" title="Returns">
-      <p>Unworn pieces may be returned within 14 days of delivery. Items must be in original condition with tags attached.</p>
-      <p>To start a return, contact us at hello@bingindiaries.com with your order number.</p>
-      <p>Refunds are processed within 5–10 business days after we receive your return.</p>
+    <InfoPage eyebrow={page.eyebrow} title={page.title}>
+      {page.body.map((p) => (
+        <p key={p.slice(0, 24)}>{p}</p>
+      ))}
     </InfoPage>
   );
 }

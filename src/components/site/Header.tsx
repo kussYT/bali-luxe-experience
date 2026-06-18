@@ -17,8 +17,8 @@ const iconBtn =
 
 export function Header() {
   const { count, setOpen } = useCart();
-  const { collections } = useCatalog();
-  const navMain = buildNavMain(collections);
+  const { collections, publishedProducts } = useCatalog();
+  const navMain = buildNavMain(collections, publishedProducts);
   const [navOpen, setNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 

@@ -1,4 +1,4 @@
-import type { Collection } from "@/lib/catalog-types";
+import type { Collection, Product } from "@/lib/catalog-types";
 
 export const POPULAR_SEARCHES = [
   "bob",
@@ -17,9 +17,13 @@ export type NavLink = {
 };
 
 export function buildNavShop(collections: Collection[]): NavLink[] {
+  const shopCollections = collections
+    .filter((c) => !["archives", "best-sellers", "all-products"].includes(c.slug))
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
   return [
     { label: "View all", to: "/collection" },
-    ...collections.map((c) => ({
+    ...shopCollections.map((c) => ({
       label: c.name,
       to: "/collection",
       search: { c: c.slug },
@@ -29,13 +33,43 @@ export function buildNavShop(collections: Collection[]): NavLink[] {
   ];
 }
 
-export const NAV_SALES: NavLink[] = [
-  { label: "View all sale", to: "/collection", search: { sale: "true" } },
-];
+export function buildNavSales(products: Product[]): NavLink[] {
+  const saleProducts = products.filter((p) => p.onSale && p.status === "published");
+  const outletCount = products.filter((p) => p.outlet && p.status === "published").length;
+  const items: NavLink[] = [
+    { label: "All sale pieces", to: "/collection", search: { sale: "true" } },
+  ];
+
+  if (outletCount > 0) {
+    items.push({ label: "Outlet", to: "/collection", search: { c: "archives" } });
+  }
+
+  if (saleProducts.length === 0) {
+    items.push({ label: "How it works", to: "/collection", search: { sale: "true" }, hash: "sale-info" });
+    return items;
+  }
+
+  const seen = new Set<string>();
+  for (const product of saleProducts) {
+    const slug = product.collectionSlug;
+    if (!slug || seen.has(slug) || slug === "archives") continue;
+    seen.add(slug);
+    items.push({
+      label: product.collection,
+      to: "/collection",
+      search: { sale: "true", c: slug },
+    });
+  }
+
+  return items;
+}
 
 export const NAV_ABOUT: NavLink[] = [
-  { label: "About us", to: "/about" },
-  { label: "Atelier", to: "/about", hash: "atelier" },
+  { label: "La marque", to: "/about" },
+  { label: "Artisans & éthique", to: "/about", hash: "artisans" },
+  { label: "Matières & qualité", to: "/about", hash: "quality" },
+  { label: "Guide d'entretien", to: "/care" },
+  { label: "Guide des tailles", to: "/sizing" },
   { label: "Find us", to: "/find-us" },
   { label: "Shipping", to: "/shipping" },
   { label: "Returns", to: "/returns" },
@@ -43,10 +77,10 @@ export const NAV_ABOUT: NavLink[] = [
   { label: "Contact", to: "/contact" },
 ];
 
-export function buildNavMain(collections: Collection[]) {
+export function buildNavMain(collections: Collection[], products: Product[]) {
   return [
     { label: "Shop", items: buildNavShop(collections) },
-    { label: "Sales", items: NAV_SALES },
+    { label: "Sales", items: buildNavSales(products) },
     { label: "About us", items: NAV_ABOUT },
   ] as const;
 }

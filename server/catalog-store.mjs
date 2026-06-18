@@ -1,6 +1,8 @@
-import { readFile, writeFile, mkdir, copyFile } from "node:fs/promises";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { getProjectRoot } from "./runtime-root.mjs";
+import { isDatabaseConfigured } from "./db/pool.mjs";
+import { getCatalogResponse } from "./api/catalog.mjs";
 
 function getCatalogPaths() {
   const root = getProjectRoot();
@@ -49,6 +51,7 @@ function normalizeProduct(raw) {
     story: raw.story || "",
     collection: raw.collection || "Shop",
     collectionSlug: raw.collectionSlug || slugify(raw.collection || "shop"),
+    collectionSlugs: Array.isArray(raw.collectionSlugs) ? raw.collectionSlugs : undefined,
     subcategory: raw.subcategory || "",
     category: raw.category || "hats",
     productType: raw.productType || "",
@@ -64,6 +67,7 @@ function normalizeProduct(raw) {
     status,
     featured: Boolean(raw.featured),
     onSale,
+    outlet: Boolean(raw.outlet),
     available: stock > 0 && status === "published",
     origin: raw.origin === "France" ? "France" : "Bali",
   };
@@ -82,9 +86,7 @@ export function normalizeCatalog(raw) {
 }
 
 export async function readCatalog() {
-  const { isDatabaseConfigured } = await import("./db/pool.mjs");
   if (isDatabaseConfigured()) {
-    const { getCatalogResponse } = await import("./api/catalog.mjs");
     return getCatalogResponse({ includeDrafts: true });
   }
 

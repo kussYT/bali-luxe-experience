@@ -40,7 +40,12 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
         <p className="text-[0.8125rem] md:text-sm leading-snug text-foreground group-hover:text-accent transition-colors duration-500">
           {product.name}
         </p>
-        <p className="text-sm text-foreground/90 tracking-wide">{format(product)}</p>
+        <p className="text-sm text-foreground/90 tracking-wide flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <span>{format(product)}</span>
+          {product.onSale && product.compareAtEUR != null && (
+            <span className="text-xs text-muted line-through">€{product.priceEUR}</span>
+          )}
+        </p>
       </div>
     </Link>
   );

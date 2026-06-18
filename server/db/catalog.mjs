@@ -28,7 +28,7 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
   const statusFilter = includeDrafts ? "" : "WHERE p.status = 'published'";
 
   const { rows: collectionRows } = await query(
-    `SELECT slug, name, season FROM collections ORDER BY name ASC`,
+    `SELECT slug, name, season, description, sort_order FROM collections ORDER BY sort_order ASC, name ASC`,
   );
 
   const { rows: productRows } = await query(
@@ -67,6 +67,8 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
         slug: c.slug,
         name: c.name,
         season: c.season || "",
+        description: c.description || "",
+        sortOrder: c.sort_order ?? 0,
       })),
       products: [],
       source: "postgres",
@@ -198,6 +200,8 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
       slug: c.slug,
       name: c.name,
       season: c.season || "",
+      description: c.description || "",
+      sortOrder: c.sort_order ?? 0,
     })),
     products,
     source: "postgres",

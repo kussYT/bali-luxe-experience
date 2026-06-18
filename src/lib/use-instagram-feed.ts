@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { INSTAGRAM, INSTAGRAM_POSTS, type InstagramPost } from "@/data/instagram-content";
+import { sanitizeInstagramPosts } from "@/lib/instagram-utils";
 
 export type InstagramFeed = {
   profile: typeof INSTAGRAM;
   posts: InstagramPost[];
   syncedAt?: string;
-  source?: "graph-api" | "oembed" | "static" | "fallback";
+  source?: "graph-api" | "oembed" | "static" | "fallback" | string;
   error?: string;
 };
 
@@ -14,6 +15,10 @@ const STATIC_FEED: InstagramFeed = {
   posts: INSTAGRAM_POSTS,
   source: "fallback",
 };
+
+function withSafePosts(data: InstagramFeed): InstagramFeed {
+  return { ...data, posts: sanitizeInstagramPosts(data.posts ?? []) };
+}
 
 export function useInstagramFeed() {
   const [feed, setFeed] = useState<InstagramFeed>(STATIC_FEED);
@@ -24,12 +29,11 @@ export function useInstagramFeed() {
     let cancelled = false;
 
     async function load() {
-      // 1) server API (token stays server-side)
       try {
         const res = await fetch("/api/instagram", { cache: "no-store" });
         if (res.ok) {
-          const data = (await res.json()) as InstagramFeed;
-          if (!cancelled && data.posts?.length) {
+          const data = withSafePosts((await res.json()) as InstagramFeed);
+          if (!cancelled && data.posts.length) {
             setFeed({
               profile: { ...INSTAGRAM, ...data.profile },
               posts: data.posts,
@@ -42,15 +46,14 @@ export function useInstagramFeed() {
           }
         }
       } catch {
-        /* continue to static-file fallback */
+        /* continue */
       }
 
-      // 2) static public JSON fallback
       try {
         const res = await fetch("/instagram-feed.json", { cache: "no-store" });
         if (res.ok) {
-          const data = (await res.json()) as InstagramFeed;
-          if (!cancelled && data.posts?.length) {
+          const data = withSafePosts((await res.json()) as InstagramFeed);
+          if (!cancelled && data.posts.length) {
             setFeed({
               profile: { ...INSTAGRAM, ...data.profile },
               posts: data.posts,
@@ -62,7 +65,7 @@ export function useInstagramFeed() {
           }
         }
       } catch {
-        /* continue to local fallback */
+        /* continue */
       }
 
       if (!cancelled) {

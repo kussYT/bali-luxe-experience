@@ -1,8 +1,9 @@
-import { BINGIN_SOUNDS } from "@/data/lifestyle-content";
 import { Reveal } from "@/components/lifestyle/Reveal";
+import { useSiteContent } from "@/lib/content-context";
 
 export function BinginSounds() {
-  const { title, playlistName, description, spotifyUrl, spotifyPlaylistId } = BINGIN_SOUNDS;
+  const { homepage } = useSiteContent();
+  const { title, playlistName, description, spotifyUrl, spotifyPlaylistId } = homepage.binginSounds;
   const embedSrc = `https://open.spotify.com/embed/playlist/${spotifyPlaylistId}?utm_source=generator&theme=0`;
 
   return (
@@ -23,15 +24,15 @@ export function BinginSounds() {
             </a>
           </div>
 
-          <div className="w-full min-w-0 rounded-sm overflow-hidden border border-border bg-secondary">
+          <div className="rounded-sm overflow-hidden border border-border bg-secondary aspect-square max-h-[380px] w-full">
             <iframe
-              title={`${playlistName} — Spotify`}
+              title={`${playlistName} on Spotify`}
               src={embedSrc}
               width="100%"
-              height="352"
+              height="100%"
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
               loading="lazy"
-              className="block w-full border-0"
+              className="size-full min-h-[280px]"
             />
           </div>
         </div>

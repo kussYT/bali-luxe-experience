@@ -249,8 +249,12 @@ export function ProductForm({
             onChange={(e) =>
               set("compareAtEUR", e.target.value === "" ? undefined : Number(e.target.value))
             }
-            placeholder="Optional"
+            placeholder="Optional — lower than list price"
           />
+          <p className="text-xs text-muted-foreground">
+            If set below the list price, the piece appears under <strong>Sales</strong> in the menu with a
+            crossed-out original price.
+          </p>
         </div>
       </div>
 

@@ -1,8 +1,22 @@
-import pg from "pg";
-
-const { Pool } = pg;
+import { Pool, neonConfig } from "@neondatabase/serverless";
+import { getProjectRoot } from "../runtime-root.mjs";
 
 let pool;
+let driverReady = false;
+
+async function ensureDriver() {
+  if (driverReady) return;
+  const edge = getProjectRoot() === null;
+  if (edge) {
+    // HTTP fetch mode — reliable on Cloudflare Workers (no TCP/WebSocket pool issues)
+    neonConfig.poolQueryViaFetch = true;
+    neonConfig.fetchConnectionCache = true;
+  } else {
+    const { default: WebSocket } = await import("ws");
+    neonConfig.webSocketConstructor = WebSocket;
+  }
+  driverReady = true;
+}
 
 export function isDatabaseConfigured() {
   return Boolean(process.env.DATABASE_URL?.trim());
@@ -16,21 +30,18 @@ export function getPool() {
     throw err;
   }
   if (!pool) {
-    pool = new Pool({
-      connectionString: url,
-      ssl: url.includes("localhost") || url.includes("127.0.0.1") ? false : { rejectUnauthorized: false },
-      max: 10,
-    });
+    pool = new Pool({ connectionString: url });
   }
   return pool;
 }
 
 export async function query(text, params) {
-  const client = getPool();
-  return client.query(text, params);
+  await ensureDriver();
+  return getPool().query(text, params);
 }
 
 export async function withTransaction(fn) {
+  await ensureDriver();
   const client = await getPool().connect();
   try {
     await client.query("BEGIN");

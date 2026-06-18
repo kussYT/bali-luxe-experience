@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
-import { SHOP_THE_MOOD, type MoodHotspot } from "@/data/lifestyle-content";
 import { Reveal } from "@/components/lifestyle/Reveal";
+import { useSiteContent } from "@/lib/content-context";
+import type { MoodHotspot } from "@/lib/content-types";
 
 function HotspotLink({
   spot,
@@ -78,8 +79,9 @@ function Hotspot({
 }
 
 export function ShopTheMood() {
+  const { homepage } = useSiteContent();
+  const { image, alt, hotspots } = homepage.shopTheMood;
   const [activeId, setActiveId] = useState<string | null>(null);
-  const { image, alt, hotspots } = SHOP_THE_MOOD;
 
   return (
     <section className="page-wrap section-pad section-gap">

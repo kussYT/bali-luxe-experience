@@ -21,6 +21,10 @@ export function collectionSlug(name: string) {
 }
 
 /** Match product by collection nav slug (Shopify-derived). */
-export function productInCollection(product: { collectionSlug: string }, slug: string) {
-  return product.collectionSlug === slug;
+export function productInCollection(
+  product: { collectionSlug: string; collectionSlugs?: string[] },
+  slug: string,
+) {
+  if (product.collectionSlug === slug) return true;
+  return product.collectionSlugs?.includes(slug) ?? false;
 }

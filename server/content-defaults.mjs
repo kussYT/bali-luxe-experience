@@ -1,0 +1,227 @@
+/** Default editorial content — mirrors src/data/lifestyle-content.ts (fallback when DB empty). */
+
+export const DEFAULT_ANNOUNCEMENT = {
+  enabled: true,
+  text: "Slow-made between Bali & France — Complimentary shipping over €150 — Fall / Winter 2026",
+  link: "",
+};
+
+export const DEFAULT_HOMEPAGE = {
+  hero: {
+    eyebrow: "Bingin Diaries · Bali & France",
+    title: "Endless Summer, Made in Bali",
+    subtitle: "Bali stories, worn everywhere — slow fashion for sun, travel, and the art of living lightly.",
+    poster: "/lifestyle/hero.jpg",
+    videoSrc: "/lifestyle/hero.mp4",
+    ctaPrimary: "Shop the collection",
+    ctaPrimaryHref: "/collection",
+    ctaSecondary: "Explore the journal",
+    ctaSecondaryHref: "/travel-diaries",
+  },
+  editorial: {
+    sub: "Inspired by slow living",
+    line: "Designed in Bali",
+    body: "Sketched between rice fields and ocean cliffs — each hat begins as a mood, not a trend.",
+    image: "/lifestyle/editorial-designed.jpg",
+    linkLabel: "Our story",
+    linkHref: "/about",
+  },
+  featuredSection: {
+    eyebrow: "Curated",
+    title: "Pieces of the season",
+  },
+  lookbook: {
+    eyebrow: "Bali Chapters",
+    title: "Summer stories",
+    linkLabel: "Shop the look",
+    chapters: [
+      {
+        title: "Chapter I — Sunburn",
+        caption: "Endless summer days",
+        image: "/lifestyle/lookbook-sunburn.jpg",
+        align: "left",
+      },
+      {
+        title: "Chapter II — Salt Air",
+        caption: "Hand-woven in Bali",
+        image: "/lifestyle/lookbook-salt.jpg",
+        align: "right",
+      },
+      {
+        title: "Chapter III — Riviera Light",
+        caption: "From Bingin to the world",
+        image: "/lifestyle/lookbook-riviera.jpg",
+        align: "left",
+      },
+    ],
+  },
+  shopTheMood: {
+    image: "/lifestyle/shop-mood.jpg",
+    alt: "Lifestyle look — Bingin Diaries",
+    hotspots: [
+      { id: "rimba", x: 38, y: 28, label: "The Rimba Sand", productSlug: "the-rimba-sand" },
+      { id: "fisher", x: 62, y: 52, label: "90's Fisherman", productSlug: "90s-fisherman-ecru" },
+      { id: "bucket", x: 24, y: 68, label: "Le Bucket", productSlug: "le-bucket-ranger" },
+      { id: "knit", x: 78, y: 34, label: "Summer beanie", productSlug: "soft-pink-summer-beanie" },
+    ],
+  },
+  craft: {
+    eyebrow: "Craft & material",
+    title: "The details that matter",
+    items: [
+      {
+        title: "Natural fabrics",
+        text: "Breathable weaves chosen for heat, humidity, and long days in the sun.",
+        image: "/lifestyle/craft-fabric.jpg",
+      },
+      {
+        title: "Hand-finished details",
+        text: "Every brim shaped and checked in our Bali atelier before it travels.",
+        image: "/lifestyle/craft-hands.jpg",
+      },
+      {
+        title: "Made for travel",
+        text: "Lightweight pieces that pack flat and recover their form with ease.",
+        image: "/lifestyle/craft-travel.jpg",
+      },
+      {
+        title: "Conscious packaging",
+        text: "Recycled papers, cotton dust bags, no plastic — slow from studio to door.",
+        image: "/lifestyle/craft-packaging.jpg",
+      },
+    ],
+  },
+  quote: {
+    text: "Each piece carries the memory of the hands that made it — a small diary of sun, salt, and slow time.",
+    attribution: "The atelier · Bali & France",
+  },
+  journalSection: {
+    eyebrow: "Bingin Diaries Journal",
+    title: "Travel & slow living",
+  },
+  binginSounds: {
+    title: "Bingin Sounds",
+    playlistName: "Heatwave SS23",
+    description: "Sounds for slow mornings, salty hair and endless sunsets.",
+    spotifyUrl: "https://open.spotify.com/playlist/1gD6v7Z3KgFIBbTHHccpeL",
+    spotifyPlaylistId: "1gD6v7Z3KgFIBbTHHccpeL",
+  },
+  travelDiariesPage: {
+    eyebrow: "Bingin Diaries Journal",
+    title: "Slow notes from Bali & beyond",
+    description: "Plages, cafés, moodboards et looks — une dimension lifestyle pour voyager avec la maison.",
+  },
+};
+
+export const DEFAULT_POSTS = [
+  {
+    slug: "a-day-in-bingin",
+    title: "A Day in Bingin",
+    excerpt: "Black sand, morning surf, and the quiet rhythm of the cliff.",
+    image: "/lifestyle/journal-bingin.jpg",
+    category: "Guides",
+    readMinutes: 4,
+    body: [
+      "Wake before the heat. Walk the path down to the beach with coffee still warm in hand.",
+      "Bingin rewards patience — a small bay, turquoise water, and afternoons that stretch into gold.",
+      "We weave here between tides: sketching shapes, testing brims, letting the salt air settle into every fiber.",
+    ],
+  },
+  {
+    slug: "our-favorite-sunset-spots",
+    title: "Our Favorite Sunset Spots",
+    excerpt: "Where the light turns honey and the ocean feels endless.",
+    image: "/lifestyle/journal-sunset.jpg",
+    category: "Places",
+    readMinutes: 5,
+    body: [
+      "Uluwatu temple steps. A cold lime soda. The sound of wax on a board.",
+      "Canggu rice fields on the drive home — palm shadows long and slow.",
+      "Our hats were made for these hours: soft brim, sun at your back, nowhere to be.",
+    ],
+  },
+  {
+    slug: "the-bali-packing-list",
+    title: "The Bali Packing List",
+    excerpt: "Light layers, natural fabrics, and room for souvenirs.",
+    image: "/lifestyle/journal-packing.jpg",
+    category: "Moodboards",
+    readMinutes: 3,
+    body: [
+      "One woven hat. One bucket for market mornings. Linen everything.",
+      "Leave space for rattan, ceramics, and the dress you will wear twice.",
+      "Pack slow — Bali teaches you to carry less and feel more.",
+    ],
+  },
+  {
+    slug: "slow-mornings-in-uluwatu",
+    title: "Slow Mornings in Uluwatu",
+    excerpt: "Clifftop light, open windows, and the first swim of the day.",
+    image: "/lifestyle/journal-uluwatu.jpg",
+    category: "Stories",
+    readMinutes: 4,
+    body: [
+      "The villa wakes with birds and distant gamelan.",
+      "We steam pandan tea, lay out straw on the table, and review yesterday's weave.",
+      "By noon the brim is set. By sunset it is yours.",
+    ],
+  },
+];
+
+export const DEFAULT_PAGES = [
+  {
+    slug: "shipping",
+    title: "Shipping",
+    eyebrow: "Customer care",
+    metaDescription: "Shipping information for Bingin Diaries orders worldwide.",
+    body: [
+      "We ship worldwide from our ateliers in Canggu and Paris. Orders are dispatched within 2–4 business days.",
+      "Delivery times vary by destination — typically 3–7 days within Europe, 7–14 days internationally.",
+      "You'll receive tracking details by email once your order leaves the atelier.",
+    ],
+  },
+  {
+    slug: "returns",
+    title: "Returns",
+    eyebrow: "Customer care",
+    metaDescription: "Returns policy for Bingin Diaries.",
+    body: [
+      "Unworn pieces may be returned within 14 days of delivery. Items must be in original condition with tags attached.",
+      "To start a return, contact us at hello@bingindiaries.com with your order number.",
+      "Refunds are processed within 5–10 business days after we receive your return.",
+    ],
+  },
+  {
+    slug: "about",
+    title: "Two homes, one diary.",
+    eyebrow: "The atelier",
+    metaDescription: "About Bingin Diaries — hand-woven hats from Bali and France.",
+    body: [
+      "Born from a long, slow ride between Canggu and the South of France.",
+      "Bingin Diaries is a small house of hand-woven hats — designed in France, made in Bali, finished by hand. We work with a few artisans we know by name, in a rhythm that lets each piece breathe.",
+      "We believe in a quieter kind of fashion. One that travels well, that ages well, and that carries the memory of the place it came from.",
+    ],
+  },
+];
+
+function deepMerge(base, patch) {
+  if (!patch || typeof patch !== "object" || Array.isArray(patch)) return patch ?? base;
+  const out = { ...base };
+  for (const key of Object.keys(patch)) {
+    const val = patch[key];
+    if (val && typeof val === "object" && !Array.isArray(val) && base[key] && typeof base[key] === "object") {
+      out[key] = deepMerge(base[key], val);
+    } else if (val !== undefined) {
+      out[key] = val;
+    }
+  }
+  return out;
+}
+
+export function mergeHomepage(stored) {
+  return deepMerge(DEFAULT_HOMEPAGE, stored || {});
+}
+
+export function mergeAnnouncement(stored) {
+  return { ...DEFAULT_ANNOUNCEMENT, ...(stored || {}) };
+}

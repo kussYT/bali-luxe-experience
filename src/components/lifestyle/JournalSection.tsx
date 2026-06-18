@@ -1,31 +1,32 @@
 import { Link } from "@tanstack/react-router";
-import { JOURNAL_ARTICLES } from "@/data/lifestyle-content";
 import { Reveal } from "@/components/lifestyle/Reveal";
+import { useSiteContent } from "@/lib/content-context";
 
 export function JournalSection({ showHeader = true }: { showHeader?: boolean }) {
-  const articles = JOURNAL_ARTICLES;
+  const { posts, homepage } = useSiteContent();
+  const header = homepage.journalSection;
 
   return (
     <section className={`page-wrap section-pad ${showHeader ? "section-gap" : "pb-16 md:pb-24"}`}>
       {showHeader && (
-      <Reveal>
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12 md:mb-16">
-          <div>
-            <p className="text-eyebrow">Bingin Diaries Journal</p>
-            <h2 className="font-display text-3xl md:text-5xl mt-2">Travel & slow living</h2>
+        <Reveal>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12 md:mb-16">
+            <div>
+              <p className="text-eyebrow">{header.eyebrow}</p>
+              <h2 className="font-display text-3xl md:text-5xl mt-2">{header.title}</h2>
+            </div>
+            <Link
+              to="/travel-diaries"
+              className="text-eyebrow link-underline !text-muted-foreground hover:!text-foreground"
+            >
+              View all stories
+            </Link>
           </div>
-          <Link
-            to="/travel-diaries"
-            className="text-eyebrow link-underline !text-muted-foreground hover:!text-foreground"
-          >
-            View all stories
-          </Link>
-        </div>
-      </Reveal>
+        </Reveal>
       )}
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-        {articles.map((article, i) => (
+        {posts.map((article, i) => (
           <Reveal key={article.slug} delay={i * 70}>
             <Link to="/journal/$slug" params={{ slug: article.slug }} className="group block">
               <div className="overflow-hidden aspect-[4/5] bg-secondary">
