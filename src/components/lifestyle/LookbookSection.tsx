@@ -1,27 +1,30 @@
 import { Link } from "@tanstack/react-router";
-import { LOOKBOOK_CHAPTERS } from "@/data/lifestyle-content";
 import { Reveal } from "@/components/lifestyle/Reveal";
+import { useSiteContent } from "@/lib/content-context";
 
 export function LookbookSection() {
+  const { homepage } = useSiteContent();
+  const { lookbook } = homepage;
+
   return (
     <section className="page-wrap section-pad section-gap editorial-rule">
       <Reveal>
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12 md:mb-16">
           <div>
-            <p className="text-eyebrow">Bali Chapters</p>
-            <h2 className="font-display text-3xl md:text-5xl mt-2">Summer stories</h2>
+            <p className="text-eyebrow">{lookbook.eyebrow}</p>
+            <h2 className="font-display text-3xl md:text-5xl mt-2">{lookbook.title}</h2>
           </div>
           <Link
             to="/collection"
             className="text-eyebrow link-underline !text-muted-foreground hover:!text-foreground"
           >
-            Shop the look
+            {lookbook.linkLabel}
           </Link>
         </div>
       </Reveal>
 
       <div className="space-y-16 md:space-y-24">
-        {LOOKBOOK_CHAPTERS.map((chapter, i) => {
+        {lookbook.chapters.map((chapter, i) => {
           const imageFirst = chapter.align === "left";
           return (
             <Reveal key={chapter.title} delay={i * 100}>

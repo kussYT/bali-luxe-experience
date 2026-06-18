@@ -1,9 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { EDITORIAL_FEATURE } from "@/data/lifestyle-content";
 import { Reveal } from "@/components/lifestyle/Reveal";
+import { useSiteContent } from "@/lib/content-context";
 
 export function EditorialStrip() {
-  const block = EDITORIAL_FEATURE;
+  const { homepage } = useSiteContent();
+  const block = homepage.editorial;
 
   return (
     <section className="editorial-rule bg-surface">
@@ -24,8 +25,8 @@ export function EditorialStrip() {
                 {block.line}
               </h2>
               <p className="text-caption mt-6 max-w-md">{block.body}</p>
-              <Link to="/about" className="inline-block mt-8 text-eyebrow link-underline !text-foreground">
-                Our story
+              <Link to={block.linkHref} className="inline-block mt-8 text-eyebrow link-underline !text-foreground">
+                {block.linkLabel}
               </Link>
             </div>
           </div>

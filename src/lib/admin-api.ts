@@ -1,4 +1,11 @@
 import type { Catalog, Product } from "@/lib/catalog-types";
+import type {
+  AnnouncementContent,
+  CmsPage,
+  HomepageContent,
+  JournalPost,
+  AdminCollectionMeta,
+} from "@/lib/content-types";
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -244,4 +251,91 @@ export async function uploadProductImages(slug: string, files: FileList | File[]
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Upload failed");
   return data as { urls: string[] };
+}
+
+export async function fetchAdminSiteContent() {
+  return request<{
+    announcement: AnnouncementContent;
+    homepage: HomepageContent;
+    stored: { announcement: Partial<AnnouncementContent>; homepage: Partial<HomepageContent> };
+    source: string;
+  }>("/api/admin/content/site");
+}
+
+export async function updateAdminSiteContent(payload: {
+  announcement?: Partial<AnnouncementContent>;
+  homepage?: Partial<HomepageContent>;
+}) {
+  return request<{
+    announcement: AnnouncementContent;
+    homepage: HomepageContent;
+    stored: { announcement: Partial<AnnouncementContent>; homepage: Partial<HomepageContent> };
+    source: string;
+  }>("/api/admin/content/site", { method: "PATCH", body: JSON.stringify(payload) });
+}
+
+export async function seedAdminCms() {
+  return request<{ posts: { seeded: number }; pages: { seeded: number }; source: string }>(
+    "/api/admin/content/seed",
+    { method: "POST" },
+  );
+}
+
+export async function fetchAdminPosts() {
+  return request<{ posts: JournalPost[]; source: string }>("/api/admin/content/posts");
+}
+
+export async function fetchAdminPost(slug: string) {
+  return request<{ post: JournalPost; source: string }>(
+    `/api/admin/content/posts/${encodeURIComponent(slug)}`,
+  );
+}
+
+export async function saveAdminPost(post: Partial<JournalPost> & { slug: string; status?: string }) {
+  return request<{ post: JournalPost; source: string }>("/api/admin/content/posts", {
+    method: "POST",
+    body: JSON.stringify(post),
+  });
+}
+
+export async function deleteAdminPost(slug: string) {
+  return request<{ ok: boolean; source: string }>(
+    `/api/admin/content/posts/${encodeURIComponent(slug)}`,
+    { method: "DELETE" },
+  );
+}
+
+export async function fetchAdminPages() {
+  return request<{ pages: CmsPage[]; source: string }>("/api/admin/content/pages");
+}
+
+export async function fetchAdminPage(slug: string) {
+  return request<{ page: CmsPage; source: string }>(
+    `/api/admin/content/pages/${encodeURIComponent(slug)}`,
+  );
+}
+
+export async function saveAdminPage(page: Partial<CmsPage> & { slug: string; status?: string }) {
+  return request<{ page: CmsPage; source: string }>("/api/admin/content/pages", {
+    method: "POST",
+    body: JSON.stringify(page),
+  });
+}
+
+export async function deleteAdminPage(slug: string) {
+  return request<{ ok: boolean; source: string }>(
+    `/api/admin/content/pages/${encodeURIComponent(slug)}`,
+    { method: "DELETE" },
+  );
+}
+
+export async function fetchAdminCollections() {
+  return request<{ collections: AdminCollectionMeta[]; source: string }>("/api/admin/collections");
+}
+
+export async function updateAdminCollection(slug: string, patch: Partial<AdminCollectionMeta>) {
+  return request<{ collection: AdminCollectionMeta; source: string }>(
+    `/api/admin/collections/${encodeURIComponent(slug)}`,
+    { method: "PATCH", body: JSON.stringify(patch) },
+  );
 }

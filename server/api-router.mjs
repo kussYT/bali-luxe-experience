@@ -38,6 +38,27 @@ import {
 } from "./api/newsletter-admin.mjs";
 import { postContactMessage } from "./api/contact.mjs";
 import {
+  getSiteContentResponse,
+  getPostsListResponse,
+  getPostResponse,
+  getPageResponse,
+} from "./api/content.mjs";
+import {
+  getAdminContentResponse,
+  patchAdminContentResponse,
+  getAdminPostsResponse,
+  getAdminPostResponse,
+  saveAdminPostResponse,
+  removeAdminPostResponse,
+  getAdminPagesResponse,
+  getAdminPageResponse,
+  saveAdminPageResponse,
+  removeAdminPageResponse,
+  getAdminCollectionsResponse,
+  patchAdminCollectionResponse,
+  seedCmsContent,
+} from "./api/content-admin.mjs";
+import {
   createAdminProduct,
   updateAdminProduct,
   deleteAdminProduct,
@@ -168,6 +189,24 @@ export async function handleApiRequest(request, context = {}) {
       const body = await readJsonBody(request);
       const result = await postContactMessage(body);
       return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/content/site" && method === "GET") {
+      return getSiteContentResponse();
+    }
+
+    if (pathname === "/api/content/posts" && method === "GET") {
+      return getPostsListResponse();
+    }
+
+    const contentPostMatch = pathname.match(/^\/api\/content\/posts\/([^/]+)$/);
+    if (contentPostMatch && method === "GET") {
+      return getPostResponse(decodeURIComponent(contentPostMatch[1]));
+    }
+
+    const contentPageMatch = pathname.match(/^\/api\/content\/pages\/([^/]+)$/);
+    if (contentPageMatch && method === "GET") {
+      return getPageResponse(decodeURIComponent(contentPageMatch[1]));
     }
 
     if (pathname === "/api/admin/login" && method === "POST") {
@@ -337,6 +376,83 @@ export async function handleApiRequest(request, context = {}) {
         urls.push(urlPath);
       }
       return jsonResponse(200, { urls });
+    }
+
+    if (pathname === "/api/admin/content/site" && method === "GET") {
+      const result = await getAdminContentResponse();
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/content/site" && method === "PATCH") {
+      const body = await readJsonBody(request);
+      const result = await patchAdminContentResponse(body);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/content/seed" && method === "POST") {
+      const result = await seedCmsContent();
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/content/posts" && method === "GET") {
+      const result = await getAdminPostsResponse();
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/content/posts" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await saveAdminPostResponse(body);
+      return jsonResponse(200, result);
+    }
+
+    const adminPostMatch = pathname.match(/^\/api\/admin\/content\/posts\/([^/]+)$/);
+    if (adminPostMatch) {
+      const slug = decodeURIComponent(adminPostMatch[1]);
+      if (method === "GET") {
+        const result = await getAdminPostResponse(slug);
+        return jsonResponse(200, result);
+      }
+      if (method === "DELETE") {
+        const result = await removeAdminPostResponse(slug);
+        return jsonResponse(200, result);
+      }
+    }
+
+    if (pathname === "/api/admin/content/pages" && method === "GET") {
+      const result = await getAdminPagesResponse();
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/content/pages" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await saveAdminPageResponse(body);
+      return jsonResponse(200, result);
+    }
+
+    const adminPageMatch = pathname.match(/^\/api\/admin\/content\/pages\/([^/]+)$/);
+    if (adminPageMatch) {
+      const slug = decodeURIComponent(adminPageMatch[1]);
+      if (method === "GET") {
+        const result = await getAdminPageResponse(slug);
+        return jsonResponse(200, result);
+      }
+      if (method === "DELETE") {
+        const result = await removeAdminPageResponse(slug);
+        return jsonResponse(200, result);
+      }
+    }
+
+    if (pathname === "/api/admin/collections" && method === "GET") {
+      const result = await getAdminCollectionsResponse();
+      return jsonResponse(200, result);
+    }
+
+    const adminCollectionMatch = pathname.match(/^\/api\/admin\/collections\/([^/]+)$/);
+    if (adminCollectionMatch && method === "PATCH") {
+      const slug = decodeURIComponent(adminCollectionMatch[1]);
+      const body = await readJsonBody(request);
+      const result = await patchAdminCollectionResponse(slug, body);
+      return jsonResponse(200, result);
     }
 
     return jsonResponse(404, { error: "Not found" });
