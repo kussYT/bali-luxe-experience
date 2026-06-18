@@ -1,19 +1,23 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { isDatabaseConfigured } from "./db/pool.mjs";
+import { getProjectRoot } from "./runtime-root.mjs";
 
-const __root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const ORDERS_PATH = join(__root, "data", "orders.json");
+function getOrdersPath() {
+  const root = getProjectRoot();
+  return root ? join(root, "data", "orders.json") : null;
+}
 
 async function getDbOrders() {
   return import("./db/orders.mjs");
 }
 
 async function readAllJson() {
+  const ordersPath = getOrdersPath();
+  if (!ordersPath) return [];
   try {
-    const raw = await readFile(ORDERS_PATH, "utf8");
+    const raw = await readFile(ordersPath, "utf8");
     const data = JSON.parse(raw);
     return Array.isArray(data.orders) ? data.orders : [];
   } catch {
@@ -22,8 +26,14 @@ async function readAllJson() {
 }
 
 async function writeAllJson(orders) {
-  await mkdir(join(__root, "data"), { recursive: true });
-  await writeFile(ORDERS_PATH, JSON.stringify({ orders }, null, 2), "utf8");
+  const ordersPath = getOrdersPath();
+  if (!ordersPath) {
+    const err = new Error("Order file storage is not available in this runtime");
+    err.status = 503;
+    throw err;
+  }
+  await mkdir(join(getProjectRoot(), "data"), { recursive: true });
+  await writeFile(ordersPath, JSON.stringify({ orders }, null, 2), "utf8");
 }
 
 export async function createPendingOrder(payload) {
