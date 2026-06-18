@@ -59,6 +59,8 @@ import {
   patchAdminCollectionResponse,
   seedCmsContent,
 } from "./api/content-admin.mjs";
+import { getAdminCmsStatusResponse } from "./api/cms-status.mjs";
+import { sanitizeInstagramFeed } from "./instagram-utils.mjs";
 import {
   createAdminProduct,
   updateAdminProduct,
@@ -105,7 +107,7 @@ async function instagramResponse(request) {
   }
 
   try {
-    const payload = getStaticInstagramFeed();
+    const payload = sanitizeInstagramFeed(getStaticInstagramFeed());
     if (payload?.posts?.length) {
       return jsonResponse(200, {
         ...payload,
@@ -375,6 +377,11 @@ export async function handleApiRequest(request, context = {}) {
         urls.push(urlPath);
       }
       return jsonResponse(200, { urls });
+    }
+
+    if (pathname === "/api/admin/cms/status" && method === "GET") {
+      const result = await getAdminCmsStatusResponse();
+      return jsonResponse(200, result);
     }
 
     if (pathname === "/api/admin/content/site" && method === "GET") {

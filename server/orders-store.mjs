@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { isDatabaseConfigured } from "./db/pool.mjs";
 import { getProjectRoot } from "./runtime-root.mjs";
+import * as dbOrders from "./db/orders.mjs";
 
 function getOrdersPath() {
   const root = getProjectRoot();
@@ -10,7 +11,7 @@ function getOrdersPath() {
 }
 
 async function getDbOrders() {
-  return import("./db/orders.mjs");
+  return dbOrders;
 }
 
 async function readAllJson() {

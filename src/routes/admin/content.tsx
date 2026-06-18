@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { CmsStatusCard } from "@/components/admin/CmsStatusCard";
 
 export const Route = createFileRoute("/admin/content")({
   head: () => ({ meta: [{ title: "Content — Bingin Diaries Admin" }] }),
@@ -94,6 +95,8 @@ function AdminContentPage() {
 
       {error && <p className="text-destructive text-sm">{error}</p>}
       {message && <p className="text-sm text-muted-foreground">{message}</p>}
+
+      <CmsStatusCard />
 
       <form onSubmit={handleSave} className="space-y-6">
         <Card>

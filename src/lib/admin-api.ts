@@ -339,3 +339,31 @@ export async function updateAdminCollection(slug: string, patch: Partial<AdminCo
     { method: "PATCH", body: JSON.stringify(patch) },
   );
 }
+
+export type AdminCmsStatus = {
+  source: string;
+  database: boolean;
+  instagram: {
+    source: string;
+    syncedAt: string | null;
+    postCount: number;
+    localImages: number;
+    cdnImages: number;
+    needsRefresh: boolean;
+  };
+  instagramApi: {
+    hasToken: boolean;
+    hasUserId: boolean;
+  };
+  cms: {
+    posts: number;
+    pages: number;
+    collections: number;
+    hasHomepage: boolean;
+    hasAnnouncement: boolean;
+  } | null;
+};
+
+export async function fetchAdminCmsStatus() {
+  return request<AdminCmsStatus>("/api/admin/cms/status");
+}

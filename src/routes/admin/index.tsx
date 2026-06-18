@@ -10,6 +10,7 @@ import type { Catalog } from "@/lib/catalog-types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardCharts } from "@/components/admin/DashboardCharts";
 import { OrdersWorldMap } from "@/components/admin/OrdersWorldMap";
+import { CmsStatusCard } from "@/components/admin/CmsStatusCard";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Admin dashboard — Bingin Diaries" }] }),
@@ -69,6 +70,8 @@ function AdminDashboard() {
           </Card>
         ))}
       </div>
+
+      <CmsStatusCard compact />
 
       {analyticsError && (
         <p className="text-sm text-muted-foreground">

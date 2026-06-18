@@ -1,6 +1,8 @@
-import { readFile, writeFile, mkdir, copyFile } from "node:fs/promises";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { getProjectRoot } from "./runtime-root.mjs";
+import { isDatabaseConfigured } from "./db/pool.mjs";
+import { getCatalogResponse } from "./api/catalog.mjs";
 
 function getCatalogPaths() {
   const root = getProjectRoot();
@@ -82,9 +84,7 @@ export function normalizeCatalog(raw) {
 }
 
 export async function readCatalog() {
-  const { isDatabaseConfigured } = await import("./db/pool.mjs");
   if (isDatabaseConfigured()) {
-    const { getCatalogResponse } = await import("./api/catalog.mjs");
     return getCatalogResponse({ includeDrafts: true });
   }
 
