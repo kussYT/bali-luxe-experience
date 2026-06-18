@@ -1,8 +1,6 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+import { getProjectRoot, requireProjectRoot } from "./runtime-root.mjs";
 
 function guessContentType(filename) {
   const ext = path.extname(filename).toLowerCase();
@@ -28,7 +26,8 @@ export async function saveUploadedImage(slug, filename, buffer, env) {
     return `/uploads/${key}`;
   }
 
-  const dir = path.join(ROOT, "public", "uploads", "products", slug);
+  const root = requireProjectRoot();
+  const dir = path.join(root, "public", "uploads", "products", slug);
   await mkdir(dir, { recursive: true });
   const dest = path.join(dir, safeName);
   await writeFile(dest, buffer);
@@ -49,8 +48,11 @@ export async function getUploadedImage(keyPath, env) {
     };
   }
 
+  const root = getProjectRoot();
+  if (!root) return null;
+
   try {
-    const filePath = path.join(ROOT, "public", "uploads", key.replace(/^products\//, "products/"));
+    const filePath = path.join(root, "public", "uploads", key.replace(/^products\//, "products/"));
     const body = await readFile(filePath);
     return { body, contentType: guessContentType(filePath) };
   } catch {

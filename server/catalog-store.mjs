@@ -1,13 +1,16 @@
 import { readFile, writeFile, mkdir, copyFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { getProjectRoot } from "./runtime-root.mjs";
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const CATALOG_PATHS = [
-  path.join(ROOT, "data", "catalog.json"),
-  path.join(ROOT, "public", "catalog.json"),
-  path.join(ROOT, "src", "data", "catalog.json"),
-];
+function getCatalogPaths() {
+  const root = getProjectRoot();
+  if (!root) return [];
+  return [
+    path.join(root, "data", "catalog.json"),
+    path.join(root, "public", "catalog.json"),
+    path.join(root, "src", "data", "catalog.json"),
+  ];
+}
 
 function slugify(value) {
   return value
@@ -85,7 +88,7 @@ export async function readCatalog() {
     return getCatalogResponse({ includeDrafts: true });
   }
 
-  for (const filePath of CATALOG_PATHS) {
+  for (const filePath of getCatalogPaths()) {
     try {
       const raw = JSON.parse(await readFile(filePath, "utf8"));
       return normalizeCatalog(raw);
@@ -99,9 +102,15 @@ export async function readCatalog() {
 export async function writeCatalog(catalog) {
   const normalized = normalizeCatalog(catalog);
   const json = JSON.stringify(normalized, null, 2);
-  await mkdir(path.dirname(CATALOG_PATHS[0]), { recursive: true });
-  await Promise.all(CATALOG_PATHS.map((p) => writeFile(p, json, "utf8")));
+  const catalogPaths = getCatalogPaths();
+  if (!catalogPaths.length) {
+    const err = new Error("Catalog file storage is not available in this runtime");
+    err.status = 503;
+    throw err;
+  }
+  await mkdir(path.dirname(catalogPaths[0]), { recursive: true });
+  await Promise.all(catalogPaths.map((p) => writeFile(p, json, "utf8")));
   return normalized;
 }
 
-export { slugify, deriveCollections, CATALOG_PATHS, ROOT };
+export { slugify, deriveCollections, getCatalogPaths as CATALOG_PATHS, getProjectRoot as ROOT };

@@ -1,10 +1,12 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { query, isDatabaseConfigured } from "./pool.mjs";
+import { getProjectRoot } from "../runtime-root.mjs";
 
-const __root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SETTINGS_FILE = join(__root, "data", "site-settings.json");
+function getSettingsFile() {
+  const root = getProjectRoot();
+  return root ? join(root, "data", "site-settings.json") : null;
+}
 
 export const DEFAULT_NEWSLETTER_SETTINGS = {
   provider: "local",
@@ -21,8 +23,10 @@ export const DEFAULT_NEWSLETTER_SETTINGS = {
 };
 
 async function readFileSettings() {
+  const settingsFile = getSettingsFile();
+  if (!settingsFile) return {};
   try {
-    const raw = await readFile(SETTINGS_FILE, "utf8");
+    const raw = await readFile(settingsFile, "utf8");
     return JSON.parse(raw);
   } catch {
     return {};
@@ -30,8 +34,15 @@ async function readFileSettings() {
 }
 
 async function writeFileSettings(all) {
-  await mkdir(join(__root, "data"), { recursive: true });
-  await writeFile(SETTINGS_FILE, JSON.stringify(all, null, 2), "utf8");
+  const root = getProjectRoot();
+  const settingsFile = getSettingsFile();
+  if (!root || !settingsFile) {
+    const err = new Error("Settings file storage is not available in this runtime");
+    err.status = 503;
+    throw err;
+  }
+  await mkdir(join(root, "data"), { recursive: true });
+  await writeFile(settingsFile, JSON.stringify(all, null, 2), "utf8");
 }
 
 export async function getSetting(key, defaultValue = null) {
