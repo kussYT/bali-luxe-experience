@@ -14,6 +14,7 @@ import {
   clearSessionCookieHeader,
 } from "./admin-auth.mjs";
 import { fetchInstagramFeed, INSTAGRAM_PROFILE } from "./instagram-feed.mjs";
+import { getStaticInstagramFeed } from "./instagram-static.mjs";
 import { subscribeNewsletter } from "./newsletter.mjs";
 import {
   createCheckoutSession,
@@ -104,10 +105,8 @@ async function instagramResponse(request) {
   }
 
   try {
-    const staticUrl = new URL("/instagram-feed.json", request.url);
-    const res = await fetch(staticUrl);
-    if (res.ok) {
-      const payload = await res.json();
+    const payload = getStaticInstagramFeed();
+    if (payload?.posts?.length) {
       return jsonResponse(200, {
         ...payload,
         source: payload.source || "static",
@@ -115,7 +114,7 @@ async function instagramResponse(request) {
       });
     }
   } catch {
-    /* static asset unavailable */
+    /* static feed unavailable */
   }
 
   return jsonResponse(200, {
