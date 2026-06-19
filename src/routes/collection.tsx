@@ -139,7 +139,7 @@ function Collection() {
 
       <section className="page-wrap section-pad section-gap">
         {filtered.length === 0 ? (
-          <p className="font-display text-2xl md:text-3xl text-muted">
+          <p className="font-display text-2xl md:text-3xl text-foreground/65">
             {sale === "true"
               ? "No pieces on sale right now — check back soon or browse the full collection."
               : "No pieces found for this selection yet."}

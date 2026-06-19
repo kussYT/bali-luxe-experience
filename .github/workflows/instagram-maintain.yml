@@ -1,0 +1,87 @@
+# Weekly Instagram maintenance: refresh token, sync images, deploy.
+# Keeps the feed autonomous — no manual npm commands for Béatrice.
+#
+# Required GitHub repository secrets:
+#   INSTAGRAM_ACCESS_TOKEN, CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+#   GH_PAT — fine-grained PAT with repo Secrets: write (updates token after refresh)
+# Optional: INSTAGRAM_USER_ID
+
+name: Instagram maintenance
+
+on:
+  schedule:
+    # Every Sunday 04:00 UTC
+    - cron: "0 4 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: instagram-maintain
+  cancel-in-progress: false
+
+jobs:
+  maintain:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Refresh Instagram token
+        id: refresh
+        continue-on-error: true
+        env:
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+        run: node scripts/refresh-instagram-token.mjs --github-output
+
+      - name: Update Cloudflare Instagram secret
+        if: steps.refresh.outputs.access_token != ''
+        run: |
+          echo -n "${{ steps.refresh.outputs.access_token }}" | npx wrangler secret put INSTAGRAM_ACCESS_TOKEN
+
+      - name: Update GitHub Instagram secret
+        if: steps.refresh.outputs.access_token != ''
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "GH_PAT not configured — skipping GitHub secret update."
+            echo "Add GH_PAT (repo Secrets write) so the refreshed token stays in sync for CI."
+            exit 0
+          fi
+          echo -n "${{ steps.refresh.outputs.access_token }}" | gh secret set INSTAGRAM_ACCESS_TOKEN --repo "${{ github.repository }}"
+
+      - name: Sync Instagram feed
+        env:
+          INSTAGRAM_ACCESS_TOKEN: ${{ steps.refresh.outputs.access_token || secrets.INSTAGRAM_ACCESS_TOKEN }}
+          INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+        run: npm run instagram:sync
+
+      - name: Commit synced assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/instagram-feed.json public/instagram/
+          if git diff --staged --quiet; then
+            echo "No Instagram asset changes to commit."
+          else
+            git commit -m "chore: sync Instagram feed [automated]"
+            git push
+          fi
+
+      - name: Deploy to Cloudflare
+        run: npm run deploy

@@ -102,7 +102,7 @@ function ProductPage() {
           <div className="mt-8 flex items-baseline gap-4">
             <p className="text-xl tracking-wide">{format(product)}</p>
             {product.onSale && product.compareAtEUR != null && (
-              <p className="text-sm text-muted line-through">€{product.priceEUR}</p>
+              <p className="text-sm text-muted-foreground line-through">€{product.priceEUR}</p>
             )}
             {product.onSale && (
               <span className="text-eyebrow !text-accent">Sale</span>

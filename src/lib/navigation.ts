@@ -16,6 +16,50 @@ export type NavLink = {
   hash?: string;
 };
 
+export type NavColumn = {
+  title: string;
+  items: NavLink[];
+};
+
+export type NavFeaturedImage = {
+  label: string;
+  to: string;
+  hash?: string;
+  image: string;
+};
+
+/** About us mega-menu — columns + featured photo links (desktop band). */
+export const NAV_ABOUT_COLUMNS: NavColumn[] = [
+  {
+    title: "La marque",
+    items: [
+      { label: "La marque", to: "/about" },
+      { label: "Artisans & éthique", to: "/about", hash: "artisans" },
+      { label: "Matières & qualité", to: "/about", hash: "quality" },
+      { label: "Contact", to: "/contact" },
+    ],
+  },
+  {
+    title: "Guides",
+    items: [
+      { label: "Guide d'entretien", to: "/care" },
+      { label: "Guide des tailles", to: "/sizing" },
+      { label: "Find us", to: "/find-us" },
+      { label: "Shipping", to: "/shipping" },
+      { label: "Returns", to: "/returns" },
+    ],
+  },
+  {
+    title: "Journal",
+    items: [{ label: "Travel Diaries", to: "/travel-diaries" }],
+  },
+];
+
+export const NAV_ABOUT_FEATURED: NavFeaturedImage[] = [
+  { label: "Travel Diaries", to: "/travel-diaries", image: "/lifestyle/lookbook-sunburn.jpg" },
+  { label: "La marque", to: "/about", image: "/lifestyle/craft-hands.jpg" },
+];
+
 export function buildNavShop(collections: Collection[]): NavLink[] {
   const shopCollections = collections
     .filter((c) => !["archives", "best-sellers", "all-products"].includes(c.slug))

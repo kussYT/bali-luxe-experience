@@ -37,9 +37,9 @@ All `/api/*` routes are handled by TanStack Start server route `src/routes/api/$
 | Site | `SITE_URL` |
 | Admin | `ADMIN_PASSWORD`, `ADMIN_SECRET` |
 | Email | `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_OPS` (contact form inbox) |
-| Atlist (Find us map) | `VITE_ATLIST_EMBED_URL` (optional, client embed) |
+| Atlist (Find us map) | Bundled by default — override with `VITE_ATLIST_EMBED_URL` if needed |
 | Newsletter | `NEWSLETTER_PROVIDER`, Brevo keys (optional) |
-| Instagram | `INSTAGRAM_ACCESS_TOKEN` (optional) |
+| Instagram | `INSTAGRAM_ACCESS_TOKEN` (optional) — [automation](./instagram-automation.md) |
 
 Configure via `wrangler secret put <NAME>`.
 
