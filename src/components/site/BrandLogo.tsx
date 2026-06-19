@@ -17,8 +17,8 @@ export function BrandLogo({ variant = "header", className = "" }: BrandLogoProps
         variant === "footer"
           ? "h-[1.125rem] sm:h-5 brightness-0 invert"
           : variant === "compact"
-            ? "h-4 w-auto mix-blend-multiply"
-            : "h-[0.875rem] sm:h-4 md:h-[1.125rem] w-auto mix-blend-multiply"
+            ? "h-4 w-auto"
+            : "h-[0.875rem] sm:h-4 md:h-[1.125rem] w-auto"
       }`}
     />
   );
