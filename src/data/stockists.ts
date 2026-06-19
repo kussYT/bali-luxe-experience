@@ -1,4 +1,4 @@
-import data from "./stockists.json";
+import data from "./stockists.json" with { type: "json" };
 
 export type StockistStore = {
   name: string;

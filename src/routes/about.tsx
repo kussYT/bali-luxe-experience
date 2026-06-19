@@ -1,22 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BRAND_CONTENT } from "@/data/brand-content";
-import { IMG } from "@/data/lifestyle-content";
+import { useSiteContent } from "@/lib/content-context";
 import { NAV_ABOUT } from "@/lib/navigation";
-
-const { about } = BRAND_CONTENT;
-
-const SIDEBAR_LINKS = [
-  { label: "La marque", to: "/about" as const, hash: "vision", image: IMG.craft.hands },
-  { label: "Artisans & éthique", to: "/about" as const, hash: "artisans", image: IMG.craft.fabric },
-  { label: "Matières & qualité", to: "/about" as const, hash: "quality", image: IMG.editorial },
-  { label: "Guide d'entretien", to: "/care" as const, image: IMG.craft.travel },
-  { label: "Guide des tailles", to: "/sizing" as const, image: IMG.journal.bingin },
-  { label: "Find us", to: "/find-us" as const, image: IMG.shopMood },
-  { label: "Shipping", to: "/shipping" as const, image: IMG.lookbook.salt },
-  { label: "Returns", to: "/returns" as const, image: IMG.journal.sunset },
-  { label: "Travel Diaries", to: "/travel-diaries" as const, image: IMG.lookbook.sunburn },
-  { label: "Contact", to: "/contact" as const, image: IMG.lookbook.riviera },
-];
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -33,11 +17,12 @@ export const Route = createFileRoute("/about")({
 });
 
 function About() {
+  const { about } = useSiteContent();
+
   return (
     <div className="bg-white min-h-screen">
       <section className="page-wrap section-pad pt-24 pb-16 md:pb-20">
         <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,420px)] gap-12 lg:gap-20 items-start">
-          {/* Left — story */}
           <div className="max-w-3xl">
             <p className="text-eyebrow text-foreground/50">{about.eyebrow}</p>
             <h1 className="font-display text-5xl md:text-7xl lg:text-8xl mt-4 leading-[0.92] tracking-tight">
@@ -71,15 +56,14 @@ function About() {
               ))}
             </nav>
 
-            {/* Mobile / tablet — photo links */}
             <div className="lg:hidden mt-10">
               <p className="text-eyebrow text-foreground/45 mb-5">Explore</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                {SIDEBAR_LINKS.map((item) => (
+                {about.sidebarLinks.map((item) => (
                   <Link
                     key={`mobile-${item.label}`}
                     to={item.to}
-                    hash={"hash" in item ? item.hash : undefined}
+                    hash={item.hash}
                     className="group relative overflow-hidden aspect-[4/5] bg-neutral-100"
                   >
                     <img
@@ -120,15 +104,14 @@ function About() {
             </div>
           </div>
 
-          {/* Right — clickable photo links (desktop) */}
           <aside className="hidden lg:block sticky top-28">
             <p className="text-eyebrow text-foreground/45 mb-6">Explore</p>
             <div className="grid grid-cols-2 gap-3">
-              {SIDEBAR_LINKS.map((item) => (
+              {about.sidebarLinks.map((item) => (
                 <Link
                   key={item.label}
                   to={item.to}
-                  hash={"hash" in item ? item.hash : undefined}
+                  hash={item.hash}
                   className="group relative overflow-hidden aspect-[3/4] bg-neutral-100"
                 >
                   <img

@@ -1,7 +1,9 @@
 import type { Catalog, Product } from "@/lib/catalog-types";
 import type {
+  AboutContent,
   AnnouncementContent,
   CmsPage,
+  FindUsContent,
   HomepageContent,
   JournalPost,
   AdminCollectionMeta,
@@ -257,7 +259,14 @@ export async function fetchAdminSiteContent() {
   return request<{
     announcement: AnnouncementContent;
     homepage: HomepageContent;
-    stored: { announcement: Partial<AnnouncementContent>; homepage: Partial<HomepageContent> };
+    about: AboutContent;
+    findUs: FindUsContent;
+    stored: {
+      announcement: Partial<AnnouncementContent>;
+      homepage: Partial<HomepageContent>;
+      about: Partial<AboutContent>;
+      findUs: Partial<FindUsContent>;
+    };
     source: string;
   }>("/api/admin/content/site");
 }
@@ -265,11 +274,20 @@ export async function fetchAdminSiteContent() {
 export async function updateAdminSiteContent(payload: {
   announcement?: Partial<AnnouncementContent>;
   homepage?: Partial<HomepageContent>;
+  about?: AboutContent;
+  findUs?: FindUsContent;
 }) {
   return request<{
     announcement: AnnouncementContent;
     homepage: HomepageContent;
-    stored: { announcement: Partial<AnnouncementContent>; homepage: Partial<HomepageContent> };
+    about: AboutContent;
+    findUs: FindUsContent;
+    stored: {
+      announcement: Partial<AnnouncementContent>;
+      homepage: Partial<HomepageContent>;
+      about: Partial<AboutContent>;
+      findUs: Partial<FindUsContent>;
+    };
     source: string;
   }>("/api/admin/content/site", { method: "PATCH", body: JSON.stringify(payload) });
 }

@@ -90,9 +90,71 @@ export type HomepageContent = {
   };
 };
 
+export type AboutSection = {
+  id: string;
+  eyebrow: string;
+  title: string;
+  body: string;
+};
+
+export type AboutValue = {
+  n: string;
+  t: string;
+  d: string;
+};
+
+export type AboutSidebarLink = {
+  label: string;
+  to: string;
+  hash?: string;
+  image: string;
+};
+
+export type AboutContent = {
+  eyebrow: string;
+  title: string;
+  metaDescription: string;
+  youtubeId: string;
+  sections: AboutSection[];
+  values: AboutValue[];
+  sidebarLinks: AboutSidebarLink[];
+};
+
+export type StockistStore = {
+  name: string;
+  instagram?: string;
+  url?: string;
+};
+
+export type StockistArea = {
+  name: string;
+  stores: StockistStore[];
+};
+
+export type StockistCountry = {
+  country: string;
+  areas: StockistArea[];
+};
+
+export type FindUsContent = {
+  eyebrow: string;
+  title: string;
+  metaDescription: string;
+  description: string;
+  atlistEmbedUrl: string;
+  atlistMapUrl: string;
+  wholesaleEmail: string;
+  wholesaleTitle: string;
+  wholesaleCtaLabel: string;
+  showStockistList: boolean;
+  countries: StockistCountry[];
+};
+
 export type SiteContent = {
   announcement: AnnouncementContent;
   homepage: HomepageContent;
+  about: AboutContent;
+  findUs: FindUsContent;
 };
 
 export type JournalPost = {

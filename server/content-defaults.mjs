@@ -1,5 +1,7 @@
 /** Default editorial content — mirrors src/data/lifestyle-content.ts (fallback when DB empty). */
 
+import stockists from "../src/data/stockists.json" with { type: "json" };
+
 export const DEFAULT_ANNOUNCEMENT = {
   enabled: true,
   text: "Slow-made between Bali & France — Complimentary shipping over €150 — Fall / Winter 2026",
@@ -136,6 +138,72 @@ export const DEFAULT_HOMEPAGE = {
   },
 };
 
+export const DEFAULT_ABOUT = {
+  eyebrow: "La marque",
+  title: "LA MARQUE",
+  metaDescription:
+    "L'histoire de Bingin Diaries — chapeaux artisanaux entre Bali, le Portugal et la France.",
+  youtubeId: "Ol56ZDhtlnY",
+  sections: [
+    {
+      id: "vision",
+      eyebrow: "01 — Attitude",
+      title: "Une attitude, une singularité",
+      body: "S’offrir un chapeau, c’est avant tout s’offrir une attitude, une authenticité, de l’audace et une singularité… Attachés à des moments qui se collectent, des souvenirs indélébiles et pour cultiver sa différence, chez Bingin Diaries, nous dessinons, créons et pensons nos collections pour qu’elles soient singulières & mémorables.",
+    },
+    {
+      id: "artisans",
+      eyebrow: "02 — Artisans",
+      title: "Une marque juste & humaine",
+      body: "BINGIN DIARIES EST UNE MARQUE juste & humaine et impliquée dans les communautés qui confectionnent nos chapeaux. Derrière chaque pièce que vous portez, il y a un homme ou une femme, UNE HISTOIRE. NOUS entretenons des relations étroites avec NOS artisans. Nous engageons la marque envers le respect des droits des travailleurs, DES CONDITIONS DE TRAVAIL équitables et une volonté de contribuer positivement au développement des communautés locales À BALI ET AU PORTUGAL.",
+    },
+    {
+      id: "quality",
+      eyebrow: "03 — Matières",
+      title: "Qualité, durabilité & éco-responsabilité",
+      body: "Nos chapeaux sont le reflet de notre engagement envers la qualité et la durabilité. Nous apportons une grande importance aux matériaux utilisés dans la fabrication des chapeaux, ET VEILLONS JOUR APRÈS JOUR À NOUS RAPPROCHER DE CHAPEAUX 100% ÉCO-RESPONSABLE. Les chapeaux sont dessinés et stockés en France.",
+    },
+    {
+      id: "france",
+      eyebrow: "04 — France",
+      title: "Dessinés & stockés en France",
+      body: "Avec Bingin Diaries, vos chapeaux s’emportent au rythme de vos souvenirs et vos styles s’exportent au tempo de votre authenticité.",
+    },
+  ],
+  values: [
+    { n: "01", t: "Artisans connus", d: "Bali & Portugal — une histoire derrière chaque pièce." },
+    { n: "02", t: "Matières durables", d: "Vers des chapeaux de plus en plus éco-responsables." },
+    { n: "03", t: "Slow fashion", d: "Collections singulières, mémorables, faites pour durer." },
+  ],
+  sidebarLinks: [
+    { label: "La marque", to: "/about", hash: "vision", image: "/lifestyle/craft-hands.jpg" },
+    { label: "Artisans & éthique", to: "/about", hash: "artisans", image: "/lifestyle/craft-fabric.jpg" },
+    { label: "Matières & qualité", to: "/about", hash: "quality", image: "/lifestyle/editorial-designed.jpg" },
+    { label: "Guide d'entretien", to: "/care", image: "/lifestyle/craft-travel.jpg" },
+    { label: "Guide des tailles", to: "/sizing", image: "/lifestyle/journal-bingin.jpg" },
+    { label: "Find us", to: "/find-us", image: "/lifestyle/shop-mood.jpg" },
+    { label: "Shipping", to: "/shipping", image: "/lifestyle/lookbook-salt.jpg" },
+    { label: "Returns", to: "/returns", image: "/lifestyle/journal-sunset.jpg" },
+    { label: "Travel Diaries", to: "/travel-diaries", image: "/lifestyle/lookbook-sunburn.jpg" },
+    { label: "Contact", to: "/contact", image: "/lifestyle/lookbook-riviera.jpg" },
+  ],
+};
+
+export const DEFAULT_FIND_US = {
+  eyebrow: "Retailers",
+  title: "Find us",
+  metaDescription: "Find Bingin Diaries at select boutiques in Bali, France, Spain, Finland and more.",
+  description:
+    "Discover Bingin Diaries at select boutiques around the world — from Bali to Europe and beyond.",
+  atlistEmbedUrl: "https://my.atlist.com/map/eb6f5d5f-087a-4f52-934e-affcbb8d5f09?share=true",
+  atlistMapUrl: "https://my.atlist.com/map/eb6f5d5f-087a-4f52-934e-affcbb8d5f09",
+  wholesaleEmail: stockists.wholesaleEmail,
+  wholesaleTitle: "You are a retailer and want to work with us?",
+  wholesaleCtaLabel: "Contact the house",
+  showStockistList: true,
+  countries: stockists.countries,
+};
+
 export const DEFAULT_POSTS = [
   {
     slug: "a-day-in-bingin",
@@ -247,4 +315,12 @@ export function mergeHomepage(stored) {
 
 export function mergeAnnouncement(stored) {
   return { ...DEFAULT_ANNOUNCEMENT, ...(stored || {}) };
+}
+
+export function mergeAbout(stored) {
+  return deepMerge(DEFAULT_ABOUT, stored || {});
+}
+
+export function mergeFindUs(stored) {
+  return deepMerge(DEFAULT_FIND_US, stored || {});
 }

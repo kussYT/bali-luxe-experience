@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { CmsPage, HomepageContent, JournalPost, SiteContent } from "@/lib/content-types";
+import { FALLBACK_ABOUT, FALLBACK_FIND_US } from "@/lib/cms-fallbacks";
 import {
   BINGIN_SOUNDS,
   CRAFT_DETAILS,
@@ -90,6 +91,8 @@ const FALLBACK_SITE: SiteContent = {
       description: "Plages, cafés, moodboards et looks — une dimension lifestyle pour voyager avec la maison.",
     },
   },
+  about: FALLBACK_ABOUT,
+  findUs: FALLBACK_FIND_US,
 };
 
 const FALLBACK_POSTS: JournalPost[] = JOURNAL_ARTICLES.map((a) => ({ ...a }));
@@ -98,6 +101,8 @@ type ContentContextValue = {
   site: SiteContent;
   homepage: HomepageContent;
   announcement: SiteContent["announcement"];
+  about: SiteContent["about"];
+  findUs: SiteContent["findUs"];
   posts: JournalPost[];
   loading: boolean;
   error: string | null;
@@ -124,10 +129,20 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       const [siteRes, postsRes] = await Promise.all([
-        fetchJson<{ announcement: SiteContent["announcement"]; homepage: HomepageContent }>("/api/content/site"),
+        fetchJson<{
+          announcement: SiteContent["announcement"];
+          homepage: HomepageContent;
+          about: SiteContent["about"];
+          findUs: SiteContent["findUs"];
+        }>("/api/content/site"),
         fetchJson<{ posts: JournalPost[] }>("/api/content/posts"),
       ]);
-      setSite({ announcement: siteRes.announcement, homepage: siteRes.homepage });
+      setSite({
+        announcement: siteRes.announcement,
+        homepage: siteRes.homepage,
+        about: siteRes.about,
+        findUs: siteRes.findUs,
+      });
       setPosts(postsRes.posts);
       setError(null);
     } catch (e) {
@@ -159,6 +174,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       site,
       homepage: site.homepage,
       announcement: site.announcement,
+      about: site.about,
+      findUs: site.findUs,
       posts,
       loading,
       error,
