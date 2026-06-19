@@ -7,7 +7,7 @@ export function BinginSounds() {
   const embedSrc = `https://open.spotify.com/embed/playlist/${spotifyPlaylistId}?utm_source=generator&theme=0`;
 
   return (
-    <section className="page-wrap section-pad py-16 md:py-20">
+    <section className="page-wrap section-pad py-16 md:py-20 bg-white border-t border-border">
       <Reveal>
         <div className="border border-border bg-surface p-6 md:p-10 lg:p-12 grid lg:grid-cols-[1fr_minmax(0,380px)] gap-8 lg:gap-12 items-center">
           <div className="max-w-lg">

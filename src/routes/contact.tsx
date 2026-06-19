@@ -6,7 +6,7 @@ export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
       { title: "Contact — Bingin Diaries" },
-      { name: "description", content: "Talk to the atelier in Canggu or Paris." },
+      { name: "description", content: "Write to the Bingin Diaries team." },
     ],
   }),
   component: Contact,
@@ -35,7 +35,7 @@ function Contact() {
   }
 
   return (
-    <section className="px-6 md:px-14 py-24 grid md:grid-cols-2 gap-16 max-w-7xl">
+    <section className="page-wrap section-pad py-24 grid md:grid-cols-2 gap-16 max-w-7xl bg-white">
       <div>
         <p className="text-eyebrow text-muted-foreground">Get in touch</p>
         <h1 className="font-display text-5xl md:text-7xl mt-4 leading-[0.95]">
@@ -45,17 +45,11 @@ function Contact() {
           For special orders, press, wholesale, or simply to say hello — we read every message.
         </p>
 
-        <div className="mt-12 space-y-8">
-          <div>
-            <p className="text-eyebrow text-muted-foreground mb-2">Bali — Atelier</p>
-            <p className="font-display text-2xl">Jl. Pantai Batu Bolong, Canggu</p>
-            <p className="text-sm text-muted-foreground mt-1">canggu@bingindiaries.com</p>
-          </div>
-          <div>
-            <p className="text-eyebrow text-muted-foreground mb-2">Paris — Studio</p>
-            <p className="font-display text-2xl">12 rue de Sévigné, 75004</p>
-            <p className="text-sm text-muted-foreground mt-1">paris@bingindiaries.com</p>
-          </div>
+        <div className="mt-12">
+          <p className="text-eyebrow text-muted-foreground mb-2">Email</p>
+          <a href="mailto:info@bingindiaries.com" className="font-display text-2xl link-underline">
+            info@bingindiaries.com
+          </a>
         </div>
       </div>
 

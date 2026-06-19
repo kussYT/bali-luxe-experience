@@ -41,8 +41,21 @@ export type MoodHotspot = {
   collectionSearch?: Record<string, string>;
 };
 
+export type HomePhotoTile = {
+  label: string;
+  image: string;
+  href: string;
+  search?: Record<string, string>;
+};
+
+export type PhotoStripContent = {
+  layout: "landscape" | "grid";
+  tiles: HomePhotoTile[];
+};
+
 export type HomepageContent = {
   hero: HeroContent;
+  photoStrip: PhotoStripContent;
   editorial: EditorialContent;
   featuredSection: { eyebrow: string; title: string };
   lookbook: {

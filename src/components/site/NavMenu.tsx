@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { X } from "lucide-react";
 import type { NavLink } from "@/lib/navigation";
+import { BrandLogo } from "@/components/site/BrandLogo";
 import { MarketSelector } from "@/components/site/MarketSelector";
 
 type NavSection = { label: string; items: readonly NavLink[] };
@@ -40,7 +41,7 @@ export function NavMenu({ open, onClose, sections }: NavMenuProps) {
     <div className="fixed inset-0 z-50 flex md:hidden">
       <aside className="w-full max-w-lg bg-background flex flex-col h-full shadow-2xl animate-fade-in overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-border sticky top-0 bg-background z-10">
-          <p className="text-eyebrow text-muted-foreground">Menu</p>
+          <BrandLogo variant="compact" />
           <button type="button" onClick={onClose} aria-label="Close menu">
             <X className="size-5" />
           </button>

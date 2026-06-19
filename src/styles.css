@@ -72,10 +72,10 @@
 :root {
   --radius: 2px;
 
-  /* Core palette */
-  --background: #f8f4ee;
+  /* Core palette — premium white base; marquee keeps warm secondary */
+  --background: #ffffff;
   --secondary: #efe7dd;
-  --surface: #fffdf8;
+  --surface: #ffffff;
   --foreground: #1c1a17;
   --muted: #7d746c;
   --accent: #b88a65;
@@ -328,7 +328,7 @@
   /* Gimaguas-style product card hover */
   .product-image-wrap {
     overflow: hidden;
-    background-color: var(--secondary);
+    background-color: #ffffff;
     aspect-ratio: 4 / 5;
   }
   .product-image-wrap img {
