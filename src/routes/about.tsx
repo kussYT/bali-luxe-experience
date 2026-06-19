@@ -71,6 +71,32 @@ function About() {
               ))}
             </nav>
 
+            {/* Mobile / tablet — photo links */}
+            <div className="lg:hidden mt-10">
+              <p className="text-eyebrow text-foreground/45 mb-5">Explore</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                {SIDEBAR_LINKS.map((item) => (
+                  <Link
+                    key={`mobile-${item.label}`}
+                    to={item.to}
+                    hash={"hash" in item ? item.hash : undefined}
+                    className="group relative overflow-hidden aspect-[4/5] bg-neutral-100"
+                  >
+                    <img
+                      src={item.image}
+                      alt=""
+                      className="absolute inset-0 size-full object-cover"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-foreground/25" />
+                    <p className="absolute bottom-2.5 left-2.5 right-2.5 text-surface text-[0.5625rem] sm:text-[0.625rem] font-medium tracking-[0.16em] uppercase leading-snug">
+                      {item.label}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
             <div className="mt-16 space-y-16 md:space-y-20">
               {about.sections.map((section) => (
                 <article key={section.id} id={section.id} className="scroll-mt-28">
@@ -94,7 +120,7 @@ function About() {
             </div>
           </div>
 
-          {/* Right — clickable photo links */}
+          {/* Right — clickable photo links (desktop) */}
           <aside className="hidden lg:block sticky top-28">
             <p className="text-eyebrow text-foreground/45 mb-6">Explore</p>
             <div className="grid grid-cols-2 gap-3">

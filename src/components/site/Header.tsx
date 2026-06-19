@@ -4,6 +4,7 @@ import { Menu, Search, ShoppingBag } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog-context";
 import { buildNavMain } from "@/lib/navigation";
+import { BrandLogo } from "@/components/site/BrandLogo";
 import { NavMenu } from "@/components/site/NavMenu";
 import { NavDropdown } from "@/components/site/NavDropdown";
 import { SearchDrawer } from "@/components/site/SearchDrawer";
@@ -30,7 +31,7 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-[12px] border-b border-border/60 relative">
-        <div className="page-wrap section-pad grid grid-cols-[1fr_auto_1fr] items-center h-[4.25rem] md:h-[5.25rem] gap-2 md:gap-4">
+        <div className="page-wrap section-pad grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center h-[4.25rem] md:h-[5.25rem] gap-1.5 sm:gap-2 md:gap-4">
           <div className="flex items-center gap-2 md:gap-6 lg:gap-8 min-w-0">
             <button
               type="button"
@@ -51,15 +52,7 @@ export function Header() {
             </nav>
           </div>
 
-          <Link
-            to="/"
-            aria-label="Bingin Diaries"
-            className="flex flex-col items-center shrink-0 text-center px-1"
-          >
-            <span className="font-display text-[1rem] sm:text-[1.25rem] md:text-[1.5rem] lg:text-[1.65rem] tracking-[0.06em] leading-none whitespace-nowrap">
-              Bingin Diaries
-            </span>
-          </Link>
+          <BrandLogo variant="header" className="px-0.5 sm:px-1 max-w-[min(100%,11rem)] sm:max-w-none" />
 
           <div className="flex items-center justify-end gap-1.5 sm:gap-3 md:gap-7 min-w-0">
             <div className="hidden md:block">
