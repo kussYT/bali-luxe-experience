@@ -370,6 +370,7 @@ export async function updateAdminCollection(slug: string, patch: Partial<AdminCo
 export type AdminCmsStatus = {
   source: string;
   database: boolean;
+  uploads: "r2" | "filesystem" | "unavailable";
   instagram: {
     source: string;
     syncedAt: string | null;

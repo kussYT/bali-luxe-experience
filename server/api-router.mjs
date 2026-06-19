@@ -383,7 +383,7 @@ export async function handleApiRequest(request, context = {}) {
     }
 
     if (pathname === "/api/admin/cms/status" && method === "GET") {
-      const result = await getAdminCmsStatusResponse();
+      const result = await getAdminCmsStatusResponse(context.env);
       return jsonResponse(200, result);
     }
 

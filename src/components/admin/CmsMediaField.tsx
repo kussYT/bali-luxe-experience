@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { uploadCmsMedia } from "@/lib/admin-api";
+import { UPLOADS_UNAVAILABLE_MESSAGE, useUploadsAvailable } from "@/lib/use-uploads-available";
 
 type CmsMediaFieldProps = {
   label: string;
@@ -21,13 +22,14 @@ export function CmsMediaField({
   accept = "image/*,video/mp4,video/webm",
   hint,
 }: CmsMediaFieldProps) {
+  const { available: uploadsAvailable, loading: uploadsLoading } = useUploadsAvailable();
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isVideo = /\.(mp4|webm)(\?|$)/i.test(value) || value.includes("/hero.mp4");
 
   async function handleUpload(files: FileList | null) {
-    if (!files?.length) return;
+    if (!uploadsAvailable || !files?.length) return;
     setUploading(true);
     setError(null);
     try {
@@ -45,21 +47,26 @@ export function CmsMediaField({
       <Label>{label}</Label>
       <div className="flex flex-wrap gap-2">
         <Input value={value} onChange={(e) => onChange(e.target.value)} className="flex-1 min-w-[200px]" />
-        <label>
-          <Button type="button" variant="outline" disabled={uploading} asChild>
-            <span>{uploading ? "Envoi…" : "Uploader un fichier"}</span>
-          </Button>
-          <input
-            type="file"
-            accept={accept}
-            className="sr-only"
-            onChange={(e) => {
-              handleUpload(e.target.files);
-              e.target.value = "";
-            }}
-          />
-        </label>
+        {!uploadsLoading && uploadsAvailable && (
+          <label>
+            <Button type="button" variant="outline" disabled={uploading} asChild>
+              <span>{uploading ? "Envoi…" : "Uploader un fichier"}</span>
+            </Button>
+            <input
+              type="file"
+              accept={accept}
+              className="sr-only"
+              onChange={(e) => {
+                handleUpload(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        )}
       </div>
+      {!uploadsLoading && !uploadsAvailable && (
+        <p className="text-xs text-amber-700 dark:text-amber-400">{UPLOADS_UNAVAILABLE_MESSAGE}</p>
+      )}
       {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       {error && <p className="text-xs text-destructive">{error}</p>}
       {value && (

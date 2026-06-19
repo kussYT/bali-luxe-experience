@@ -7,6 +7,7 @@
   "observability": {
     "enabled": true
   },
-  // Uncomment after creating the bucket: wrangler r2 bucket create bingin-diaries-uploads
+  // Enable R2 in Cloudflare Dashboard first, then:
+  // npx wrangler r2 bucket create bingin-diaries-uploads
   // "r2_buckets": [{ "binding": "UPLOADS", "bucket_name": "bingin-diaries-uploads" }]
 }

@@ -15,6 +15,8 @@ import { CmsStatusCard } from "@/components/admin/CmsStatusCard";
 import { ContentSubnav } from "@/components/admin/ContentSubnav";
 import { CmsField } from "@/components/admin/CmsField";
 import { CmsMediaField } from "@/components/admin/CmsMediaField";
+import { UploadsUnavailableBanner } from "@/components/admin/UploadsUnavailableBanner";
+import { useUploadsAvailable } from "@/lib/use-uploads-available";
 
 export const Route = createFileRoute("/admin/content/")({
   head: () => ({ meta: [{ title: "Content — Bingin Diaries Admin" }] }),
@@ -28,6 +30,7 @@ function AdminContentPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [seeding, setSeeding] = useState(false);
+  const { available: uploadsAvailable, loading: uploadsLoading } = useUploadsAvailable();
 
   useEffect(() => {
     load();
@@ -99,11 +102,16 @@ function AdminContentPage() {
       {error && <p className="text-destructive text-sm">{error}</p>}
       {message && <p className="text-sm text-muted-foreground">{message}</p>}
 
-      <div className="rounded-sm border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground leading-relaxed">
-        <strong className="text-foreground">Photos & vidéos :</strong> clique sur{" "}
-        <strong className="text-foreground">Uploader un fichier</strong> à côté du champ — le lien se remplit
-        automatiquement. Formats : JPG, PNG, WebP, MP4. Pas besoin de taper le chemin à la main.
-      </div>
+      {!uploadsLoading && uploadsAvailable && (
+        <div className="rounded-sm border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground leading-relaxed">
+          <strong className="text-foreground">Photos & vidéos :</strong> clique sur{" "}
+          <strong className="text-foreground">Uploader un fichier</strong> à côté du champ — le lien se remplit
+          automatiquement. Formats : JPG, PNG, WebP, MP4. Pas besoin de taper le chemin à la main.
+        </div>
+      )}
+      {!uploadsLoading && !uploadsAvailable && (
+        <UploadsUnavailableBanner hint="Colle une URL d'image ou de vidéo dans le champ pour l'instant." />
+      )}
 
       <CmsStatusCard />
 

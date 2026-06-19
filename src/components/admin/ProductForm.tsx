@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { uploadProductImages } from "@/lib/admin-api";
+import { UPLOADS_UNAVAILABLE_MESSAGE, useUploadsAvailable } from "@/lib/use-uploads-available";
 import { Plus, X } from "lucide-react";
 
 export type VariantFormRow = {
@@ -111,6 +112,7 @@ export function ProductForm({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const { available: uploadsAvailable, loading: uploadsLoading } = useUploadsAvailable();
 
   const set = <K extends keyof ProductFormValues>(key: K, val: ProductFormValues[K]) => {
     setValues((prev) => ({ ...prev, [key]: val }));
@@ -142,7 +144,7 @@ export function ProductForm({
   };
 
   const handleFiles = async (files: FileList | null) => {
-    if (!files?.length) return;
+    if (!uploadsAvailable || !files?.length) return;
     const slug = values.slug || slugify(values.name);
     if (!slug) {
       setError("Enter a product name before uploading images.");
@@ -389,7 +391,12 @@ export function ProductForm({
 
       <div className="space-y-3 border border-border p-5">
         <Label>Images</Label>
-        <Input type="file" accept="image/*" multiple onChange={(e) => handleFiles(e.target.files)} disabled={uploading} />
+        {!uploadsLoading && uploadsAvailable && (
+          <Input type="file" accept="image/*" multiple onChange={(e) => handleFiles(e.target.files)} disabled={uploading} />
+        )}
+        {!uploadsLoading && !uploadsAvailable && (
+          <p className="text-sm text-amber-700 dark:text-amber-400">{UPLOADS_UNAVAILABLE_MESSAGE}</p>
+        )}
         {uploading && <p className="text-sm text-muted-foreground">Uploading…</p>}
         {values.images.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-3">

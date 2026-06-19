@@ -92,7 +92,14 @@ Wrangler deploys `dist/server` as the Worker and serves `dist/client` as static 
 
 ## R2 image uploads (admin)
 
-Admin product image upload uses local disk in dev. In production:
+**Required for CMS media upload on staging/production.** Cloudflare Workers have no filesystem — uploads go to R2.
+
+### 1. Enable R2 (one-time, Cloudflare Dashboard)
+
+1. [Cloudflare Dashboard](https://dash.cloudflare.com) → **R2 Object Storage**
+2. Click **Purchase R2** / enable R2 (free tier covers CMS usage)
+
+### 2. Create bucket + bind Worker
 
 ```bash
 npx wrangler r2 bucket create bingin-diaries-uploads
@@ -104,7 +111,15 @@ Uncomment in `wrangler.jsonc`:
 "r2_buckets": [{ "binding": "UPLOADS", "bucket_name": "bingin-diaries-uploads" }]
 ```
 
-Redeploy. Images are served at `/uploads/products/...` via `src/routes/uploads/$.ts`.
+```bash
+npm run deploy
+```
+
+Images are served at `/uploads/cms/...` or `/uploads/products/...` via `src/routes/uploads/$.ts`.
+
+**Without R2:** admin upload returns `503` — Beatrice can paste an external image URL manually until R2 is enabled.
+
+**Local dev:** uploads save to `public/uploads/` (no R2 needed).
 
 ---
 

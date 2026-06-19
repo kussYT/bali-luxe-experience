@@ -245,8 +245,10 @@ API helper: `uploadCmsMedia()` in `src/lib/admin-api.ts`
 
 **Storage:**
 
-- **Production:** Cloudflare R2 (`UPLOADS` binding in `wrangler.jsonc`)
+- **Production:** Cloudflare R2 (`UPLOADS` binding in `wrangler.jsonc`) — **must be enabled in Cloudflare Dashboard first**
 - **Local dev:** `public/uploads/…`
+
+**If upload fails with "Filesystem storage is not available":** R2 is not configured on the Worker. See [sprint-s5-deployment.md](./sprint-s5-deployment.md#r2-image-uploads-admin).
 
 Served at `/uploads/$` via `src/routes/uploads/$.ts`.
 

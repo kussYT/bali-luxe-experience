@@ -19,6 +19,19 @@ function objectKey(slug, filename) {
   return { safeName, key };
 }
 
+function uploadsUnavailableError() {
+  const err = new Error("Media uploads not available until R2 is enabled");
+  err.status = 503;
+  return err;
+}
+
+/** Where uploads are stored in this runtime (for admin diagnostics). */
+export function getUploadsStorageMode(env) {
+  if (env?.UPLOADS) return "r2";
+  if (getProjectRoot()) return "filesystem";
+  return "unavailable";
+}
+
 /** Save product image — local disk in dev, R2 on Cloudflare when UPLOADS binding is set. */
 export async function saveUploadedImage(slug, filename, buffer, env) {
   const { safeName, key } = objectKey(slug, filename);
@@ -29,6 +42,8 @@ export async function saveUploadedImage(slug, filename, buffer, env) {
     });
     return `/uploads/${key}`;
   }
+
+  if (!getProjectRoot()) throw uploadsUnavailableError();
 
   const root = requireProjectRoot();
   const dir = path.join(root, "public", "uploads", ...key.split("/").slice(0, -1));
