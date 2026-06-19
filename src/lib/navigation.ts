@@ -124,6 +124,11 @@ export const NAV_ABOUT: NavLink[] = [
 /** Latest seasonal collection — synced from Shopify `mi-paradisio-collection`. */
 export const NAV_NEW_COLLECTION: NavLink[] = [
   { label: "Mi Paradisio 2026", to: "/collection", search: { c: "mi-paradisio-collection" } },
+  {
+    label: "New Accessories",
+    to: "/collection",
+    search: { c: "mi-paradisio-collection", cat: "accessories" },
+  },
   { label: "Special Occasions", to: "/collection", search: { c: "special-occasions" } },
   { label: "View all new", to: "/collection", search: { c: "mi-paradisio-collection" } },
 ];
