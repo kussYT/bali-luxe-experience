@@ -6,6 +6,7 @@ import { useCatalog } from "@/lib/catalog-context";
 import { buildNavMain } from "@/lib/navigation";
 import { BrandLogo } from "@/components/site/BrandLogo";
 import { NavMenu } from "@/components/site/NavMenu";
+import { NavAboutDropdown } from "@/components/site/NavAboutDropdown";
 import { NavDropdown } from "@/components/site/NavDropdown";
 import { SearchDrawer } from "@/components/site/SearchDrawer";
 import { MarketSelector } from "@/components/site/MarketSelector";
@@ -46,9 +47,13 @@ export function Header() {
             </button>
 
             <nav className="hidden md:flex items-center gap-7 lg:gap-9" aria-label="Main">
-              {navMain.map((section) => (
-                <NavDropdown key={section.label} label={section.label} items={[...section.items]} />
-              ))}
+              {navMain.map((section) =>
+                section.label === "About us" ? (
+                  <NavAboutDropdown key={section.label} />
+                ) : (
+                  <NavDropdown key={section.label} label={section.label} items={[...section.items]} />
+                ),
+              )}
             </nav>
           </div>
 
