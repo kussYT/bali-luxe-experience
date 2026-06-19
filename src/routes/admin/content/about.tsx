@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ContentSubnav } from "@/components/admin/ContentSubnav";
 import { CmsField } from "@/components/admin/CmsField";
+import { CmsMediaField } from "@/components/admin/CmsMediaField";
 
 export const Route = createFileRoute("/admin/content/about")({
   head: () => ({ meta: [{ title: "About — Bingin Diaries Admin" }] }),
@@ -258,7 +259,7 @@ function AdminAboutContentPage() {
                     setAbout({ ...about, sidebarLinks });
                   }}
                 />
-                <CmsField
+                <CmsMediaField
                   label="Image (URL)"
                   value={link.image}
                   onChange={(v) => {
@@ -266,6 +267,8 @@ function AdminAboutContentPage() {
                     sidebarLinks[i] = { ...sidebarLinks[i], image: v };
                     setAbout({ ...about, sidebarLinks });
                   }}
+                  folder={`sidebar-${i + 1}`}
+                  accept="image/*"
                 />
               </div>
             ))}

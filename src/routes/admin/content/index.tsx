@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { CmsStatusCard } from "@/components/admin/CmsStatusCard";
 import { ContentSubnav } from "@/components/admin/ContentSubnav";
 import { CmsField } from "@/components/admin/CmsField";
+import { CmsMediaField } from "@/components/admin/CmsMediaField";
 
 export const Route = createFileRoute("/admin/content/")({
   head: () => ({ meta: [{ title: "Content — Bingin Diaries Admin" }] }),
@@ -98,6 +99,12 @@ function AdminContentPage() {
       {error && <p className="text-destructive text-sm">{error}</p>}
       {message && <p className="text-sm text-muted-foreground">{message}</p>}
 
+      <div className="rounded-sm border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground leading-relaxed">
+        <strong className="text-foreground">Photos & vidéos :</strong> clique sur{" "}
+        <strong className="text-foreground">Uploader un fichier</strong> à côté du champ — le lien se remplit
+        automatiquement. Formats : JPG, PNG, WebP, MP4. Pas besoin de taper le chemin à la main.
+      </div>
+
       <CmsStatusCard />
 
       <form onSubmit={handleSave} className="space-y-6">
@@ -143,8 +150,20 @@ function AdminContentPage() {
             <div className="sm:col-span-2">
               <CmsField label="Sous-titre" value={hero.subtitle} onChange={(v) => setHomepage({ ...homepage, hero: { ...hero, subtitle: v } })} />
             </div>
-            <CmsField label="Image poster" value={hero.poster} onChange={(v) => setHomepage({ ...homepage, hero: { ...hero, poster: v } })} />
-            <CmsField label="Vidéo (URL)" value={hero.videoSrc} onChange={(v) => setHomepage({ ...homepage, hero: { ...hero, videoSrc: v } })} />
+            <CmsMediaField
+              label="Image poster"
+              value={hero.poster}
+              onChange={(v) => setHomepage({ ...homepage, hero: { ...hero, poster: v } })}
+              folder="hero"
+              accept="image/*"
+            />
+            <CmsMediaField
+              label="Vidéo (URL ou fichier MP4)"
+              value={hero.videoSrc}
+              onChange={(v) => setHomepage({ ...homepage, hero: { ...hero, videoSrc: v } })}
+              folder="hero"
+              accept="video/mp4,video/webm,image/*"
+            />
             <CmsField label="CTA principal" value={hero.ctaPrimary} onChange={(v) => setHomepage({ ...homepage, hero: { ...hero, ctaPrimary: v } })} />
             <CmsField label="Lien CTA principal" value={hero.ctaPrimaryHref} onChange={(v) => setHomepage({ ...homepage, hero: { ...hero, ctaPrimaryHref: v } })} />
             <CmsField label="CTA secondaire" value={hero.ctaSecondary} onChange={(v) => setHomepage({ ...homepage, hero: { ...hero, ctaSecondary: v } })} />
@@ -187,7 +206,7 @@ function AdminContentPage() {
                     setHomepage({ ...homepage, photoStrip: { ...homepage.photoStrip!, tiles } });
                   }}
                 />
-                <CmsField
+                <CmsMediaField
                   label="Image (URL)"
                   value={tile.image}
                   onChange={(v) => {
@@ -195,6 +214,8 @@ function AdminContentPage() {
                     tiles[i] = { ...tiles[i], image: v };
                     setHomepage({ ...homepage, photoStrip: { ...homepage.photoStrip!, tiles } });
                   }}
+                  folder={`photo-strip-${i + 1}`}
+                  accept="image/*"
                 />
                 <CmsField
                   label="Lien"

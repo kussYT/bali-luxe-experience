@@ -243,6 +243,15 @@ export async function updateInventoryQuantity(payload: {
 }
 
 export async function uploadProductImages(slug: string, files: FileList | File[]) {
+  return uploadAdminFiles(slug, files);
+}
+
+/** Upload CMS assets (hero, photo strip, about sidebar…) under /uploads/cms/… */
+export async function uploadCmsMedia(folder: string, files: FileList | File[]) {
+  return uploadAdminFiles(`cms/${folder}`, files);
+}
+
+async function uploadAdminFiles(slug: string, files: FileList | File[]) {
   const form = new FormData();
   for (const file of files) form.append("images", file);
   const res = await fetch(`/api/admin/upload?slug=${encodeURIComponent(slug)}`, {

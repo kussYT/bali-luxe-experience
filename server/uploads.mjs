@@ -7,12 +7,16 @@ function guessContentType(filename) {
   if (ext === ".png") return "image/png";
   if (ext === ".webp") return "image/webp";
   if (ext === ".gif") return "image/gif";
+  if (ext === ".mp4") return "video/mp4";
+  if (ext === ".webm") return "video/webm";
   return "image/jpeg";
 }
 
 function objectKey(slug, filename) {
   const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
-  return { safeName, key: `products/${slug}/${safeName}` };
+  const safeSlug = slug.replace(/[^a-zA-Z0-9._/-]/g, "_").replace(/^\/+|\/+$/g, "");
+  const key = safeSlug.includes("/") ? `${safeSlug}/${safeName}` : `products/${safeSlug}/${safeName}`;
+  return { safeName, key };
 }
 
 /** Save product image — local disk in dev, R2 on Cloudflare when UPLOADS binding is set. */
@@ -27,11 +31,11 @@ export async function saveUploadedImage(slug, filename, buffer, env) {
   }
 
   const root = requireProjectRoot();
-  const dir = path.join(root, "public", "uploads", "products", slug);
+  const dir = path.join(root, "public", "uploads", ...key.split("/").slice(0, -1));
   await mkdir(dir, { recursive: true });
-  const dest = path.join(dir, safeName);
+  const dest = path.join(root, "public", "uploads", ...key.split("/"));
   await writeFile(dest, buffer);
-  return `/uploads/products/${slug}/${safeName}`;
+  return `/uploads/${key}`;
 }
 
 /** Serve uploaded image from R2 (production) or local public folder (dev). */
@@ -52,7 +56,7 @@ export async function getUploadedImage(keyPath, env) {
   if (!root) return null;
 
   try {
-    const filePath = path.join(root, "public", "uploads", key.replace(/^products\//, "products/"));
+    const filePath = path.join(root, "public", "uploads", ...key.split("/"));
     const body = await readFile(filePath);
     return { body, contentType: guessContentType(filePath) };
   } catch {
