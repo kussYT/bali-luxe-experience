@@ -31,6 +31,9 @@ Local dev still uses Vite middleware (`vite.admin-api.mjs`) which calls the same
 
 Deploy to the default `*.workers.dev` URL **before** attaching `bingindiaries.com`. The Shopify site stays live until DNS cutover.
 
+**Current staging:** https://bingin-diaries.bingindiaries.workers.dev  
+**CMS / design guide:** [08-content-cms-and-design.md](./08-content-cms-and-design.md)
+
 1. `npx wrangler login`
 2. Set secrets (see below) with `SITE_URL` = your `workers.dev` URL after first deploy
 3. `npm run deploy`

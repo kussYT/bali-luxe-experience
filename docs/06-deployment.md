@@ -40,8 +40,11 @@ All `/api/*` routes are handled by TanStack Start server route `src/routes/api/$
 | Atlist (Find us map) | Bundled by default — override with `VITE_ATLIST_EMBED_URL` if needed |
 | Newsletter | `NEWSLETTER_PROVIDER`, Brevo keys (optional) |
 | Instagram | `INSTAGRAM_ACCESS_TOKEN` (optional) — [automation](./instagram-automation.md) |
+| CMS uploads | R2 binding `UPLOADS` (recommended in prod) |
 
 Configure via `wrangler secret put <NAME>`.
+
+**Editorial CMS & design:** [08-content-cms-and-design.md](./08-content-cms-and-design.md)
 
 ---
 
@@ -49,7 +52,7 @@ Configure via `wrangler secret put <NAME>`.
 
 - Enable SSL (`?sslmode=require` on Neon)
 - Run `npm run db:migrate` against prod before deploy
-- Catalog: `npm run db:seed-catalog` once, then manage via admin
+- Catalog: `npm run catalog:import` then `npm run db:seed-catalog`, then manage via admin
 
 ---
 

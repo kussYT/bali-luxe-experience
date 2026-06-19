@@ -110,6 +110,26 @@
 
 ---
 
+## S8 — Premium design & editorial CMS ✅
+
+| Deliverable | Status |
+|-------------|--------|
+| White theme + minimal product cards | ✅ |
+| Homepage: hero → photo strip → products → Instagram | ✅ |
+| Hero poster + optional video (graceful fallback) | ✅ |
+| Home photo strip CMS (3 portrait tiles, full bleed) | ✅ |
+| Instagram grid full-bleed (`gap-0`) | ✅ |
+| Collection scoped sub-filters (`?c=`) | ✅ |
+| Mi Paradisio catalog sync (13 products) | ✅ |
+| About page + Find us (Atlist + stockists) | ✅ |
+| CMS: `/admin/content`, `/about`, `/find-us` | ✅ |
+| CMS media upload (hero, photo strip, About sidebar) | ✅ |
+| Staging deploy `*.workers.dev` | ✅ |
+
+**Guide:** [08-content-cms-and-design.md](./08-content-cms-and-design.md)
+
+---
+
 ## S6 — Customer accounts (optional)
 
 - Email auth
