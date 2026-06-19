@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-06-18T07:59:17.735Z",
+  "generatedAt": "2026-06-19T06:56:07.137Z",
   "store": "https://bingindiaries.com",
-  "productCount": 45,
+  "productCount": 53,
   "collections": [
     {
       "slug": "90s-fisher",
@@ -118,6 +118,126 @@
   ],
   "products": [
     {
+      "slug": "openweave-crochet-pillbox",
+      "name": "Handmade open weave Pillbox",
+      "collection": "Mi Paradisio",
+      "collectionSlug": "mi-paradisio-collection",
+      "collectionSlugs": [
+        "mi-paradisio-collection",
+        "special-occasions"
+      ],
+      "category": "hats",
+      "productType": "summer hat",
+      "priceEUR": 125,
+      "onSale": false,
+      "available": true,
+      "priceUSD": 138,
+      "priceIDR": 2125000,
+      "image": "/shopify-import/openweave-crochet-pillbox/01.png",
+      "images": [
+        "/shopify-import/openweave-crochet-pillbox/01.png"
+      ],
+      "story": "Hand-crocheted from natural banana leaf fibers, this pillbox hat features an intricate open-weave structure adorned with colorful glass beads. Airy silhouette celebrates artisanal craftsmanship, with each piece handmade and uniquely its own.",
+      "details": [
+        "summer hat"
+      ],
+      "tags": [
+        "handmade",
+        "open",
+        "weave",
+        "pillbox",
+        "paradisio",
+        "summer",
+        "hat",
+        "openweave-crochet-pillbox"
+      ],
+      "outlet": false,
+      "featured": false,
+      "status": "published",
+      "stock": 1,
+      "origin": "Bali"
+    },
+    {
+      "slug": "handmade-crochet-pillbox",
+      "name": "Handmade crochet Pillbox",
+      "collection": "Mi Paradisio",
+      "collectionSlug": "mi-paradisio-collection",
+      "collectionSlugs": [
+        "mi-paradisio-collection",
+        "special-occasions"
+      ],
+      "category": "hats",
+      "productType": "summer hat",
+      "priceEUR": 125,
+      "onSale": false,
+      "available": true,
+      "priceUSD": 138,
+      "priceIDR": 2125000,
+      "image": "/shopify-import/handmade-crochet-pillbox/01.png",
+      "images": [
+        "/shopify-import/handmade-crochet-pillbox/01.png",
+        "/shopify-import/handmade-crochet-pillbox/02.png"
+      ],
+      "story": "An unique pillbox hat hand-crocheted from natural banana leaf fibers and finished with glass bead details. Each piece is handmade and one of a kind, celebrating the beauty of artisanal craftsmanship.",
+      "details": [
+        "summer hat"
+      ],
+      "tags": [
+        "handmade",
+        "crochet",
+        "pillbox",
+        "paradisio",
+        "summer",
+        "hat",
+        "handmade-crochet-pillbox"
+      ],
+      "outlet": false,
+      "featured": false,
+      "status": "published",
+      "stock": 1,
+      "origin": "Bali"
+    },
+    {
+      "slug": "handmade-crochet-beret",
+      "name": "Handmade crochet Beret",
+      "collection": "Mi Paradisio",
+      "collectionSlug": "mi-paradisio-collection",
+      "collectionSlugs": [
+        "mi-paradisio-collection",
+        "special-occasions"
+      ],
+      "category": "hats",
+      "productType": "summer hat",
+      "priceEUR": 115,
+      "onSale": false,
+      "available": true,
+      "priceUSD": 127,
+      "priceIDR": 1955000,
+      "image": "/shopify-import/handmade-crochet-beret/01.png",
+      "images": [
+        "/shopify-import/handmade-crochet-beret/01.png",
+        "/shopify-import/handmade-crochet-beret/02.png"
+      ],
+      "story": "A timeless silhouette reimagined through artisanal craftsmanship. Hand-crocheted from natural banana leaf fibers, this beret combines texture, lightness, and understated elegance. Each piece is individually crafted, resulting in subtle variations that make it truly unique.",
+      "details": [
+        "summer hat"
+      ],
+      "tags": [
+        "handmade",
+        "crochet",
+        "beret",
+        "paradisio",
+        "summer",
+        "hat",
+        "handmade-crochet-beret"
+      ],
+      "outlet": false,
+      "featured": false,
+      "status": "published",
+      "stock": 1,
+      "origin": "Bali"
+    },
+    {
       "slug": "the-rimba-chocolate",
       "name": "The Rimba | Chocolate",
       "collection": "Retro Safari",
@@ -155,6 +275,185 @@
       ],
       "outlet": false,
       "featured": true,
+      "status": "published",
+      "stock": 1,
+      "origin": "Bali"
+    },
+    {
+      "slug": "hair-comb",
+      "name": "Hair Comb",
+      "collection": "Mi Paradisio",
+      "collectionSlug": "mi-paradisio-collection",
+      "collectionSlugs": [
+        "mi-paradisio-collection"
+      ],
+      "category": "accessories",
+      "productType": "",
+      "priceEUR": 69,
+      "onSale": false,
+      "available": true,
+      "priceUSD": 76,
+      "priceIDR": 1173000,
+      "image": "/shopify-import/hair-comb/01.jpg",
+      "images": [
+        "/shopify-import/hair-comb/01.jpg"
+      ],
+      "story": "The Bingin Diaries Hair Comb is a handcrafted accessory that brings a simple yet refined look to any hairstyle. With its mix of smooth beads and shell detail, it adds character without feeling overdone. The sturdy teeth slide in easily and hold your hair in place, making it both practical and decorative. Its simplicity and uniqueness make it a piece you can reach for whether you're dressing casually or adding a subtle accent to a special look. Key features : Silver platted…",
+      "details": [],
+      "tags": [
+        "hair",
+        "comb",
+        "paradisio",
+        "hair-comb"
+      ],
+      "outlet": false,
+      "featured": false,
+      "status": "published",
+      "stock": 1,
+      "origin": "Bali"
+    },
+    {
+      "slug": "hair-pin",
+      "name": "Hair Pin",
+      "collection": "Mi Paradisio",
+      "collectionSlug": "mi-paradisio-collection",
+      "collectionSlugs": [
+        "mi-paradisio-collection"
+      ],
+      "category": "accessories",
+      "productType": "",
+      "priceEUR": 35,
+      "onSale": false,
+      "available": true,
+      "priceUSD": 39,
+      "priceIDR": 595000,
+      "image": "/shopify-import/hair-pin/01.jpg",
+      "images": [
+        "/shopify-import/hair-pin/01.jpg"
+      ],
+      "story": "The Bingin Diaries hair pin features a sleek silver shaft with a looped top and three carefully chosen beads for effortless styling. This unique combination of textures and tones creates a timeless accessory that feels both organic and sophisticated. Perfect for securing buns or adding flair to you everyday looks and hairstyles, it's a piece that combines elegance and simplicity. Key features : Ceramic shell bead Secure fit Minimalist design with neutral tones Lightweight …",
+      "details": [],
+      "tags": [
+        "hair",
+        "pin",
+        "paradisio",
+        "hair-pin"
+      ],
+      "outlet": false,
+      "featured": false,
+      "status": "published",
+      "stock": 1,
+      "origin": "Bali"
+    },
+    {
+      "slug": "hat-pin",
+      "name": "Hat pin",
+      "collection": "Mi Paradisio",
+      "collectionSlug": "mi-paradisio-collection",
+      "collectionSlugs": [
+        "mi-paradisio-collection"
+      ],
+      "category": "accessories",
+      "productType": "accessories",
+      "priceEUR": 29,
+      "onSale": false,
+      "available": true,
+      "priceUSD": 32,
+      "priceIDR": 493000,
+      "image": "/shopify-import/hat-pin/01.jpg",
+      "images": [
+        "/shopify-import/hat-pin/01.jpg",
+        "/shopify-import/hat-pin/02.jpg",
+        "/shopify-import/hat-pin/03.jpg"
+      ],
+      "story": "The Bingin Diaries hat pin is a refined accessory designed to complement your favorite woven hats. Hand-crafted with glass beads threaded onto a sleek silver skewer, combining practicality with a touch of elegance. The looped top makes it easy to use, while the pointed end secures your hat without causing damage. With its minimalist design and natural tones, it pairs effortlessly with any style, adding a refined touch to your look. Key features : Glass beads Durable silver…",
+      "details": [
+        "accessories"
+      ],
+      "tags": [
+        "hat",
+        "pin",
+        "paradisio",
+        "accessories",
+        "hat-pin"
+      ],
+      "outlet": false,
+      "featured": false,
+      "status": "published",
+      "stock": 1,
+      "origin": "Bali"
+    },
+    {
+      "slug": "gilda-hat",
+      "name": "Gilda Hat",
+      "collection": "Mi Paradisio",
+      "collectionSlug": "mi-paradisio-collection",
+      "collectionSlugs": [
+        "best-sellers",
+        "mi-paradisio-collection",
+        "paille"
+      ],
+      "category": "hats",
+      "productType": "Hats",
+      "priceEUR": 95,
+      "onSale": false,
+      "available": true,
+      "priceUSD": 105,
+      "priceIDR": 1615000,
+      "image": "/shopify-import/gilda-hat/01.png",
+      "images": [
+        "/shopify-import/gilda-hat/01.png",
+        "/shopify-import/gilda-hat/02.jpg"
+      ],
+      "story": "The Gilda Hat by Bingin Diaries is a modern take on a classic brim hat. Made from natural woven fibers, it is light, comfortable, and easy to wear all day. This hat is reversible, so you can wear it in different ways to match your style. The wide brim helps protect you from the sun, making it perfect for beach days, holidays, or everyday use. With its simple shape and natural look, the Gilda Hat is easy to style with any outfit. It’s a great choice if you want a hat that i…",
+      "details": [
+        "Hats"
+      ],
+      "tags": [
+        "gilda",
+        "hat",
+        "paradisio",
+        "hats",
+        "gilda-hat"
+      ],
+      "outlet": false,
+      "featured": true,
+      "status": "published",
+      "stock": 1,
+      "origin": "Bali"
+    },
+    {
+      "slug": "mi-paradisio-cabas",
+      "name": "Mi Paradisio Cabas",
+      "collection": "Mi Paradisio",
+      "collectionSlug": "mi-paradisio-collection",
+      "collectionSlugs": [
+        "mi-paradisio-collection"
+      ],
+      "category": "bags",
+      "productType": "bag",
+      "priceEUR": 119,
+      "onSale": false,
+      "available": true,
+      "priceUSD": 131,
+      "priceIDR": 2023000,
+      "image": "/shopify-import/mi-paradisio-cabas/01.jpg",
+      "images": [
+        "/shopify-import/mi-paradisio-cabas/01.jpg",
+        "/shopify-import/mi-paradisio-cabas/02.jpg"
+      ],
+      "story": "The Mi Paradisio Cabas is a bold reinterpretation of the classic tote. Hand‑woven from metal wire, it combines strength with lightness, creating a shimmering mesh that holds its shape beautifully. Each bag is finished with ceramic and glass beads, carefully placed to add texture, color, and individuality, no two cabas are exactly alike. Designed to be both practical and artistic, this cabas is spacious enough for everyday essentials yet refined enough to stand out as a sta…",
+      "details": [
+        "bag"
+      ],
+      "tags": [
+        "paradisio",
+        "cabas",
+        "bag",
+        "mi-paradisio-cabas"
+      ],
+      "outlet": false,
+      "featured": false,
       "status": "published",
       "stock": 1,
       "origin": "Bali"
@@ -1172,8 +1471,7 @@
         "/shopify-import/boater-the-slang/01.jpg",
         "/shopify-import/boater-the-slang/02.jpg",
         "/shopify-import/boater-the-slang/03.jpg",
-        "/shopify-import/boater-the-slang/04.jpg",
-        "/shopify-import/boater-the-slang/05.jpg"
+        "/shopify-import/boater-the-slang/04.jpg"
       ],
       "story": "\"THE SLANG\", un chapeau d'hiver en laine 100% premium de style Boater kaki, fabriqué avec soin au Portugal. Son design neutre complète tous vos looks, tandis que sa qualité exceptionnelle et son ajustement parfait en font un accessoire de luxe intemporel. Commandez maintenant pour une livraison rapide. Stock disponible en France.",
       "details": [],
