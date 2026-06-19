@@ -2,17 +2,21 @@ import { Link } from "@tanstack/react-router";
 import { useSiteContent } from "@/lib/content-context";
 import type { HomePhotoTile } from "@/lib/content-types";
 
+/** Portrait strip — equal columns, full bleed, hero-scale height. */
+const STRIP_HEIGHT =
+  "min-h-[72vh] sm:min-h-[80vh] md:min-h-[92vh] lg:min-h-[96vh]";
+
 function TileLink({ tile }: { tile: HomePhotoTile }) {
   const inner = (
-    <div className="group relative overflow-hidden bg-white aspect-[4/5] md:aspect-auto md:min-h-[280px]">
+    <div className={`group relative overflow-hidden bg-neutral-100 h-full ${STRIP_HEIGHT}`}>
       <img
         src={tile.image}
         alt={tile.label}
         loading="lazy"
-        className="absolute inset-0 size-full object-cover transition-transform duration-[1.8s] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
+        className="absolute inset-0 size-full object-cover object-center transition-transform duration-[1.8s] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
       />
-      <div className="absolute inset-0 bg-foreground/10 group-hover:bg-foreground/20 transition-colors" />
-      <p className="absolute bottom-4 left-4 md:bottom-6 md:left-6 text-surface text-[0.6875rem] font-medium tracking-[0.22em] uppercase">
+      <div className="absolute inset-0 bg-foreground/5 group-hover:bg-foreground/15 transition-colors duration-500" />
+      <p className="absolute top-3 left-3 sm:top-5 sm:left-5 md:top-6 md:left-6 text-surface text-[0.5625rem] sm:text-[0.6875rem] font-medium tracking-[0.18em] sm:tracking-[0.22em] uppercase leading-snug drop-shadow-[0_1px_8px_rgba(0,0,0,0.35)]">
         {tile.label}
       </p>
     </div>
@@ -20,14 +24,14 @@ function TileLink({ tile }: { tile: HomePhotoTile }) {
 
   if (tile.href.startsWith("http")) {
     return (
-      <a href={tile.href} className="block">
+      <a href={tile.href} className="block h-full min-w-0">
         {inner}
       </a>
     );
   }
 
   return (
-    <Link to={tile.href} search={tile.search as never} className="block">
+    <Link to={tile.href} search={tile.search as never} className="block h-full min-w-0">
       {inner}
     </Link>
   );
@@ -41,22 +45,26 @@ export function HomePhotoStrip() {
   if (strip.layout === "landscape" && strip.tiles[0]) {
     const tile = strip.tiles[0];
     return (
-      <section className="page-wrap section-pad py-8 md:py-12">
+      <section className="w-full">
         {tile.href.startsWith("http") ? (
-          <a href={tile.href} className="block group overflow-hidden">
+          <a href={tile.href} className={`block group overflow-hidden ${STRIP_HEIGHT}`}>
             <img
               src={tile.image}
               alt={tile.label}
-              className="w-full aspect-[21/9] md:aspect-[24/9] object-cover image-editorial transition-transform duration-[2s] group-hover:scale-[1.02]"
+              className="size-full object-cover image-editorial transition-transform duration-[2s] group-hover:scale-[1.02]"
               loading="lazy"
             />
           </a>
         ) : (
-          <Link to={tile.href} search={tile.search as never} className="block group overflow-hidden">
+          <Link
+            to={tile.href}
+            search={tile.search as never}
+            className={`block group overflow-hidden ${STRIP_HEIGHT}`}
+          >
             <img
               src={tile.image}
               alt={tile.label}
-              className="w-full aspect-[21/9] md:aspect-[24/9] object-cover image-editorial transition-transform duration-[2s] group-hover:scale-[1.02]"
+              className="size-full object-cover image-editorial transition-transform duration-[2s] group-hover:scale-[1.02]"
               loading="lazy"
             />
           </Link>
@@ -65,11 +73,13 @@ export function HomePhotoStrip() {
     );
   }
 
+  const tileCount = strip.tiles.length;
+
   return (
-    <section className="page-wrap section-pad py-8 md:py-12">
+    <section className="w-full bg-white">
       <div
-        className={`grid gap-2 md:gap-3 ${
-          strip.tiles.length === 2 ? "grid-cols-2" : "grid-cols-2 md:grid-cols-3"
+        className={`grid gap-0 ${STRIP_HEIGHT} ${
+          tileCount === 2 ? "grid-cols-2" : "grid-cols-3"
         }`}
       >
         {strip.tiles.map((tile) => (
