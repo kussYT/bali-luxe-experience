@@ -24,6 +24,8 @@ import { AmbientSoundProvider } from "@/lib/ambient-sound-context";
 
 import { AmbientSoundToggle } from "@/components/site/AmbientSoundToggle";
 
+import { BinginSounds } from "@/components/lifestyle/BinginSounds";
+
 import { CookieConsent } from "@/components/site/CookieConsent";
 
 import { Toaster } from "@/components/ui/sonner";
@@ -86,11 +88,17 @@ export const Route = createRootRoute({
 
       { name: "twitter:card", content: "summary_large_image" },
 
+      { property: "og:image", content: "/logo.png" },
+
     ],
 
     links: [
 
       { rel: "stylesheet", href: appCss },
+
+      { rel: "icon", href: "/logo.png", type: "image/png" },
+
+      { rel: "apple-touch-icon", href: "/logo.png" },
 
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
 
@@ -177,6 +185,8 @@ function RootComponent() {
                 <Outlet />
 
               </main>
+
+              {!isAdmin && <BinginSounds />}
 
               {!isAdmin && <Footer />}
 

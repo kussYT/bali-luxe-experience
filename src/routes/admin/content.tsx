@@ -152,7 +152,123 @@ function AdminContentPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Éditorial</CardTitle>
+            <CardTitle className="text-lg">Bloc photos (sous le hero)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Disposition</Label>
+              <select
+                className="w-full border border-border rounded-sm px-3 py-2 text-sm bg-background"
+                value={homepage.photoStrip?.layout ?? "grid"}
+                onChange={(e) =>
+                  setHomepage({
+                    ...homepage,
+                    photoStrip: {
+                      ...(homepage.photoStrip ?? { tiles: [] }),
+                      layout: e.target.value as "landscape" | "grid",
+                    },
+                  })
+                }
+              >
+                <option value="grid">Grille (2–3 catégories)</option>
+                <option value="landscape">Photo paysage unique</option>
+              </select>
+            </div>
+            {(homepage.photoStrip?.tiles ?? []).map((tile, i) => (
+              <div key={i} className="grid gap-3 sm:grid-cols-2 border border-border p-4 rounded-sm">
+                <Field
+                  label={`Tuile ${i + 1} — label`}
+                  value={tile.label}
+                  onChange={(v) => {
+                    const tiles = [...(homepage.photoStrip?.tiles ?? [])];
+                    tiles[i] = { ...tiles[i], label: v };
+                    setHomepage({ ...homepage, photoStrip: { ...homepage.photoStrip!, tiles } });
+                  }}
+                />
+                <Field
+                  label="Image (URL)"
+                  value={tile.image}
+                  onChange={(v) => {
+                    const tiles = [...(homepage.photoStrip?.tiles ?? [])];
+                    tiles[i] = { ...tiles[i], image: v };
+                    setHomepage({ ...homepage, photoStrip: { ...homepage.photoStrip!, tiles } });
+                  }}
+                />
+                <Field
+                  label="Lien"
+                  value={tile.href}
+                  onChange={(v) => {
+                    const tiles = [...(homepage.photoStrip?.tiles ?? [])];
+                    tiles[i] = { ...tiles[i], href: v };
+                    setHomepage({ ...homepage, photoStrip: { ...homepage.photoStrip!, tiles } });
+                  }}
+                />
+                <Field
+                  label="Collection (slug, optionnel)"
+                  value={tile.search?.c ?? ""}
+                  onChange={(v) => {
+                    const tiles = [...(homepage.photoStrip?.tiles ?? [])];
+                    tiles[i] = { ...tiles[i], search: v ? { c: v } : undefined };
+                    setHomepage({ ...homepage, photoStrip: { ...homepage.photoStrip!, tiles } });
+                  }}
+                />
+              </div>
+            ))}
+            <p className="text-xs text-muted-foreground">
+              TODO i18n : les libellés pourront être traduits quand le multilingue sera activé.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Spotify — Bingin Sounds</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <Field
+              label="Titre section"
+              value={homepage.binginSounds.title}
+              onChange={(v) =>
+                setHomepage({ ...homepage, binginSounds: { ...homepage.binginSounds, title: v } })
+              }
+            />
+            <Field
+              label="Nom playlist"
+              value={homepage.binginSounds.playlistName}
+              onChange={(v) =>
+                setHomepage({ ...homepage, binginSounds: { ...homepage.binginSounds, playlistName: v } })
+              }
+            />
+            <div className="sm:col-span-2">
+              <Field
+                label="Description"
+                value={homepage.binginSounds.description}
+                onChange={(v) =>
+                  setHomepage({ ...homepage, binginSounds: { ...homepage.binginSounds, description: v } })
+                }
+                multiline
+              />
+            </div>
+            <Field
+              label="URL Spotify"
+              value={homepage.binginSounds.spotifyUrl}
+              onChange={(v) =>
+                setHomepage({ ...homepage, binginSounds: { ...homepage.binginSounds, spotifyUrl: v } })
+              }
+            />
+            <Field
+              label="ID playlist Spotify"
+              value={homepage.binginSounds.spotifyPlaylistId}
+              onChange={(v) =>
+                setHomepage({ ...homepage, binginSounds: { ...homepage.binginSounds, spotifyPlaylistId: v } })
+              }
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Éditorial (legacy — hors homepage)</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <Field label="Surtitre" value={editorial.sub} onChange={(v) => setHomepage({ ...homepage, editorial: { ...editorial, sub: v } })} />

@@ -29,9 +29,9 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-surface/85 backdrop-blur-[12px] border-b border-border/80 relative">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-[12px] border-b border-border/60 relative">
         <div className="page-wrap section-pad grid grid-cols-[1fr_auto_1fr] items-center h-[4.25rem] md:h-[5.25rem] gap-2 md:gap-4">
-          <div className="flex items-center gap-2 md:gap-10 min-w-0">
+          <div className="flex items-center gap-2 md:gap-6 lg:gap-8 min-w-0">
             <button
               type="button"
               onClick={() => {
@@ -54,9 +54,9 @@ export function Header() {
           <Link
             to="/"
             aria-label="Bingin Diaries"
-            className="flex flex-col items-center shrink-0 text-center min-w-0 max-w-[9.5rem] sm:max-w-none"
+            className="flex flex-col items-center shrink-0 text-center px-1"
           >
-            <span className="font-display text-[1.1rem] sm:text-[1.35rem] md:text-[1.65rem] tracking-[0.04em] leading-none truncate">
+            <span className="font-display text-[1rem] sm:text-[1.25rem] md:text-[1.5rem] lg:text-[1.65rem] tracking-[0.06em] leading-none whitespace-nowrap">
               Bingin Diaries
             </span>
           </Link>

@@ -46,10 +46,8 @@ export function Footer() {
 
           </Link>
 
-          <Link to="/account" className="block link-underline text-surface/85 hover:text-surface">
-
+          <Link to="/account" search={{ tab: "wishlist" } as never} className="block link-underline text-surface/85 hover:text-surface">
             Wishlist
-
           </Link>
 
         </div>

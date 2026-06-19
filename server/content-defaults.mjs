@@ -30,6 +30,29 @@ export const DEFAULT_HOMEPAGE = {
     eyebrow: "Curated",
     title: "Pieces of the season",
   },
+  photoStrip: {
+    layout: "grid",
+    tiles: [
+      {
+        label: "Mi Paradisio",
+        image: "/lifestyle/lookbook-sunburn.jpg",
+        href: "/collection",
+        search: { c: "mi-paradisio-collection" },
+      },
+      {
+        label: "Sunburn",
+        image: "/lifestyle/lookbook-salt.jpg",
+        href: "/collection",
+        search: { c: "sunburn" },
+      },
+      {
+        label: "The Rimba",
+        image: "/lifestyle/journal-sunset.jpg",
+        href: "/collection",
+        search: { c: "the-rimba" },
+      },
+    ],
+  },
   lookbook: {
     eyebrow: "Bali Chapters",
     title: "Summer stories",

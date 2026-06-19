@@ -1,34 +1,47 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog-context";
 import { ProductCard } from "@/components/site/ProductCard";
 
+type AccountSearch = { tab?: "login" | "wishlist" | "orders" };
+
 export const Route = createFileRoute("/account")({
+  validateSearch: (search: Record<string, unknown>): AccountSearch => {
+    const tab = search.tab;
+    if (tab === "wishlist" || tab === "orders" || tab === "login") return { tab };
+    return { tab: "login" };
+  },
   head: () => ({ meta: [{ title: "Account — Bingin Diaries" }] }),
   component: Account,
 });
 
 function Account() {
-  const [tab, setTab] = useState<"login" | "wishlist" | "orders">("login");
+  const { tab: tabFromUrl } = Route.useSearch();
+  const [tab, setTab] = useState<"login" | "wishlist" | "orders">(tabFromUrl ?? "login");
   const { wishlist } = useCart();
   const { publishedProducts } = useCatalog();
   const wished = publishedProducts.filter((p) => wishlist.includes(p.slug));
 
+  useEffect(() => {
+    if (tabFromUrl) setTab(tabFromUrl);
+  }, [tabFromUrl]);
+
   return (
-    <section className="page-wrap section-pad mx-auto py-16 md:py-20 max-w-6xl">
+    <section className="page-wrap section-pad mx-auto py-16 md:py-20 max-w-6xl bg-white">
       <p className="text-eyebrow text-muted-foreground">Your account</p>
       <h1 className="font-display text-5xl md:text-7xl mt-4 leading-[0.95]">Bonjour.</h1>
 
       <div className="flex gap-4 sm:gap-8 mt-12 border-b border-border overflow-x-auto">
         {(["login", "wishlist", "orders"] as const).map((t) => (
-          <button
+          <Link
             key={t}
-            onClick={() => setTab(t)}
+            to="/account"
+            search={{ tab: t }}
             className={`pb-4 text-eyebrow whitespace-nowrap shrink-0 ${tab === t ? "text-ink border-b border-ink -mb-px" : "text-muted-foreground"}`}
           >
             {t}
-          </button>
+          </Link>
         ))}
       </div>
 

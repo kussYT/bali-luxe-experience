@@ -1,13 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { STOCKISTS } from "@/data/stockists";
+import { ATLIST_EMBED_URL, ATLIST_MAP_URL } from "@/data/atlist";
 import { Reveal } from "@/components/lifestyle/Reveal";
 
 export function FindUsPage() {
-  const { heroImage, wholesaleEmail, countries } = STOCKISTS;
+  const { wholesaleEmail, countries } = STOCKISTS;
+  const hasAtlistEmbed = Boolean(ATLIST_EMBED_URL);
 
   return (
     <>
-      <header className="page-wrap section-pad pt-20 md:pt-28 pb-10 md:pb-14 text-center border-b border-border">
+      <header className="page-wrap section-pad pt-20 md:pt-28 pb-10 md:pb-14 text-center border-b border-border bg-white">
         <Reveal>
           <p className="text-eyebrow">Retailers</p>
           <h1 className="font-display text-5xl md:text-7xl lg:text-8xl mt-4 leading-[0.92]">Find us</h1>
@@ -17,17 +19,41 @@ export function FindUsPage() {
         </Reveal>
       </header>
 
-      <div className="page-wrap section-pad py-12 md:py-16">
-        <Reveal>
-          <div className="overflow-hidden aspect-[16/7] md:aspect-[21/9] max-w-4xl mx-auto bg-secondary mb-16 md:mb-20">
-            <img
-              src={heroImage}
-              alt=""
-              className="size-full object-cover image-editorial"
-              loading="eager"
-            />
-          </div>
-        </Reveal>
+      <div className="page-wrap section-pad py-12 md:py-16 bg-white">
+        {hasAtlistEmbed ? (
+          <Reveal>
+            <div className="mb-12 md:mb-16 overflow-hidden border border-border bg-white">
+              <iframe
+                title="Bingin Diaries — store locator (Atlist)"
+                src={ATLIST_EMBED_URL}
+                className="w-full min-h-[420px] md:min-h-[520px] border-0"
+                loading="lazy"
+                allow="geolocation"
+              />
+            </div>
+            <p className="text-center text-sm text-muted-foreground mb-16">
+              <a href={ATLIST_MAP_URL} target="_blank" rel="noreferrer" className="link-underline">
+                Open full map on Atlist
+              </a>
+            </p>
+          </Reveal>
+        ) : (
+          <Reveal>
+            <div className="max-w-2xl mx-auto mb-16 p-8 border border-border bg-secondary/40 text-center">
+              <p className="font-display text-2xl italic">Interactive map</p>
+              <p className="text-caption mt-4">
+                The Atlist store locator will appear here once connected.{" "}
+                <a href={ATLIST_MAP_URL} target="_blank" rel="noreferrer" className="link-underline !text-foreground">
+                  View on Atlist
+                </a>
+              </p>
+              <p className="text-xs text-muted-foreground mt-4">
+                TODO: add <code className="text-foreground">VITE_ATLIST_EMBED_URL</code> from the Bingin Diaries Atlist
+                account.
+              </p>
+            </div>
+          </Reveal>
+        )}
 
         <div className="max-w-3xl mx-auto space-y-14 md:space-y-20">
           {countries.map((region, ci) => (

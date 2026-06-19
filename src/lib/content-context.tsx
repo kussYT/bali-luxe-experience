@@ -39,6 +39,29 @@ const FALLBACK_SITE: SiteContent = {
       linkHref: "/about",
     },
     featuredSection: { eyebrow: "Curated", title: "Pieces of the season" },
+    photoStrip: {
+      layout: "grid",
+      tiles: [
+        {
+          label: "Mi Paradisio",
+          image: IMG.lookbook.sunburn,
+          href: "/collection",
+          search: { c: "mi-paradisio-collection" },
+        },
+        {
+          label: "Sunburn",
+          image: IMG.lookbook.salt,
+          href: "/collection",
+          search: { c: "sunburn" },
+        },
+        {
+          label: "The Rimba",
+          image: IMG.journal.sunset,
+          href: "/collection",
+          search: { c: "the-rimba" },
+        },
+      ],
+    },
     lookbook: {
       eyebrow: "Bali Chapters",
       title: "Summer stories",
