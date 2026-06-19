@@ -17,6 +17,7 @@
     "lifestyle:audio": "node scripts/download-ambient-audio.mjs",
     "instagram:sync": "node scripts/sync-instagram.mjs",
     "instagram:refresh": "node scripts/refresh-instagram.mjs",
+    "instagram:token-refresh": "node scripts/refresh-instagram-token.mjs",
     "stockists:sync": "node scripts/sync-stockists.mjs",
     "db:migrate": "node scripts/db-migrate.mjs",
     "db:seed-catalog": "node scripts/migrate-catalog-to-postgres.mjs",
