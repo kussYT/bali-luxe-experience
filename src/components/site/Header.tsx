@@ -87,7 +87,12 @@ export function Header() {
                     onToggle={() => setAboutOpen((v) => !v)}
                   />
                 ) : (
-                  <NavDropdown key={section.label} label={section.label} items={[...section.items]} />
+                  <NavDropdown
+                    key={section.label}
+                    label={section.label}
+                    items={[...section.items]}
+                    onOpen={() => setAboutOpen(false)}
+                  />
                 ),
               )}
             </nav>

@@ -6,10 +6,12 @@ type NavDropdownProps = {
   label: string;
   items: NavLink[];
   onNavigate?: () => void;
+  /** Called when the menu opens (hover or click). */
+  onOpen?: () => void;
   className?: string;
 };
 
-export function NavDropdown({ label, items, onNavigate, className = "" }: NavDropdownProps) {
+export function NavDropdown({ label, items, onNavigate, onOpen, className = "" }: NavDropdownProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
@@ -35,11 +37,16 @@ export function NavDropdown({ label, items, onNavigate, className = "" }: NavDro
     onNavigate?.();
   };
 
+  const openMenu = () => {
+    onOpen?.();
+    setOpen(true);
+  };
+
   return (
     <div
       ref={rootRef}
       className={`relative ${className}`}
-      onMouseEnter={() => setOpen(true)}
+      onMouseEnter={openMenu}
       onMouseLeave={() => setOpen(false)}
     >
       <button
@@ -48,7 +55,10 @@ export function NavDropdown({ label, items, onNavigate, className = "" }: NavDro
         aria-expanded={open}
         aria-haspopup="true"
         aria-controls={menuId}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          onOpen?.();
+          setOpen((v) => !v);
+        }}
       >
         {label}
       </button>

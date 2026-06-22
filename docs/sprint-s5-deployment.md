@@ -105,11 +105,15 @@ Wrangler deploys `dist/server` as the Worker and serves `dist/client` as static 
 npx wrangler r2 bucket create bingin-diaries-uploads
 ```
 
-Uncomment in `wrangler.jsonc`:
+Ensure `wrangler.jsonc` targets the **Bingindiaries@gmail.com** account:
 
 ```jsonc
+"account_id": "d089bcfdcc69ca589716cc8f4b9971a0",
+"workers_dev": true,
 "r2_buckets": [{ "binding": "UPLOADS", "bucket_name": "bingin-diaries-uploads" }]
 ```
+
+**One-time:** register the `workers.dev` subdomain on that account (Wrangler will prompt, or open [Workers onboarding](https://dash.cloudflare.com/d089bcfdcc69ca589716cc8f4b9971a0/workers/onboarding)). Without this step, deploy uploads the Worker but does not publish the new version with R2.
 
 ```bash
 npm run deploy
