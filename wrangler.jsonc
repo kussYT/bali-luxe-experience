@@ -1,13 +1,12 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "bingin-diaries",
+  "account_id": "d089bcfdcc69ca589716cc8f4b9971a0",
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
   "main": "@tanstack/react-start/server-entry",
   "observability": {
     "enabled": true
   },
-  // Enable R2 in Cloudflare Dashboard first, then:
-  // npx wrangler r2 bucket create bingin-diaries-uploads
-  // "r2_buckets": [{ "binding": "UPLOADS", "bucket_name": "bingin-diaries-uploads" }]
+  "r2_buckets": [{ "binding": "UPLOADS", "bucket_name": "bingin-diaries-uploads" }]
 }
