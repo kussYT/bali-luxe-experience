@@ -17,7 +17,7 @@ export function CinematicHero({ poster, videoSrc }: CinematicHeroProps) {
   const resolvedVideo = videoSrc ?? hero.videoSrc;
 
   return (
-    <section className="relative min-h-[92vh] md:min-h-[96vh] overflow-hidden bg-foreground grain">
+    <section className="relative min-h-[92vh] md:min-h-[96vh] overflow-hidden bg-secondary grain">
       {showVideo && resolvedVideo && (
         <video
           className={`absolute inset-0 size-full object-cover image-editorial transition-opacity duration-1000 ${videoReady ? "opacity-100" : "opacity-0"}`}
@@ -25,8 +25,9 @@ export function CinematicHero({ poster, videoSrc }: CinematicHeroProps) {
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="auto"
           poster={resolvedPoster}
+          onLoadedData={() => setVideoReady(true)}
           onCanPlay={() => setVideoReady(true)}
           onError={() => setVideoFailed(true)}
           aria-hidden

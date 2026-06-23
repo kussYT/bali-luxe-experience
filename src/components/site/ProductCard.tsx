@@ -5,7 +5,15 @@ import { useCurrency } from "@/lib/currency";
 import { useCart } from "@/lib/cart";
 import { productMiniDescription } from "@/lib/product-display";
 
-export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
+export function ProductCard({
+  product,
+  index = 0,
+  compact = false,
+}: {
+  product: Product;
+  index?: number;
+  compact?: boolean;
+}) {
   const { format } = useCurrency();
   const { toggleWish, wishlist } = useCart();
   const wished = wishlist.includes(product.slug);
@@ -15,7 +23,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
     <Link
       to="/product/$slug"
       params={{ slug: product.slug }}
-      className="group block animate-fade-up bg-white"
+      className={`group block animate-fade-up bg-white ${compact ? "product-card--compact" : ""}`}
       style={{ animationDelay: `${index * 70}ms` }}
     >
       <div className="product-image-wrap relative mb-3 md:mb-4 bg-white">

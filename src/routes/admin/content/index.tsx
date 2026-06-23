@@ -16,6 +16,7 @@ import { ContentSubnav } from "@/components/admin/ContentSubnav";
 import { CmsField } from "@/components/admin/CmsField";
 import { CmsMediaField } from "@/components/admin/CmsMediaField";
 import { UploadsUnavailableBanner } from "@/components/admin/UploadsUnavailableBanner";
+import { CmsMediaGuide } from "@/components/admin/CmsMediaGuide";
 import { useUploadsAvailable } from "@/lib/use-uploads-available";
 
 export const Route = createFileRoute("/admin/content/")({
@@ -85,6 +86,19 @@ function AdminContentPage() {
   const hero = homepage.hero;
   const editorial = homepage.editorial;
   const quote = homepage.quote;
+  const spotlight = {
+    enabled: false,
+    productSlug: "",
+    eyebrow: "Spotlight",
+    title: "",
+    description: "",
+    image: "",
+    ctaLabel: "Discover the piece",
+    ...homepage.spotlightProduct,
+  };
+
+  const patchSpotlight = (patch: Partial<typeof spotlight>) =>
+    setHomepage({ ...homepage, spotlightProduct: { ...spotlight, ...patch } });
 
   return (
     <div className="space-y-8 max-w-4xl">
@@ -109,6 +123,7 @@ function AdminContentPage() {
           automatiquement. Formats : JPG, PNG, WebP, MP4. Pas besoin de taper le chemin à la main.
         </div>
       )}
+      <CmsMediaGuide />
       {!uploadsLoading && !uploadsAvailable && (
         <UploadsUnavailableBanner hint="Colle une URL d'image ou de vidéo dans le champ pour l'instant." />
       )}
@@ -181,6 +196,56 @@ function AdminContentPage() {
 
         <Card>
           <CardHeader>
+            <CardTitle className="text-lg">Produit en avant</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Switch checked={spotlight.enabled} onCheckedChange={(v) => patchSpotlight({ enabled: v })} />
+              <Label>Afficher un produit mis en avant sur la homepage</Label>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <CmsField
+                label="Slug produit (ex: gilda-hat)"
+                value={spotlight.productSlug}
+                onChange={(v) => patchSpotlight({ productSlug: v })}
+              />
+              <CmsField label="Eyebrow" value={spotlight.eyebrow} onChange={(v) => patchSpotlight({ eyebrow: v })} />
+              <CmsField
+                label="Titre (vide = nom du produit)"
+                value={spotlight.title}
+                onChange={(v) => patchSpotlight({ title: v })}
+              />
+              <CmsField
+                label="Bouton CTA"
+                value={spotlight.ctaLabel}
+                onChange={(v) => patchSpotlight({ ctaLabel: v })}
+              />
+              <div className="sm:col-span-2">
+                <CmsField
+                  label="Description courte"
+                  value={spotlight.description}
+                  onChange={(v) => patchSpotlight({ description: v })}
+                  multiline
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <CmsMediaField
+                  label="Image (optionnel — sinon photo principale du produit)"
+                  value={spotlight.image}
+                  onChange={(v) => patchSpotlight({ image: v })}
+                  folder="spotlight"
+                  accept="image/*"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Le produit doit être <strong>publié</strong>. Trouve le slug dans Admin → Produits (champ URL).
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle className="text-lg">Bloc photos (sous le hero)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -245,6 +310,30 @@ function AdminContentPage() {
                 />
               </div>
             ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Musique d&apos;ambiance (Sound on / off)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Fichier joué par le bouton fixe en bas à droite du site. Indépendant de la section Spotify
+              ci-dessous.
+            </p>
+            <CmsMediaField
+              label="Fichier audio (MP3)"
+              value={homepage.ambientSound?.audioSrc ?? "/audio/ambient.mp3"}
+              onChange={(v) =>
+                setHomepage({
+                  ...homepage,
+                  ambientSound: { audioSrc: v },
+                })
+              }
+              folder="ambient"
+              accept="audio/mpeg,audio/mp3,.mp3"
+            />
           </CardContent>
         </Card>
 

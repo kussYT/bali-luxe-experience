@@ -168,13 +168,13 @@ function RootComponent() {
 
       <ContentProvider>
 
+      <AmbientSoundProvider>
+
       <CurrencyProvider>
 
         <CartProvider>
 
           <CookieConsentProvider>
-
-            <AmbientSoundProvider>
 
               {!isAdmin && <Marquee />}
 
@@ -198,13 +198,13 @@ function RootComponent() {
 
               <Toaster position="top-center" />
 
-            </AmbientSoundProvider>
-
           </CookieConsentProvider>
 
         </CartProvider>
 
       </CurrencyProvider>
+
+      </AmbientSoundProvider>
 
       </ContentProvider>
 

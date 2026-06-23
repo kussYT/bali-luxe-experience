@@ -4,11 +4,11 @@
  */
 
 function emailFrom() {
-  return process.env.EMAIL_FROM?.trim() || "Bingin Diaries <hello@bingindiaries.com>";
+  return process.env.EMAIL_FROM?.trim() || "Bingin Diaries <info@bingindiaries.com>";
 }
 
 function opsInbox() {
-  return process.env.EMAIL_OPS?.trim() || process.env.CONTACT_TO?.trim() || "hello@bingindiaries.com";
+  return process.env.EMAIL_OPS?.trim() || process.env.CONTACT_TO?.trim() || "info@bingindiaries.com";
 }
 
 export function formatMoneyEmail(amount, currency) {

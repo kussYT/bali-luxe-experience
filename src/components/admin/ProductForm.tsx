@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { uploadProductImages } from "@/lib/admin-api";
+import { CmsMediaGuide } from "@/components/admin/CmsMediaGuide";
 import { UPLOADS_UNAVAILABLE_MESSAGE, useUploadsAvailable } from "@/lib/use-uploads-available";
 import { Plus, X } from "lucide-react";
 
@@ -398,6 +399,7 @@ export function ProductForm({
           <p className="text-sm text-amber-700 dark:text-amber-400">{UPLOADS_UNAVAILABLE_MESSAGE}</p>
         )}
         {uploading && <p className="text-sm text-muted-foreground">Uploading…</p>}
+        <CmsMediaGuide compact />
         {values.images.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-3">
             {values.images.map((src) => (

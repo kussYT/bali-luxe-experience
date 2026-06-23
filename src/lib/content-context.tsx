@@ -85,6 +85,7 @@ const FALLBACK_SITE: SiteContent = {
     },
     journalSection: { eyebrow: "Bingin Diaries Journal", title: "Travel & slow living" },
     binginSounds: { ...BINGIN_SOUNDS },
+    ambientSound: { audioSrc: "/audio/ambient.mp3" },
     travelDiariesPage: {
       eyebrow: "Bingin Diaries Journal",
       title: "Slow notes from Bali & beyond",

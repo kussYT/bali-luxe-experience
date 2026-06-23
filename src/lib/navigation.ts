@@ -24,65 +24,197 @@ export type NavColumn = {
 export type NavFeaturedImage = {
   label: string;
   to: string;
+  search?: Record<string, string>;
   hash?: string;
   image: string;
 };
 
-/** About us mega-menu — columns + featured photo links (desktop band). */
+const HIDDEN_NAV_COLLECTION_SLUGS = new Set(["archives", "all-products"]);
+
+export type MegaMenuId = "new-collection" | "shop" | "sales" | "about";
+
+/** New Collection mega-menu. */
+export function buildNavNewCollectionColumns(): NavColumn[] {
+  return [
+    {
+      title: "Mi Paradisio 2026",
+      items: [
+        { label: "Mi Paradisio 2026", to: "/collection", search: { c: "mi-paradisio-collection" } },
+        {
+          label: "New Accessories",
+          to: "/collection",
+          search: { c: "mi-paradisio-collection", cat: "accessories" },
+        },
+        { label: "View all new", to: "/collection", search: { c: "mi-paradisio-collection" } },
+      ],
+    },
+    {
+      title: "Discover",
+      items: [
+        { label: "Special Occasions", to: "/collection", search: { c: "special-occasions" } },
+        { label: "Shop all", to: "/collection" },
+      ],
+    },
+  ];
+}
+
+export const NAV_NEW_COLLECTION_FEATURED: NavFeaturedImage[] = [
+  {
+    label: "Mi Paradisio",
+    to: "/collection",
+    search: { c: "mi-paradisio-collection" },
+    image: "/lifestyle/lookbook-sunburn.jpg",
+  },
+  {
+    label: "Special Occasions",
+    to: "/collection",
+    search: { c: "special-occasions" },
+    image: "/lifestyle/journal-sunset.jpg",
+  },
+];
+
+/** Shop mega-menu — structured by season & category. */
+export function buildNavShopColumns(collections: Collection[]): NavColumn[] {
+  const collectionLinks = collections
+    .filter((c) => !HIDDEN_NAV_COLLECTION_SLUGS.has(c.slug) && c.slug !== "best-sellers")
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+    .slice(0, 5)
+    .map((c) => ({
+      label: c.name,
+      to: "/collection",
+      search: { c: c.slug },
+    }));
+
+  return [
+    {
+      title: "Shop",
+      items: [
+        { label: "Shop all", to: "/collection" },
+        { label: "Best sellers", to: "/collection", search: { c: "best-sellers" } },
+        { label: "Summer hats", to: "/collection", search: { c: "sunburn" } },
+        { label: "Winter hats", to: "/collection", search: { c: "fallwinter-2023-2024" } },
+        { label: "Rain hats", to: "/collection", search: { q: "rain" } },
+      ],
+    },
+    {
+      title: "Categories",
+      items: [
+        { label: "Accessories", to: "/collection", search: { cat: "accessories" } },
+        { label: "Bags", to: "/collection", search: { cat: "bags" } },
+        { label: "Knits", to: "/collection", search: { c: "the-knits" } },
+        { label: "Kids", to: "/collection", search: { c: "wild-kids" } },
+      ],
+    },
+    {
+      title: "Collections",
+      items: collectionLinks.length > 0 ? collectionLinks : [{ label: "Mi Paradisio", to: "/collection", search: { c: "mi-paradisio-collection" } }],
+    },
+  ];
+}
+
+export const NAV_SHOP_FEATURED: NavFeaturedImage[] = [
+  {
+    label: "Summer hats",
+    to: "/collection",
+    search: { c: "sunburn" },
+    image: "/lifestyle/lookbook-sunburn.jpg",
+  },
+  {
+    label: "Best sellers",
+    to: "/collection",
+    search: { c: "best-sellers" },
+    image: "/lifestyle/shop-mood.jpg",
+  },
+];
+
+/** About mega-menu — aligned with footer columns. */
 export const NAV_ABOUT_COLUMNS: NavColumn[] = [
   {
-    title: "La marque",
+    title: "Customer care",
     items: [
-      { label: "La marque", to: "/about" },
-      { label: "Artisans & éthique", to: "/about", hash: "artisans" },
-      { label: "Matières & qualité", to: "/about", hash: "quality" },
-      { label: "Contact", to: "/contact" },
-    ],
-  },
-  {
-    title: "Guides",
-    items: [
-      { label: "Guide d'entretien", to: "/care" },
-      { label: "Guide des tailles", to: "/sizing" },
-      { label: "Find us", to: "/find-us" },
+      { label: "Contact us", to: "/contact" },
+      { label: "Size guide", to: "/sizing" },
+      { label: "Care guide", to: "/care" },
+      { label: "FAQ", to: "/contact" },
       { label: "Shipping", to: "/shipping" },
-      { label: "Returns", to: "/returns" },
+      { label: "Return policy", to: "/returns" },
     ],
   },
   {
-    title: "Journal",
-    items: [{ label: "Travel Diaries", to: "/travel-diaries" }],
+    title: "Explore",
+    items: [
+      { label: "The brand", to: "/about" },
+      { label: "Travel guide", to: "/travel-diaries" },
+      { label: "Find us", to: "/find-us" },
+    ],
+  },
+  {
+    title: "Our values",
+    items: [
+      { label: "Artisans & ethics", to: "/about", hash: "artisans" },
+      { label: "Materials & quality", to: "/about", hash: "quality" },
+      { label: "Terms & conditions", to: "/contact" },
+    ],
   },
 ];
 
 export const NAV_ABOUT_FEATURED: NavFeaturedImage[] = [
   { label: "Travel Diaries", to: "/travel-diaries", image: "/lifestyle/lookbook-sunburn.jpg" },
-  { label: "La marque", to: "/about", image: "/lifestyle/craft-hands.jpg" },
+  { label: "The brand", to: "/about", image: "/lifestyle/craft-hands.jpg" },
 ];
 
 export function buildNavShop(collections: Collection[]): NavLink[] {
-  const shopCollections = collections
-    .filter((c) => !["archives", "best-sellers", "all-products"].includes(c.slug))
-    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  return buildNavShopColumns(collections).flatMap((col) => col.items);
+}
+
+export function buildNavSalesColumns(products: Product[]): NavColumn[] {
+  const saleProducts = products.filter((p) => p.onSale && p.status === "published");
+  const outletCount = products.filter((p) => p.outlet && p.status === "published").length;
+
+  const saleItems: NavLink[] = [{ label: "All sale", to: "/collection", search: { sale: "true" } }];
+  if (outletCount > 0) {
+    saleItems.push({ label: "Outlet", to: "/collection", search: { c: "archives" } });
+  }
 
   return [
-    { label: "View all", to: "/collection" },
-    ...shopCollections.map((c) => ({
-      label: c.name,
-      to: "/collection",
-      search: { c: c.slug },
-    })),
-    { label: "Accessories", to: "/collection", search: { cat: "accessories" } },
-    { label: "Bags", to: "/collection", search: { cat: "bags" } },
+    {
+      title: "Sales",
+      items: saleItems,
+    },
+    {
+      title: "Info",
+      items: [
+        {
+          label: saleProducts.length === 0 ? "How it works" : "Sale guide",
+          to: "/collection",
+          search: { sale: "true" },
+          hash: "sale-info",
+        },
+        { label: "Full collection", to: "/collection" },
+      ],
+    },
   ];
 }
+
+export const NAV_SALES_FEATURED: NavFeaturedImage[] = [
+  {
+    label: "All sale",
+    to: "/collection",
+    search: { sale: "true" },
+    image: "/lifestyle/lookbook-salt.jpg",
+  },
+  {
+    label: "Mi Paradisio",
+    to: "/collection",
+    search: { c: "mi-paradisio-collection" },
+    image: "/lifestyle/shop-mood.jpg",
+  },
+];
 
 export function buildNavSales(products: Product[]): NavLink[] {
   const saleProducts = products.filter((p) => p.onSale && p.status === "published");
   const outletCount = products.filter((p) => p.outlet && p.status === "published").length;
-  const items: NavLink[] = [
-    { label: "All sale pieces", to: "/collection", search: { sale: "true" } },
-  ];
+  const items: NavLink[] = [{ label: "All sale", to: "/collection", search: { sale: "true" } }];
 
   if (outletCount > 0) {
     items.push({ label: "Outlet", to: "/collection", search: { c: "archives" } });
@@ -90,54 +222,39 @@ export function buildNavSales(products: Product[]): NavLink[] {
 
   if (saleProducts.length === 0) {
     items.push({ label: "How it works", to: "/collection", search: { sale: "true" }, hash: "sale-info" });
-    return items;
-  }
-
-  const seen = new Set<string>();
-  for (const product of saleProducts) {
-    const slug = product.collectionSlug;
-    if (!slug || seen.has(slug) || slug === "archives") continue;
-    seen.add(slug);
-    items.push({
-      label: product.collection,
-      to: "/collection",
-      search: { sale: "true", c: slug },
-    });
   }
 
   return items;
 }
 
-export const NAV_ABOUT: NavLink[] = [
-  { label: "La marque", to: "/about" },
-  { label: "Artisans & éthique", to: "/about", hash: "artisans" },
-  { label: "Matières & qualité", to: "/about", hash: "quality" },
-  { label: "Guide d'entretien", to: "/care" },
-  { label: "Guide des tailles", to: "/sizing" },
-  { label: "Find us", to: "/find-us" },
-  { label: "Shipping", to: "/shipping" },
-  { label: "Returns", to: "/returns" },
-  { label: "Travel Diaries", to: "/travel-diaries" },
-  { label: "Contact", to: "/contact" },
-];
+export const NAV_ABOUT: NavLink[] = NAV_ABOUT_COLUMNS.flatMap((col) => col.items);
 
-/** Latest seasonal collection — synced from Shopify `mi-paradisio-collection`. */
-export const NAV_NEW_COLLECTION: NavLink[] = [
-  { label: "Mi Paradisio 2026", to: "/collection", search: { c: "mi-paradisio-collection" } },
-  {
-    label: "New Accessories",
-    to: "/collection",
-    search: { c: "mi-paradisio-collection", cat: "accessories" },
-  },
-  { label: "Special Occasions", to: "/collection", search: { c: "special-occasions" } },
-  { label: "View all new", to: "/collection", search: { c: "mi-paradisio-collection" } },
-];
+export const NAV_NEW_COLLECTION: NavLink[] = buildNavNewCollectionColumns().flatMap((col) => col.items);
+
+export function getMegaMenuContent(
+  id: MegaMenuId,
+  collections: Collection[],
+  products: Product[],
+): { columns: NavColumn[]; featured: NavFeaturedImage[] } {
+  switch (id) {
+    case "new-collection":
+      return { columns: buildNavNewCollectionColumns(), featured: NAV_NEW_COLLECTION_FEATURED };
+    case "shop":
+      return { columns: buildNavShopColumns(collections), featured: NAV_SHOP_FEATURED };
+    case "sales":
+      return { columns: buildNavSalesColumns(products), featured: NAV_SALES_FEATURED };
+    case "about":
+      return { columns: NAV_ABOUT_COLUMNS, featured: NAV_ABOUT_FEATURED };
+  }
+}
 
 export function buildNavMain(collections: Collection[], products: Product[]) {
   return [
-    { label: "New Collection", items: NAV_NEW_COLLECTION },
-    { label: "Shop", items: buildNavShop(collections) },
-    { label: "Sales", items: buildNavSales(products) },
-    { label: "About us", items: NAV_ABOUT },
+    { label: "New Collection", mega: "new-collection" as const, items: NAV_NEW_COLLECTION },
+    { label: "Shop", mega: "shop" as const, items: buildNavShop(collections) },
+    { label: "Sales", mega: "sales" as const, items: buildNavSales(products) },
+    { label: "About us", mega: "about" as const, items: NAV_ABOUT },
   ] as const;
 }
+
+export type NavMainSection = ReturnType<typeof buildNavMain>[number];

@@ -53,9 +53,20 @@ export type PhotoStripContent = {
   tiles: HomePhotoTile[];
 };
 
+export type SpotlightProductContent = {
+  enabled: boolean;
+  productSlug: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  image: string;
+  ctaLabel: string;
+};
+
 export type HomepageContent = {
   hero: HeroContent;
   photoStrip: PhotoStripContent;
+  spotlightProduct: SpotlightProductContent;
   editorial: EditorialContent;
   featuredSection: { eyebrow: string; title: string };
   lookbook: {
@@ -82,6 +93,10 @@ export type HomepageContent = {
     description: string;
     spotifyUrl: string;
     spotifyPlaylistId: string;
+  };
+  /** Looping audio for the fixed Sound on/off control (not Spotify). */
+  ambientSound: {
+    audioSrc: string;
   };
   travelDiariesPage: {
     eyebrow: string;

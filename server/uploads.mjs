@@ -53,17 +53,59 @@ export async function saveUploadedImage(slug, filename, buffer, env) {
   return `/uploads/${key}`;
 }
 
-/** Serve uploaded image from R2 (production) or local public folder (dev). */
-export async function getUploadedImage(keyPath, env) {
+function parseRangeHeader(rangeHeader, size) {
+  const match = /^bytes=(\d+)-(\d*)$/i.exec(rangeHeader ?? "");
+  if (!match) return null;
+  const start = Number(match[1]);
+  const end = match[2] ? Number(match[2]) : size - 1;
+  if (Number.isNaN(start) || Number.isNaN(end) || start > end || start >= size) return null;
+  return { start, end: Math.min(end, size - 1), length: Math.min(end, size - 1) - start + 1 };
+}
+
+function uploadResponseHeaders(contentType, size, extra = {}) {
+  return {
+    "Content-Type": contentType,
+    "Accept-Ranges": "bytes",
+    "Cache-Control": "public, max-age=31536000, immutable",
+    ...extra,
+  };
+}
+
+/** Serve uploaded file from R2 (production) or local public folder (dev), with HTTP Range for video. */
+export async function serveUploadedFile(keyPath, env, request) {
   const key = keyPath.replace(/^\/uploads\//, "");
+  const contentTypeFromKey = guessContentType(key);
 
   if (env?.UPLOADS) {
+    const head = await env.UPLOADS.head(key);
+    if (!head) return null;
+    const size = head.size;
+    const contentType = head.httpMetadata?.contentType || contentTypeFromKey;
+    const range = parseRangeHeader(request?.headers?.get("Range"), size);
+
+    if (range) {
+      const obj = await env.UPLOADS.get(key, {
+        range: { offset: range.start, length: range.length },
+      });
+      if (!obj) return null;
+      return {
+        body: obj.body,
+        status: 206,
+        headers: uploadResponseHeaders(contentType, size, {
+          "Content-Length": String(range.length),
+          "Content-Range": `bytes ${range.start}-${range.end}/${size}`,
+        }),
+      };
+    }
+
     const obj = await env.UPLOADS.get(key);
     if (!obj) return null;
-    const body = await obj.arrayBuffer();
     return {
-      body,
-      contentType: obj.httpMetadata?.contentType || guessContentType(key),
+      body: obj.body,
+      status: 200,
+      headers: uploadResponseHeaders(contentType, size, {
+        "Content-Length": String(size),
+      }),
     };
   }
 
@@ -73,8 +115,43 @@ export async function getUploadedImage(keyPath, env) {
   try {
     const filePath = path.join(root, "public", "uploads", ...key.split("/"));
     const body = await readFile(filePath);
-    return { body, contentType: guessContentType(filePath) };
+    const contentType = guessContentType(filePath);
+    const size = body.byteLength;
+    const range = parseRangeHeader(request?.headers?.get("Range"), size);
+
+    if (range) {
+      const slice = body.slice(range.start, range.end + 1);
+      return {
+        body: slice,
+        status: 206,
+        headers: uploadResponseHeaders(contentType, size, {
+          "Content-Length": String(range.length),
+          "Content-Range": `bytes ${range.start}-${range.end}/${size}`,
+        }),
+      };
+    }
+
+    return {
+      body,
+      status: 200,
+      headers: uploadResponseHeaders(contentType, size, {
+        "Content-Length": String(size),
+      }),
+    };
   } catch {
     return null;
   }
+}
+
+/** @deprecated Use serveUploadedFile for Range support */
+export async function getUploadedImage(keyPath, env) {
+  const served = await serveUploadedFile(keyPath, env);
+  if (!served) return null;
+  const body =
+    served.body instanceof ArrayBuffer
+      ? served.body
+      : served.body instanceof Uint8Array
+        ? served.body.buffer.slice(served.body.byteOffset, served.body.byteOffset + served.body.byteLength)
+        : await new Response(served.body).arrayBuffer();
+  return { body, contentType: served.headers["Content-Type"] };
 }

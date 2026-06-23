@@ -1,11 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { X } from "lucide-react";
-import type { NavLink, NavColumn, NavFeaturedImage } from "@/lib/navigation";
-import { NAV_ABOUT_COLUMNS, NAV_ABOUT_FEATURED } from "@/lib/navigation";
+import type { NavColumn, NavFeaturedImage } from "@/lib/navigation";
+import { getMegaMenuContent, type MegaMenuId } from "@/lib/navigation";
+import { useCatalog } from "@/lib/catalog-context";
 import { BrandLogo } from "@/components/site/BrandLogo";
 import { MarketSelector } from "@/components/site/MarketSelector";
 
-type NavSection = { label: string; items: readonly NavLink[] };
+type NavSection = {
+  label: string;
+  mega: MegaMenuId;
+};
 
 type NavMenuProps = {
   open: boolean;
@@ -13,46 +17,34 @@ type NavMenuProps = {
   sections: readonly NavSection[];
 };
 
-function NavLinkItem({
-  label,
-  to,
-  search,
-  hash,
+function MegaMobileSection({
+  columns,
+  featured,
   onClose,
-}: NavLink & { onClose: () => void }) {
-  return (
-    <li>
-      <Link
-        to={to}
-        search={search as never}
-        hash={hash}
-        onClick={onClose}
-        className="font-display text-xl leading-tight hover:text-clay transition-colors"
-      >
-        {label}
-      </Link>
-    </li>
-  );
-}
-
-function AboutMobileSection({ onClose }: { onClose: () => void }) {
+}: {
+  columns: NavColumn[];
+  featured: NavFeaturedImage[];
+  onClose: () => void;
+}) {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-2 gap-6">
-        {NAV_ABOUT_COLUMNS.map((column) => (
-          <AboutColumn key={column.title} column={column} onClose={onClose} />
+        {columns.map((column) => (
+          <MegaColumn key={column.title} column={column} onClose={onClose} />
         ))}
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        {NAV_ABOUT_FEATURED.map((item) => (
-          <FeaturedNavLink key={item.label} item={item} onClose={onClose} />
-        ))}
-      </div>
+      {featured.length > 0 && (
+        <div className="grid grid-cols-2 gap-3">
+          {featured.map((item) => (
+            <FeaturedNavLink key={item.label} item={item} onClose={onClose} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-function AboutColumn({ column, onClose }: { column: NavColumn; onClose: () => void }) {
+function MegaColumn({ column, onClose }: { column: NavColumn; onClose: () => void }) {
   return (
     <div>
       <p className="text-[0.625rem] tracking-[0.2em] uppercase text-muted-foreground mb-3">{column.title}</p>
@@ -77,7 +69,13 @@ function AboutColumn({ column, onClose }: { column: NavColumn; onClose: () => vo
 
 function FeaturedNavLink({ item, onClose }: { item: NavFeaturedImage; onClose: () => void }) {
   return (
-    <Link to={item.to} hash={item.hash} onClick={onClose} className="group block">
+    <Link
+      to={item.to}
+      search={item.search as never}
+      hash={item.hash}
+      onClick={onClose}
+      className="group block"
+    >
       <div className="aspect-[4/3] overflow-hidden bg-secondary">
         <img
           src={item.image}
@@ -92,6 +90,8 @@ function FeaturedNavLink({ item, onClose }: { item: NavFeaturedImage; onClose: (
 }
 
 export function NavMenu({ open, onClose, sections }: NavMenuProps) {
+  const { collections, publishedProducts } = useCatalog();
+
   if (!open) return null;
 
   return (
@@ -110,20 +110,19 @@ export function NavMenu({ open, onClose, sections }: NavMenuProps) {
             <MarketSelector variant="nav" />
           </div>
 
-          {sections.map((section) => (
-            <div key={section.label} className="space-y-4">
-              <p className="text-eyebrow text-muted-foreground">{section.label}</p>
-              {section.label === "About us" ? (
-                <AboutMobileSection onClose={onClose} />
-              ) : (
-                <ul className="space-y-2.5">
-                  {section.items.map((item) => (
-                    <NavLinkItem key={`${section.label}-${item.label}`} {...item} onClose={onClose} />
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))}
+          {sections.map((section) => {
+            const { columns, featured } = getMegaMenuContent(
+              section.mega,
+              collections,
+              publishedProducts,
+            );
+            return (
+              <div key={section.label} className="space-y-4">
+                <p className="text-eyebrow text-muted-foreground">{section.label}</p>
+                <MegaMobileSection columns={columns} featured={featured} onClose={onClose} />
+              </div>
+            );
+          })}
         </nav>
       </aside>
       <div className="flex-1 bg-ink/40 backdrop-blur-sm animate-fade-in" onClick={onClose} />

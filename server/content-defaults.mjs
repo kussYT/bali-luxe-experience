@@ -32,6 +32,15 @@ export const DEFAULT_HOMEPAGE = {
     eyebrow: "Curated",
     title: "Pieces of the season",
   },
+  spotlightProduct: {
+    enabled: false,
+    productSlug: "",
+    eyebrow: "Spotlight",
+    title: "",
+    description: "",
+    image: "",
+    ctaLabel: "Discover the piece",
+  },
   photoStrip: {
     layout: "grid",
     tiles: [
@@ -130,6 +139,9 @@ export const DEFAULT_HOMEPAGE = {
     description: "Sounds for slow mornings, salty hair and endless sunsets.",
     spotifyUrl: "https://open.spotify.com/playlist/1gD6v7Z3KgFIBbTHHccpeL",
     spotifyPlaylistId: "1gD6v7Z3KgFIBbTHHccpeL",
+  },
+  ambientSound: {
+    audioSrc: "/audio/ambient.mp3",
   },
   travelDiariesPage: {
     eyebrow: "Bingin Diaries Journal",
@@ -278,7 +290,7 @@ export const DEFAULT_PAGES = [
     metaDescription: "Returns policy for Bingin Diaries.",
     body: [
       "Unworn pieces may be returned within 14 days of delivery. Items must be in original condition with tags attached.",
-      "To start a return, contact us at hello@bingindiaries.com with your order number.",
+      "To start a return, contact us at info@bingindiaries.com with your order number.",
       "Refunds are processed within 5–10 business days after we receive your return.",
     ],
   },

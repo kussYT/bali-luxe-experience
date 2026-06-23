@@ -4,6 +4,7 @@ import { useSiteContent } from "@/lib/content-context";
 import { ProductCard } from "@/components/site/ProductCard";
 import { CinematicHero } from "@/components/lifestyle/CinematicHero";
 import { HomePhotoStrip } from "@/components/lifestyle/HomePhotoStrip";
+import { SpotlightProduct } from "@/components/lifestyle/SpotlightProduct";
 import { InstagramSection } from "@/components/lifestyle/InstagramSection";
 import { Reveal } from "@/components/lifestyle/Reveal";
 
@@ -30,6 +31,8 @@ function Home() {
       <CinematicHero />
 
       <HomePhotoStrip />
+
+      <SpotlightProduct />
 
       <section className="page-wrap section-pad section-gap bg-white">
         <Reveal>

@@ -3,12 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import { Menu, Search, ShoppingBag } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog-context";
-import { buildNavMain } from "@/lib/navigation";
+import { buildNavMain, type MegaMenuId } from "@/lib/navigation";
 import { BrandLogo } from "@/components/site/BrandLogo";
 import { NavMenu } from "@/components/site/NavMenu";
-import { NavAboutBand } from "@/components/site/NavAboutBand";
-import { NavAboutTrigger } from "@/components/site/NavAboutTrigger";
-import { NavDropdown } from "@/components/site/NavDropdown";
+import { NavSectionMegaBand } from "@/components/site/NavSectionMegaBand";
+import { NavMegaTrigger } from "@/components/site/NavMegaTrigger";
 import { SearchDrawer } from "@/components/site/SearchDrawer";
 import { MarketSelector } from "@/components/site/MarketSelector";
 
@@ -24,16 +23,16 @@ export function Header() {
   const navMain = buildNavMain(collections, publishedProducts);
   const [navOpen, setNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [aboutOpen, setAboutOpen] = useState(false);
+  const [megaMenu, setMegaMenu] = useState<MegaMenuId | null>(null);
   const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (!aboutOpen) return;
+    if (!megaMenu) return;
     const onPointerDown = (e: MouseEvent) => {
-      if (!headerRef.current?.contains(e.target as Node)) setAboutOpen(false);
+      if (!headerRef.current?.contains(e.target as Node)) setMegaMenu(null);
     };
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setAboutOpen(false);
+      if (e.key === "Escape") setMegaMenu(null);
     };
     document.addEventListener("mousedown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
@@ -41,7 +40,7 @@ export function Header() {
       document.removeEventListener("mousedown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [aboutOpen]);
+  }, [megaMenu]);
 
   const closePanels = () => {
     setNavOpen(false);
@@ -51,8 +50,11 @@ export function Header() {
   const handleHeaderMouseLeave = (e: React.MouseEvent<HTMLElement>) => {
     const related = e.relatedTarget as Node | null;
     if (related && headerRef.current?.contains(related)) return;
-    setAboutOpen(false);
+    setMegaMenu(null);
   };
+
+  const openMega = (id: MegaMenuId) => setMegaMenu(id);
+  const toggleMega = (id: MegaMenuId) => setMegaMenu((v) => (v === id ? null : id));
 
   return (
     <>
@@ -60,7 +62,7 @@ export function Header() {
         ref={headerRef}
         onMouseLeave={handleHeaderMouseLeave}
         className={`sticky top-0 z-40 bg-white/90 backdrop-blur-[12px] relative ${
-          aboutOpen ? "" : "border-b border-border/60"
+          megaMenu ? "" : "border-b border-border/60"
         }`}
       >
         <div className="page-wrap section-pad grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center h-[4.25rem] md:h-[5.25rem] gap-1.5 sm:gap-2 md:gap-4">
@@ -78,23 +80,15 @@ export function Header() {
             </button>
 
             <nav className="hidden md:flex items-center gap-7 lg:gap-9" aria-label="Main">
-              {navMain.map((section) =>
-                section.label === "About us" ? (
-                  <NavAboutTrigger
-                    key={section.label}
-                    open={aboutOpen}
-                    onOpen={() => setAboutOpen(true)}
-                    onToggle={() => setAboutOpen((v) => !v)}
-                  />
-                ) : (
-                  <NavDropdown
-                    key={section.label}
-                    label={section.label}
-                    items={[...section.items]}
-                    onOpen={() => setAboutOpen(false)}
-                  />
-                ),
-              )}
+              {navMain.map((section) => (
+                <NavMegaTrigger
+                  key={section.label}
+                  label={section.label}
+                  open={megaMenu === section.mega}
+                  onOpen={() => openMega(section.mega)}
+                  onToggle={() => toggleMega(section.mega)}
+                />
+              ))}
             </nav>
           </div>
 
@@ -165,10 +159,11 @@ export function Header() {
           </div>
         </div>
 
-        {aboutOpen && (
-          <NavAboutBand
+        {megaMenu && (
+          <NavSectionMegaBand
+            mega={megaMenu}
             className="absolute left-0 right-0 top-full z-50 hidden md:block"
-            onNavigate={() => setAboutOpen(false)}
+            onNavigate={() => setMegaMenu(null)}
           />
         )}
       </header>

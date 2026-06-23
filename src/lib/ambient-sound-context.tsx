@@ -13,6 +13,7 @@ import {
   AMBIENT_FADE_MS,
   writeAmbientPreference,
 } from "@/lib/ambient-sound";
+import { useSiteContent } from "@/lib/content-context";
 
 type AmbientSoundContextValue = {
   enabled: boolean;
@@ -42,13 +43,16 @@ function fadeVolume(
 }
 
 export function AmbientSoundProvider({ children }: { children: ReactNode }) {
+  const { homepage } = useSiteContent();
+  const audioSrc = homepage.ambientSound?.audioSrc?.trim() || AMBIENT_AUDIO_SRC;
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fadeRef = useRef<number | null>(null);
   const [enabled, setEnabled] = useState(false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const audio = new Audio(AMBIENT_AUDIO_SRC);
+    setReady(false);
+    const audio = new Audio(audioSrc);
     audio.loop = true;
     audio.preload = "metadata";
     audio.volume = 0;
@@ -65,8 +69,9 @@ export function AmbientSoundProvider({ children }: { children: ReactNode }) {
       audio.removeEventListener("canplaythrough", onCanPlay);
       audio.removeEventListener("error", onError);
       audioRef.current = null;
+      setEnabled(false);
     };
-  }, []);
+  }, [audioSrc]);
 
   const disable = useCallback(() => {
     const audio = audioRef.current;

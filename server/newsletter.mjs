@@ -1,5 +1,27 @@
 import { appendSubscriber, hasSubscriber, isValidEmail } from "./newsletter-store.mjs";
 import { getNewsletterSettings } from "./db/settings-store.mjs";
+import { getProjectRoot } from "./runtime-root.mjs";
+
+function resolveEffectiveProvider(settings) {
+  const configured = (settings.provider || "local").toLowerCase();
+  if (configured !== "local") return configured;
+
+  if (settings.hasBrevoKey && (settings.brevoListId || process.env.BREVO_LIST_ID)) return "brevo";
+  if (
+    settings.hasMailchimpKey &&
+    process.env.MAILCHIMP_LIST_ID &&
+    process.env.MAILCHIMP_SERVER_PREFIX
+  ) {
+    return "mailchimp";
+  }
+  if (settings.hasKlaviyoKey && process.env.KLAVIYO_LIST_ID) return "klaviyo";
+
+  return "local";
+}
+
+function localStorageAvailable() {
+  return Boolean(getProjectRoot());
+}
 
 /**
  * Subscribe via configured ESP or local JSONL fallback.
@@ -13,33 +35,55 @@ export async function subscribeNewsletter({ email, source }) {
     throw err;
   }
 
-  if (await hasSubscriber(normalized)) {
-    return { ok: true, duplicate: true, provider: "local" };
-  }
-
   const settings = await getNewsletterSettings();
-  const provider = (settings.provider || "local").toLowerCase();
+  const provider = resolveEffectiveProvider(settings);
+
+  if (provider !== "local" && (await hasSubscriber(normalized))) {
+    return { ok: true, duplicate: true, provider };
+  }
 
   if (provider === "brevo") {
     await subscribeBrevo(normalized, source, settings.brevoListId);
-    await appendSubscriber({ email: normalized, source });
+    await tryAppendSubscriber({ email: normalized, source });
     return { ok: true, provider: "brevo" };
   }
 
   if (provider === "mailchimp") {
     await subscribeMailchimp(normalized, source);
-    await appendSubscriber({ email: normalized, source });
+    await tryAppendSubscriber({ email: normalized, source });
     return { ok: true, provider: "mailchimp" };
   }
 
   if (provider === "klaviyo") {
     await subscribeKlaviyo(normalized, source);
-    await appendSubscriber({ email: normalized, source });
+    await tryAppendSubscriber({ email: normalized, source });
     return { ok: true, provider: "klaviyo" };
+  }
+
+  if (await hasSubscriber(normalized)) {
+    return { ok: true, duplicate: true, provider: "local" };
+  }
+
+  if (!localStorageAvailable()) {
+    const err = new Error(
+      "Newsletter is not configured for this environment. Set Brevo in Admin or add BREVO_API_KEY + BREVO_LIST_ID secrets.",
+    );
+    err.status = 503;
+    throw err;
   }
 
   await appendSubscriber({ email: normalized, source });
   return { ok: true, provider: "local" };
+}
+
+/** Local JSONL log when available (dev); ESP signup still succeeds on Workers without FS. */
+async function tryAppendSubscriber(data) {
+  try {
+    await appendSubscriber(data);
+  } catch (err) {
+    if (err.status === 503) return;
+    throw err;
+  }
 }
 
 async function subscribeBrevo(email, source, listIdFromSettings) {
