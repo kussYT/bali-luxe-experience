@@ -65,6 +65,9 @@ export type Product = {
   origin: ProductOrigin;
   defaultWarehouse?: WarehouseId;
   variants?: ProductVariant[];
+  /** SEO — empty uses product name for title */
+  seoTitle?: string;
+  metaDescription?: string;
 };
 
 export type Catalog = {

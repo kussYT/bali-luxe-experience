@@ -110,7 +110,7 @@ function CartPage() {
               <span>Subtotal</span>
               <span>{formatMoney(total, currency)}</span>
             </div>
-            <CheckoutButton className="w-full bg-foreground text-surface py-4 text-eyebrow hover:opacity-90 transition-opacity" />
+            <CheckoutButton className="btn-primary w-full" />
             <p className="text-caption text-center">Secure payment by Stripe</p>
           </aside>
         </div>

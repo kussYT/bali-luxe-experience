@@ -50,6 +50,8 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
       p.origin,
       p.default_warehouse,
       p.video_url,
+      p.seo_title,
+      p.meta_description,
       c.slug AS collection_slug,
       c.name AS collection_name
     FROM products p
@@ -199,6 +201,8 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
       image: images[0] || "/shopify-import/placeholder.jpg",
       images,
       videoUrl: p.video_url || undefined,
+      seoTitle: p.seo_title?.trim() || undefined,
+      metaDescription: p.meta_description?.trim() || undefined,
       details: p.product_type ? [p.product_type] : [],
       tags: [],
       stock,

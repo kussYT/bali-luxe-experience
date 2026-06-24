@@ -1,4 +1,8 @@
-import { translatePageLocales } from "../translate.mjs";
+import { translatePageLocales, getTranslateStatus } from "../translate.mjs";
+
+export async function getAdminTranslateStatusResponse() {
+  return getTranslateStatus();
+}
 
 export async function postAdminTranslatePage(body) {
   const sourceLocale = typeof body.sourceLocale === "string" ? body.sourceLocale : "";

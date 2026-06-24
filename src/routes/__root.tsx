@@ -22,9 +22,6 @@ import { Marquee } from "@/components/site/Marquee";
 
 import { CartDrawer } from "@/components/site/CartDrawer";
 
-import { AmbientSoundProvider } from "@/lib/ambient-sound-context";
-
-import { AmbientSoundToggle } from "@/components/site/AmbientSoundToggle";
 import { SitePreferencesDock } from "@/components/site/SitePreferencesDock";
 
 import { BinginSounds } from "@/components/lifestyle/BinginSounds";
@@ -175,8 +172,6 @@ function RootComponent() {
 
       <AccountProvider>
 
-      <AmbientSoundProvider>
-
       <CurrencyProvider>
 
         <CartProvider>
@@ -199,7 +194,6 @@ function RootComponent() {
 
               {!isAdmin && <CartDrawer />}
 
-              {!isAdmin && <AmbientSoundToggle />}
               {!isAdmin && <SitePreferencesDock />}
 
               {!isAdmin && <CookieConsent />}
@@ -211,8 +205,6 @@ function RootComponent() {
         </CartProvider>
 
       </CurrencyProvider>
-
-      </AmbientSoundProvider>
 
       </AccountProvider>
 

@@ -96,6 +96,12 @@ function AdminContentPage() {
     ctaLabel: "Discover the piece",
     ...homepage.spotlightProduct,
   };
+  const seo = {
+    title: "Bingin Diaries — Hand-woven hats from Bali & France",
+    metaDescription:
+      "A boutique house of sun-soaked hats, hand-woven between Canggu and Paris.",
+    ...homepage.seo,
+  };
 
   const patchSpotlight = (patch: Partial<typeof spotlight>) =>
     setHomepage({ ...homepage, spotlightProduct: { ...spotlight, ...patch } });
@@ -131,6 +137,28 @@ function AdminContentPage() {
       <CmsStatusCard />
 
       <form onSubmit={handleSave} className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">SEO — Page d&apos;accueil (Google)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Titre et description affichés quand quelqu&apos;un cherche « Bingin Diaries » sur Google.
+            </p>
+            <CmsField
+              label="Meta titre"
+              value={seo.title}
+              onChange={(v) => setHomepage({ ...homepage, seo: { ...seo, title: v } })}
+            />
+            <CmsField
+              label="Meta description"
+              value={seo.metaDescription}
+              onChange={(v) => setHomepage({ ...homepage, seo: { ...seo, metaDescription: v } })}
+              multiline
+            />
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Bandeau (marquee)</CardTitle>
@@ -310,30 +338,6 @@ function AdminContentPage() {
                 />
               </div>
             ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Musique d&apos;ambiance (Sound on / off)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Fichier joué par le bouton fixe en bas à droite du site. Indépendant de la section Spotify
-              ci-dessous.
-            </p>
-            <CmsMediaField
-              label="Fichier audio (MP3)"
-              value={homepage.ambientSound?.audioSrc ?? "/audio/ambient.mp3"}
-              onChange={(v) =>
-                setHomepage({
-                  ...homepage,
-                  ambientSound: { audioSrc: v },
-                })
-              }
-              folder="ambient"
-              accept="audio/mpeg,audio/mp3,.mp3"
-            />
           </CardContent>
         </Card>
 

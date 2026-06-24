@@ -107,6 +107,11 @@ const FALLBACK_SITE: SiteContent = {
       title: "Slow notes from Bali & beyond",
       description: "Plages, cafés, moodboards et looks — une dimension lifestyle pour voyager avec la maison.",
     },
+    seo: {
+      title: "Bingin Diaries — Hand-woven hats from Bali & France",
+      metaDescription:
+        "A boutique house of sun-soaked hats, hand-woven between Canggu and Paris.",
+    },
   },
   about: FALLBACK_ABOUT,
   findUs: FALLBACK_FIND_US,

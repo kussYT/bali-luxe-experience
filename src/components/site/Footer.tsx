@@ -8,7 +8,7 @@ import { SocialIconLinks } from "@/components/site/SocialIconLinks";
 function FooterColumn({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="text-sm space-y-3">
-      <p className="text-eyebrow !text-surface/50 mb-5">{title}</p>
+      <p className="text-eyebrow !text-surface/65 mb-5">{title}</p>
       {children}
     </div>
   );
@@ -92,8 +92,8 @@ export function Footer() {
       </div>
 
       <div className="page-wrap section-pad py-8 border-t border-surface/10 flex flex-col md:flex-row items-center justify-between gap-6">
-        <p className="text-eyebrow !text-surface/45">© 2026 Bingin Diaries</p>
-        <SocialIconLinks iconClassName="size-4" className="[&_a]:!text-surface/70 [&_a:hover]:!text-surface" />
+        <p className="text-eyebrow !text-surface/60">© 2026 Bingin Diaries</p>
+        <SocialIconLinks iconClassName="size-4" className="[&_a]:!text-surface/80 [&_a:hover]:!text-surface" />
       </div>
     </footer>
   );

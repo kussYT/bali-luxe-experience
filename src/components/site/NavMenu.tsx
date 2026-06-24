@@ -4,7 +4,6 @@ import type { NavColumn, NavFeaturedImage } from "@/lib/navigation";
 import { getMegaMenuContent, type MegaMenuId } from "@/lib/navigation";
 import { useCatalog } from "@/lib/catalog-context";
 import { BrandLogo } from "@/components/site/BrandLogo";
-
 type NavSection = {
   label: string;
   mega: MegaMenuId;

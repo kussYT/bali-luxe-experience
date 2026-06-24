@@ -112,6 +112,11 @@ export type HomepageContent = {
     title: string;
     description: string;
   };
+  /** Google search result title + description for homepage */
+  seo: {
+    title: string;
+    metaDescription: string;
+  };
 };
 
 export type AboutSection = {

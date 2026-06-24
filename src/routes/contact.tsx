@@ -95,7 +95,7 @@ function Contact() {
         <button
           type="submit"
           disabled={loading || sent}
-          className="bg-ink text-bone px-10 py-4 text-eyebrow hover:bg-clay transition-colors disabled:opacity-50"
+          className="btn-primary disabled:opacity-50"
         >
           {sent ? "Message sent — merci" : loading ? "Sending…" : "Send message"}
         </button>

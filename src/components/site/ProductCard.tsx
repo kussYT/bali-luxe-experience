@@ -56,7 +56,7 @@ export function ProductCard({
         <p className="text-sm tracking-wide pt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
           <span>{format(product)}</span>
           {product.onSale && product.compareAtEUR != null && (
-            <span className="text-xs text-foreground/40 line-through">€{product.priceEUR}</span>
+            <span className="text-xs text-muted-foreground line-through">€{product.priceEUR}</span>
           )}
         </p>
       </div>

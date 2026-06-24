@@ -39,6 +39,8 @@ export type ProductFormValues = {
   origin: "Bali" | "France";
   collectionSlugs: string[];
   videoUrl: string;
+  seoTitle: string;
+  metaDescription: string;
 };
 
 type ProductFormProps = {
@@ -90,6 +92,8 @@ const empty: ProductFormValues = {
   origin: "Bali",
   collectionSlugs: [],
   videoUrl: "",
+  seoTitle: "",
+  metaDescription: "",
 };
 
 function slugify(value: string) {
@@ -117,6 +121,8 @@ export function ProductForm({
       (slug) => slug && slug !== (initial?.collectionSlug ?? ""),
     ),
     videoUrl: initial?.videoUrl ?? "",
+    seoTitle: initial?.seoTitle ?? "",
+    metaDescription: initial?.metaDescription ?? "",
   }));
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -260,6 +266,34 @@ export function ProductForm({
       <div className="space-y-2">
         <Label htmlFor="story">Description</Label>
         <Textarea id="story" rows={5} value={values.story} onChange={(e) => set("story", e.target.value)} />
+      </div>
+
+      <div className="space-y-4 border border-border p-5">
+        <div>
+          <Label className="text-base">SEO (Google)</Label>
+          <p className="text-xs text-muted-foreground mt-1">
+            Titre et description affichés dans les résultats de recherche. Laissez vide pour utiliser le nom du produit.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="seo-title">Meta titre</Label>
+          <Input
+            id="seo-title"
+            value={values.seoTitle}
+            onChange={(e) => set("seoTitle", e.target.value)}
+            placeholder={values.name ? `${values.name} — Bingin Diaries` : "Nom du produit — Bingin Diaries"}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="seo-desc">Meta description</Label>
+          <Textarea
+            id="seo-desc"
+            rows={3}
+            value={values.metaDescription}
+            onChange={(e) => set("metaDescription", e.target.value)}
+            placeholder="Courte description pour Google (150–160 caractères idéal)"
+          />
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-5">

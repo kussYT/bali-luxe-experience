@@ -5,6 +5,7 @@ import { useCatalog } from "@/lib/catalog-context";
 import { useCart } from "@/lib/cart";
 import { useCurrency } from "@/lib/currency";
 import { ProductCard } from "@/components/site/ProductCard";
+import { PageMeta } from "@/components/site/PageMeta";
 import { VariantSelector } from "@/components/site/VariantSelector";
 import { getDefaultVariant, getVariant, maxCartQty } from "@/lib/warehouse-allocation";
 
@@ -68,9 +69,12 @@ function ProductPage() {
   const showVideo = Boolean(product.videoUrl);
   const isVideoActive = showVideo && activeImage === 0;
   const imageIndex = showVideo ? activeImage - 1 : activeImage;
+  const pageTitle = product.seoTitle?.trim() || `${product.name} — Bingin Diaries`;
+  const pageDescription = product.metaDescription?.trim() || undefined;
 
   return (
     <>
+      <PageMeta title={pageTitle} description={pageDescription} />
       <section className="grid md:grid-cols-[1.1fr_0.9fr] min-h-[calc(100vh-4.25rem)] md:min-h-[calc(100vh-5.25rem)]">
         <div className="bg-secondary md:sticky md:top-[5.25rem] md:self-start md:max-h-[calc(100vh-5.25rem)] overflow-hidden">
           {isVideoActive ? (

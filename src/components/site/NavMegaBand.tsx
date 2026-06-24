@@ -30,7 +30,7 @@ export function NavMegaBand({ columns, featured = [], onNavigate, className = ""
           >
             {columns.map((column) => (
               <div key={column.title}>
-                <p className="text-eyebrow text-foreground/45 mb-4 md:mb-5">{column.title}</p>
+                <p className="text-eyebrow mb-4 md:mb-5">{column.title}</p>
                 <ul className="space-y-2.5 md:space-y-3">
                   {column.items.map((item) => (
                     <li key={item.label}>

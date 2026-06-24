@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { fetchAdminOrders, adminOrdersExportUrl, type AdminOrder } from "@/lib/admin-api";
+import { orderStatusLabel } from "@/lib/order-status";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChannelBadge } from "@/components/admin/ChannelBadge";
@@ -47,7 +48,9 @@ function AdminOrdersPage() {
     loadOrders();
   }, [loadOrders]);
 
-  const paidCount = orders.filter((o) => o.status === "paid").length;
+  const toProcessCount = orders.filter((o) =>
+    ["paid", "processing", "on_hold"].includes(o.status),
+  ).length;
   const shippedCount = orders.filter((o) => o.status === "shipped").length;
   const wbCount = orders.filter((o) => o.channel === "wolf_badger").length;
 
@@ -95,15 +98,15 @@ function AdminOrdersPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-normal text-muted-foreground">Paid</CardTitle>
+            <CardTitle className="text-sm font-normal text-muted-foreground">À traiter</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="font-display text-3xl">{paidCount}</p>
+            <p className="font-display text-3xl">{toProcessCount}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-normal text-muted-foreground">Shipped</CardTitle>
+            <CardTitle className="text-sm font-normal text-muted-foreground">Traitées</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="font-display text-3xl">{shippedCount}</p>
@@ -152,20 +155,18 @@ function AdminOrdersPage() {
                 <td className="p-3">
                   <ChannelBadge channel={order.channel || "website"} />
                 </td>
-                <td className="p-3 capitalize">{order.status}</td>
+                <td className="p-3">{orderStatusLabel(order.status)}</td>
                 <td className="p-3">{order.customerEmail || "—"}</td>
                 <td className="p-3 font-mono text-xs">{order.externalRef || "—"}</td>
                 <td className="p-3">{order.shippingCountryCode || order.countryCode || "—"}</td>
                 <td className="p-3">{warehouseLabel(order.fulfillmentWarehouse)}</td>
                 <td className="p-3">{formatMoney(order.amountTotal, order.currency)}</td>
-                <td className="p-3">
-                  <Link
-                    to="/admin/orders/$orderId"
-                    params={{ orderId: order.id }}
-                    className="link-underline"
-                  >
-                    View
-                  </Link>
+                <td className="p-3 text-right">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/admin/orders/$orderId" params={{ orderId: order.id }}>
+                      Voir
+                    </Link>
+                  </Button>
                 </td>
               </tr>
             ))}

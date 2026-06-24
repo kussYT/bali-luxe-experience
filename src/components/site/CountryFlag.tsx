@@ -24,7 +24,10 @@ export function CountryFlag({ code, className, title }: CountryFlagProps) {
   }
   return (
     <Flag
-      className={cn("inline-block w-[1.25rem] h-auto rounded-[2px] shadow-sm", className)}
+      className={cn(
+        "inline-block w-[1.25rem] h-[0.833rem] shrink-0 rounded-[2px] object-cover shadow-sm",
+        className,
+      )}
       title={title}
       aria-hidden={!title}
     />

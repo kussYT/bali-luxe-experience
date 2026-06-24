@@ -34,7 +34,7 @@ export function SpotlightProduct() {
             />
           </Link>
           <div className="max-w-md">
-            <p className="text-eyebrow text-foreground/50">{spotlight.eyebrow}</p>
+            <p className="text-eyebrow">{spotlight.eyebrow}</p>
             <h2 className="font-display text-3xl md:text-5xl mt-3 leading-[0.95]">
               {spotlight.title || product.name}
             </h2>

@@ -119,6 +119,10 @@ export type AdminOrder = {
   amountTotal: number | null;
   paidAt: string | null;
   shippedAt: string | null;
+  trackingNumber: string | null;
+  trackingCarrier: string | null;
+  trackingUrl: string | null;
+  refundAmountCents: number | null;
   createdAt: string;
   items: {
     id: string;
@@ -176,10 +180,35 @@ export async function fetchAdminOrder(orderId: string) {
   );
 }
 
-export async function shipAdminOrder(orderId: string) {
+export type UpdateAdminOrderInput = {
+  status: string;
+  trackingNumber?: string;
+  trackingCarrier?: string;
+  trackingUrl?: string;
+  notifyCustomer?: boolean;
+  refundAmountCents?: number;
+  notes?: string;
+};
+
+export async function shipAdminOrder(
+  orderId: string,
+  body: {
+    trackingNumber?: string;
+    trackingCarrier?: string;
+    trackingUrl?: string;
+    notifyCustomer?: boolean;
+  } = {},
+) {
   return request<{ order: AdminOrder; source: string }>(
     `/api/admin/orders/${encodeURIComponent(orderId)}/ship`,
-    { method: "PATCH" },
+    { method: "PATCH", body: JSON.stringify(body) },
+  );
+}
+
+export async function updateAdminOrder(orderId: string, body: UpdateAdminOrderInput) {
+  return request<{ order: AdminOrder; source: string }>(
+    `/api/admin/orders/${encodeURIComponent(orderId)}`,
+    { method: "PATCH", body: JSON.stringify(body) },
   );
 }
 
@@ -422,6 +451,16 @@ export function adminCustomersBrevoExportUrl(wishlistOnly = false) {
   return wishlistOnly
     ? "/api/admin/customers/export-brevo.csv?wishlist=1"
     : "/api/admin/customers/export-brevo.csv";
+}
+
+export type TranslateStatus = {
+  available: boolean;
+  provider: string | null;
+  hint: string | null;
+};
+
+export async function fetchTranslateStatus() {
+  return request<TranslateStatus>("/api/admin/translate-page");
 }
 
 export async function autoTranslatePage(payload: {

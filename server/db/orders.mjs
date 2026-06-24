@@ -24,6 +24,10 @@ function mapOrderRow(row, items = []) {
     amountTotal: row.amount_total ?? null,
     paidAt: row.paid_at ? new Date(row.paid_at).toISOString() : null,
     shippedAt: row.shipped_at ? new Date(row.shipped_at).toISOString() : null,
+    trackingNumber: row.tracking_number || null,
+    trackingCarrier: row.tracking_carrier || null,
+    trackingUrl: row.tracking_url || null,
+    refundAmountCents: row.refund_amount_cents ?? null,
     createdAt: new Date(row.created_at).toISOString(),
     items,
   };
@@ -409,29 +413,102 @@ export async function createMarketplaceOrder({
   });
 }
 
-export async function markOrderShipped(orderId) {
+export async function markOrderShipped(orderId, { trackingNumber, trackingCarrier, trackingUrl } = {}) {
+  return updateOrderStatus(orderId, {
+    status: "shipped",
+    trackingNumber,
+    trackingCarrier,
+    trackingUrl,
+  });
+}
+
+const VALID_STATUSES = new Set([
+  "pending",
+  "paid",
+  "processing",
+  "on_hold",
+  "shipped",
+  "cancelled",
+  "refunded",
+  "partially_refunded",
+]);
+
+/** Admin status update with optional tracking / refund amount. */
+export async function updateOrderStatus(
+  orderId,
+  { status, trackingNumber, trackingCarrier, trackingUrl, refundAmountCents, notes },
+) {
   if (!isDatabaseConfigured()) {
     const err = new Error("Database not configured");
     err.status = 503;
     throw err;
   }
 
+  if (!VALID_STATUSES.has(status)) {
+    const err = new Error(`Invalid status: ${status}`);
+    err.status = 400;
+    throw err;
+  }
+
+  const existing = await findOrderById(orderId);
+  if (!existing) {
+    const err = new Error("Order not found");
+    err.status = 404;
+    throw err;
+  }
+
+  if (existing.status === "pending" && status === "shipped") {
+    const err = new Error("Cannot ship an unpaid order");
+    err.status = 409;
+    throw err;
+  }
+
+  const sets = ["status = $2::order_status", "updated_at = now()"];
+  const params = [orderId, status];
+  let idx = 3;
+
+  if (status === "shipped") {
+    sets.push(`shipped_at = COALESCE(shipped_at, now())`);
+  }
+
+  if (trackingNumber !== undefined) {
+    sets.push(`tracking_number = $${idx}`);
+    params.push(trackingNumber?.trim() || null);
+    idx += 1;
+  }
+
+  if (trackingCarrier !== undefined) {
+    sets.push(`tracking_carrier = $${idx}`);
+    params.push(trackingCarrier?.trim() || null);
+    idx += 1;
+  }
+
+  if (trackingUrl !== undefined) {
+    sets.push(`tracking_url = $${idx}`);
+    params.push(trackingUrl?.trim() || null);
+    idx += 1;
+  }
+
+  if (refundAmountCents !== undefined) {
+    sets.push(`refund_amount_cents = $${idx}`);
+    params.push(refundAmountCents);
+    idx += 1;
+  }
+
+  if (notes !== undefined) {
+    sets.push(`notes = $${idx}`);
+    params.push(notes?.trim() || null);
+    idx += 1;
+  }
+
   const { rows } = await query(
-    `UPDATE orders SET status = 'shipped', shipped_at = now(), updated_at = now()
-     WHERE id = $1 AND status IN ('paid', 'shipped')
-     RETURNING id`,
-    [orderId],
+    `UPDATE orders SET ${sets.join(", ")} WHERE id = $1 RETURNING id`,
+    params,
   );
 
   if (rows.length === 0) {
-    const existing = await findOrderById(orderId);
-    if (!existing) {
-      const err = new Error("Order not found");
-      err.status = 404;
-      throw err;
-    }
-    const err = new Error("Only paid orders can be marked as shipped");
-    err.status = 409;
+    const err = new Error("Order not found");
+    err.status = 404;
     throw err;
   }
 
@@ -454,6 +531,8 @@ export async function exportOrdersCsv() {
     "created_at",
     "paid_at",
     "shipped_at",
+    "tracking_number",
+    "tracking_carrier",
     "customer_email",
     "currency",
     "amount_total",
@@ -482,6 +561,8 @@ export async function exportOrdersCsv() {
         order.createdAt,
         order.paidAt || "",
         order.shippedAt || "",
+        order.trackingNumber || "",
+        order.trackingCarrier || "",
         order.customerEmail || "",
         order.currency,
         order.amountTotal ?? "",

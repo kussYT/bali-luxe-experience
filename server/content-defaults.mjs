@@ -155,6 +155,11 @@ export const DEFAULT_HOMEPAGE = {
     title: "Slow notes from Bali & beyond",
     description: "Plages, cafés, moodboards et looks — une dimension lifestyle pour voyager avec la maison.",
   },
+  seo: {
+    title: "Bingin Diaries — Hand-woven hats from Bali & France",
+    metaDescription:
+      "A boutique house of sun-soaked hats, hand-woven between Canggu and Paris.",
+  },
 };
 
 export const DEFAULT_ABOUT = {

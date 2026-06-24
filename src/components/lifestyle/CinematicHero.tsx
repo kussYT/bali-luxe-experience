@@ -45,11 +45,11 @@ export function CinematicHero({ poster, videoSrc }: CinematicHeroProps) {
       <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-foreground/30" />
 
       <div className="relative min-h-[92vh] md:min-h-[96vh] flex flex-col justify-end page-wrap section-pad pb-14 md:pb-20 text-surface animate-fade-up">
-        <p className="text-eyebrow !text-surface/65 mb-5 md:mb-7">{hero.eyebrow}</p>
+        <p className="text-eyebrow !text-surface/80 mb-5 md:mb-7">{hero.eyebrow}</p>
         <h1 className="font-display text-[10vw] md:text-[5.5rem] lg:text-[6.5rem] leading-[0.92] max-w-[14ch] font-light italic">
           {hero.title}
         </h1>
-        <p className="text-caption max-w-md mt-6 md:mt-8 !text-surface/75">{hero.subtitle}</p>
+        <p className="text-caption max-w-md mt-6 md:mt-8 !text-surface/85">{hero.subtitle}</p>
         <div className="mt-9 md:mt-12 flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6">
           <Link
             to={hero.ctaPrimaryHref}

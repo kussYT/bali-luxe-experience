@@ -14,24 +14,28 @@ export function SitePreferencesDock() {
 
   return (
     <div
-      className={`fixed right-5 md:right-8 z-50 flex flex-col items-end gap-2 ${bottom}`}
+      className={`fixed right-5 md:right-8 z-40 flex flex-col items-end gap-1.5 ${bottom}`}
       aria-label="Language and region"
     >
       <div
-        className={`inline-flex items-center gap-2 px-3 py-2 ${dockShell}`}
+        className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 ${dockShell}`}
         role="group"
         aria-label="Language"
       >
         {LOCALES.map((item, index) => (
-          <span key={item.code} className="inline-flex items-center gap-2">
-            {index > 0 && <span className="text-border select-none" aria-hidden>·</span>}
+          <span key={item.code} className="inline-flex items-center gap-1.5">
+            {index > 0 && (
+              <span className="text-border select-none" aria-hidden>
+                ·
+              </span>
+            )}
             <button
               type="button"
               onClick={() => setLocale(item.code as Locale)}
-              className={`text-[0.625rem] font-medium tracking-[0.22em] uppercase transition-colors duration-300 ${
+              className={`text-[0.5625rem] font-medium tracking-[0.2em] uppercase transition-colors duration-300 ${
                 locale === item.code
                   ? "text-foreground"
-                  : "text-foreground/45 hover:text-foreground/80"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
               aria-current={locale === item.code ? "true" : undefined}
               aria-label={item.label}

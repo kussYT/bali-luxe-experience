@@ -45,6 +45,8 @@ export function normalizeAdminProductBody(body) {
     stock: Math.max(0, Number(body.stock ?? 0)),
     images,
     videoUrl: typeof body.videoUrl === "string" ? body.videoUrl.trim() : "",
+    seoTitle: typeof body.seoTitle === "string" ? body.seoTitle.trim() : "",
+    metaDescription: typeof body.metaDescription === "string" ? body.metaDescription.trim() : "",
     variants: parseAdminVariants(body),
   };
 }
@@ -249,8 +251,9 @@ export async function createProductInDb(rawBody) {
     const { rows } = await client.query(
       `INSERT INTO products (
          slug, name, story, collection_id, subcategory, category, product_type,
-         price_eur, compare_at_eur, price_usd, price_idr, status, featured, origin, default_warehouse, video_url
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+         price_eur, compare_at_eur, price_usd, price_idr, status, featured, origin, default_warehouse, video_url,
+         seo_title, meta_description
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
        RETURNING id`,
       [
         p.slug,
@@ -269,6 +272,8 @@ export async function createProductInDb(rawBody) {
         p.origin,
         defaultWarehouse,
         p.videoUrl || "",
+        p.seoTitle || "",
+        p.metaDescription || "",
       ],
     );
 
@@ -342,6 +347,8 @@ export async function updateProductInDb(currentSlug, rawBody) {
          origin = $15,
          default_warehouse = $16,
          video_url = $17,
+         seo_title = $18,
+         meta_description = $19,
          updated_at = now()
        WHERE id = $1`,
       [
@@ -362,6 +369,8 @@ export async function updateProductInDb(currentSlug, rawBody) {
         p.origin,
         defaultWarehouse,
         p.videoUrl || "",
+        p.seoTitle || "",
+        p.metaDescription || "",
       ],
     );
 

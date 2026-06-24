@@ -2,22 +2,18 @@ import { SITE_LOCALE_CODES } from "./i18n-locales.mjs";
 
 const DEEPL_LANG = { fr: "FR", en: "EN", es: "ES", id: "ID" };
 
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
+export function isTranslateConfigured() {
+  return Boolean(process.env.DEEPL_API_KEY?.trim());
 }
 
-function chunkText(text, maxLen) {
-  if (text.length <= maxLen) return [text];
-  const chunks = [];
-  let rest = text;
-  while (rest.length > maxLen) {
-    let cut = rest.lastIndexOf(" ", maxLen);
-    if (cut < maxLen * 0.5) cut = maxLen;
-    chunks.push(rest.slice(0, cut).trim());
-    rest = rest.slice(cut).trim();
-  }
-  if (rest) chunks.push(rest);
-  return chunks;
+export function getTranslateStatus() {
+  return {
+    available: isTranslateConfigured(),
+    provider: isTranslateConfigured() ? "deepl" : null,
+    hint: isTranslateConfigured()
+      ? null
+      : "Ajoutez DEEPL_API_KEY dans les secrets (gratuit ~500 000 caractères/mois sur deepl.com/pro-api).",
+  };
 }
 
 async function translateDeepL(text, source, target, apiKey) {
@@ -41,24 +37,6 @@ async function translateDeepL(text, source, target, apiKey) {
   return data.translations?.[0]?.text || text;
 }
 
-async function translateMyMemory(text, source, target) {
-  const chunks = chunkText(text, 450);
-  const parts = [];
-  for (const chunk of chunks) {
-    const url = new URL("https://api.mymemory.translated.net/get");
-    url.searchParams.set("q", chunk);
-    url.searchParams.set("langpair", `${source}|${target}`);
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data.responseStatus !== 200) {
-      throw new Error(data.responseDetails || "MyMemory translation failed");
-    }
-    parts.push(data.responseData?.translatedText || chunk);
-    await sleep(250);
-  }
-  return parts.join(" ");
-}
-
 export async function translateText(text, sourceLang, targetLang) {
   const source = sourceLang?.trim().toLowerCase();
   const target = targetLang?.trim().toLowerCase();
@@ -71,15 +49,15 @@ export async function translateText(text, sourceLang, targetLang) {
   }
 
   const deeplKey = process.env.DEEPL_API_KEY?.trim();
-  if (deeplKey) {
-    try {
-      return await translateDeepL(text, source, target, deeplKey);
-    } catch (e) {
-      console.warn("[translate] DeepL failed, falling back to MyMemory:", e.message);
-    }
+  if (!deeplKey) {
+    const err = new Error(
+      "Traduction indisponible : configurez DEEPL_API_KEY (compte gratuit DeepL, ~500k caractères/mois).",
+    );
+    err.status = 503;
+    throw err;
   }
 
-  return translateMyMemory(text, source, target);
+  return translateDeepL(text, source, target, deeplKey);
 }
 
 export async function translatePageLocales({ sourceLocale, targetLocales, fields }) {
@@ -95,8 +73,12 @@ export async function translatePageLocales({ sourceLocale, targetLocales, fields
     err.status = 400;
     throw err;
   }
+  if (!isTranslateConfigured()) {
+    const err = new Error(getTranslateStatus().hint || "Translation not configured");
+    err.status = 503;
+    throw err;
+  }
 
-  const provider = process.env.DEEPL_API_KEY?.trim() ? "deepl" : "mymemory";
   const out = {};
 
   for (const target of targets) {
@@ -117,5 +99,5 @@ export async function translatePageLocales({ sourceLocale, targetLocales, fields
     };
   }
 
-  return { locales: out, provider };
+  return { locales: out, provider: "deepl" };
 }

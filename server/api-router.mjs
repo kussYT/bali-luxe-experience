@@ -27,6 +27,7 @@ import {
   getAdminOrdersResponse,
   getAdminOrderResponse,
   shipAdminOrder,
+  patchAdminOrder,
   getAdminOrdersCsv,
   postMarketplaceOrder,
 } from "./api/orders.mjs";
@@ -82,7 +83,7 @@ import {
   getAdminCustomersExportCsv,
   getAdminCustomersExportBrevoCsv,
 } from "./api/customers-admin.mjs";
-import { postAdminTranslatePage } from "./api/translate-admin.mjs";
+import { postAdminTranslatePage, getAdminTranslateStatusResponse } from "./api/translate-admin.mjs";
 
 function jsonResponse(status, body, extraHeaders = {}) {
   return Response.json(body, { status, headers: extraHeaders });
@@ -368,7 +369,8 @@ export async function handleApiRequest(request, context = {}) {
     const orderShipMatch = pathname.match(/^\/api\/admin\/orders\/([^/]+)\/ship$/);
     if (orderShipMatch && method === "PATCH") {
       const orderId = decodeURIComponent(orderShipMatch[1]);
-      const result = await shipAdminOrder(orderId);
+      const body = await readJsonBody(request).catch(() => ({}));
+      const result = await shipAdminOrder(orderId, body);
       return jsonResponse(200, result);
     }
 
@@ -377,6 +379,13 @@ export async function handleApiRequest(request, context = {}) {
       const orderId = decodeURIComponent(orderMatch[1]);
       const detail = await getAdminOrderResponse(orderId);
       return jsonResponse(200, detail);
+    }
+
+    if (orderMatch && method === "PATCH") {
+      const orderId = decodeURIComponent(orderMatch[1]);
+      const body = await readJsonBody(request);
+      const result = await patchAdminOrder(orderId, body);
+      return jsonResponse(200, result);
     }
 
     if (pathname === "/api/admin/products" && method === "POST") {
@@ -551,6 +560,11 @@ export async function handleApiRequest(request, context = {}) {
           "Content-Disposition": 'attachment; filename="bingin-customers-brevo.csv"',
         },
       });
+    }
+
+    if (pathname === "/api/admin/translate-page" && method === "GET") {
+      const status = await getAdminTranslateStatusResponse();
+      return jsonResponse(200, status);
     }
 
     if (pathname === "/api/admin/translate-page" && method === "POST") {
