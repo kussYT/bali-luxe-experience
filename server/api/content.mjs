@@ -24,8 +24,8 @@ export async function getPostResponse(slug) {
   return Response.json({ post }, { headers: CACHE_HEADERS });
 }
 
-export async function getPageResponse(slug) {
-  const page = await getPageBySlug(slug);
+export async function getPageResponse(slug, locale) {
+  const page = await getPageBySlug(slug, { locale });
   if (!page) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }

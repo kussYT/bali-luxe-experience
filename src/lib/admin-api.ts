@@ -423,3 +423,17 @@ export function adminCustomersBrevoExportUrl(wishlistOnly = false) {
     ? "/api/admin/customers/export-brevo.csv?wishlist=1"
     : "/api/admin/customers/export-brevo.csv";
 }
+
+export async function autoTranslatePage(payload: {
+  sourceLocale: string;
+  targetLocales: string[];
+  fields: { title: string; eyebrow: string; metaDescription: string; body: string[] };
+}) {
+  return request<{
+    locales: Record<string, { title: string; eyebrow: string; metaDescription: string; body: string[] }>;
+    provider: string;
+  }>("/api/admin/translate-page", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}

@@ -1,10 +1,6 @@
-export type Locale = "en" | "fr" | "es";
+export type Locale = "fr" | "en" | "id" | "es";
 
-export const LOCALES: { code: Locale; label: string }[] = [
-  { code: "en", label: "English" },
-  { code: "fr", label: "Français" },
-  { code: "es", label: "Español" },
-];
+export const LOCALE_CODES: Locale[] = ["fr", "en", "id", "es"];
 
 type MessageTree = Record<string, string | MessageTree>;
 
@@ -149,6 +145,77 @@ export const messages: Record<Locale, MessageTree> = {
       shopAll: "Tout voir",
       backToCollection: "Retour à la collection",
       notFound: "Pièce introuvable",
+    },
+  },
+  id: {
+    nav: {
+      account: "Akun",
+      wishlist: "Wishlist",
+      search: "Cari",
+      bag: "Tas",
+      newCollection: "Koleksi baru",
+      shop: "Toko",
+      sales: "Sale",
+      aboutUs: "Tentang kami",
+    },
+    search: {
+      title: "Cari",
+      placeholder: "Topi, bahan, gaya…",
+      popular: "Pencarian populer",
+      submit: "Cari",
+      results: "Hasil",
+      noResults: "Tidak ada produk ditemukan",
+      filters: "Filter",
+      all: "Semua",
+      hats: "Topi",
+      accessories: "Aksesori",
+      bags: "Tas",
+      sale: "Sale",
+    },
+    account: {
+      eyebrow: "Akun Anda",
+      title: "Halo.",
+      login: "Masuk",
+      wishlist: "Wishlist",
+      orders: "Pesanan",
+      email: "Email",
+      sendLink: "Kirim tautan masuk",
+      createAccount: "Buat akun",
+      newHereHint: "Gunakan email yang sama — akun dibuat saat Anda membuka tautan.",
+      linkSent: "Periksa kotak masuk — tautan masuk telah dikirim.",
+      signedIn: "Anda sudah masuk.",
+      signedInWelcome: "Semua siap. Jelajahi koleksi atau lihat wishlist dan pesanan Anda.",
+      devLink: "Tautan masuk (dev)",
+      newHere: "Baru di sini?",
+      newHereBody: "Buat akun untuk melacak pesanan, menyimpan favorit, dan menerima undangan pribadi.",
+      emptyWishlist: "Wishlist Anda kosong",
+      browse: "Jelajahi koleksi",
+      noOrders: "Belum ada pesanan",
+      noOrdersBody: "Pesanan Anda akan muncul di sini.",
+      signedInAs: "Masuk sebagai",
+      signOut: "Keluar",
+      shareWishlist: "Bagikan wishlist",
+      linkCopied: "Tautan disalin",
+      sharedWishlist: "Wishlist dibagikan",
+    },
+    footer: {
+      shop: "Toko",
+      customerCare: "Layanan pelanggan",
+      explore: "Jelajahi",
+      privacy: "Privasi",
+      allPieces: "Semua produk",
+      sale: "Sale",
+    },
+    product: {
+      addToBag: "Tambah ke tas",
+      soldOut: "Habis",
+      completeLook: "Lengkapi penampilan",
+      youMayLike: "Anda mungkin suka",
+    },
+    common: {
+      shopAll: "Lihat semua",
+      backToCollection: "Kembali ke koleksi",
+      notFound: "Produk tidak ditemukan",
     },
   },
   es: {

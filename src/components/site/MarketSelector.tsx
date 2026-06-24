@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
-import { SHIPPING_COUNTRIES } from "@/data/shipping-countries";
+import { formatShippingLabel, SHIPPING_COUNTRIES } from "@/data/shipping-countries";
 import { useCurrency } from "@/lib/currency";
+import { flagEmoji } from "@/lib/flags";
+import { writeShippingManual } from "@/lib/market";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +19,7 @@ type MarketSelectorProps = {
 };
 
 export function MarketSelector({ variant = "header" }: MarketSelectorProps) {
-  const { shipping, shippingLabel, setShippingCountryCode } = useCurrency();
+  const { shipping, setShippingCountryCode } = useCurrency();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -30,12 +32,13 @@ export function MarketSelector({ variant = "header" }: MarketSelectorProps) {
   }, [query]);
 
   const select = (code: string) => {
+    writeShippingManual(true);
     setShippingCountryCode(code);
     setOpen(false);
     setQuery("");
   };
 
-  const triggerLabel = shippingLabel;
+  const triggerLabel = formatShippingLabel(shipping, true);
 
   const triggerClass =
     variant === "nav"
@@ -120,7 +123,12 @@ function CountryDialog({
                   onClick={() => onSelect(c.code)}
                   className={`w-full flex items-center justify-between gap-4 text-sm py-2.5 px-3 rounded-sm transition-colors duration-300 text-left ${selectedCode === c.code ? "bg-secondary" : "hover:bg-secondary/70"}`}
                 >
-                  <span className="text-foreground/90">{c.name}</span>
+                  <span className="flex items-center gap-2 text-foreground/90 min-w-0">
+                    <span className="text-lg leading-none shrink-0" aria-hidden>
+                      {flagEmoji(c.code)}
+                    </span>
+                    <span className="truncate">{c.name}</span>
+                  </span>
                   <span className="text-caption shrink-0">{c.currencyLabel}</span>
                 </button>
               </li>

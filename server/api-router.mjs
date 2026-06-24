@@ -82,6 +82,7 @@ import {
   getAdminCustomersExportCsv,
   getAdminCustomersExportBrevoCsv,
 } from "./api/customers-admin.mjs";
+import { postAdminTranslatePage } from "./api/translate-admin.mjs";
 
 function jsonResponse(status, body, extraHeaders = {}) {
   return Response.json(body, { status, headers: extraHeaders });
@@ -184,6 +185,11 @@ export async function handleApiRequest(request, context = {}) {
       return instagramResponse(request);
     }
 
+    if (pathname === "/api/geo" && method === "GET") {
+      const countryCode = request.cf?.country || null;
+      return jsonResponse(200, { countryCode });
+    }
+
     if (pathname === "/api/catalog" && method === "GET") {
       const includeDrafts = url.searchParams.get("all") === "1";
       const catalog = await getCatalogResponse({ includeDrafts });
@@ -224,7 +230,8 @@ export async function handleApiRequest(request, context = {}) {
 
     const contentPageMatch = pathname.match(/^\/api\/content\/pages\/([^/]+)$/);
     if (contentPageMatch && method === "GET") {
-      return getPageResponse(decodeURIComponent(contentPageMatch[1]));
+      const locale = url.searchParams.get("locale") || undefined;
+      return getPageResponse(decodeURIComponent(contentPageMatch[1]), locale);
     }
 
     if (pathname === "/api/admin/login" && method === "POST") {
@@ -544,6 +551,12 @@ export async function handleApiRequest(request, context = {}) {
           "Content-Disposition": 'attachment; filename="bingin-customers-brevo.csv"',
         },
       });
+    }
+
+    if (pathname === "/api/admin/translate-page" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await postAdminTranslatePage(body);
+      return jsonResponse(200, result);
     }
 
     return jsonResponse(404, { error: "Not found" });

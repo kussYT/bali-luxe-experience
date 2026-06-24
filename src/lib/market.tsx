@@ -4,9 +4,11 @@ import {
   SHIPPING_COUNTRIES,
   type ShippingCountry,
 } from "@/data/shipping-countries";
+import { flagEmoji } from "@/lib/flags";
 import type { Country, Currency } from "@/lib/currency";
 
 export const SHIPPING_STORAGE_KEY = "bingin-shipping-country";
+export const SHIPPING_MANUAL_KEY = "bingin-shipping-manual";
 /** @deprecated use SHIPPING_STORAGE_KEY */
 export const MARKET_STORAGE_KEY = SHIPPING_STORAGE_KEY;
 
@@ -37,12 +39,21 @@ export function writeShippingCountryCode(code: string) {
   localStorage.setItem(SHIPPING_STORAGE_KEY, code);
 }
 
+export function readShippingManual(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(SHIPPING_MANUAL_KEY) === "1";
+}
+
+export function writeShippingManual(manual: boolean) {
+  localStorage.setItem(SHIPPING_MANUAL_KEY, manual ? "1" : "0");
+}
+
 export function shippingToCountry(c: ShippingCountry): Country {
   return {
     code: c.code,
     name: c.name,
     currency: c.currency as Currency,
-    flag: "",
+    flag: flagEmoji(c.code),
   };
 }
 

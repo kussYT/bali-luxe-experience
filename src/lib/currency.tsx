@@ -8,10 +8,13 @@ import {
 } from "@/data/shipping-countries";
 import {
   readShippingCountryCode,
+  readShippingManual,
   shippingToCountry,
   writeShippingCountryCode,
   SHIPPING_STORAGE_KEY,
 } from "@/lib/market";
+import { LOCALE_CHANGED_EVENT, LOCALE_DEFAULT_COUNTRY } from "@/lib/locale-market";
+import type { Locale } from "@/lib/i18n/messages";
 
 export type Currency = "EUR" | "USD" | "IDR";
 export type Country = { code: string; name: string; currency: Currency; flag: string };
@@ -39,21 +42,41 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [shipping, setShipping] = useState<ShippingCountry>(initialShipping);
   const [country, setCountry] = useState<Country>(() => shippingToCountry(initialShipping()));
 
-  useEffect(() => {
-    const code = readShippingCountryCode();
-    if (code) {
-      const next = getShippingCountry(code);
-      setShipping(next);
-      setCountry(shippingToCountry(next));
-    }
-  }, []);
-
   const setShippingCountryCode = useCallback((code: string) => {
     const next = getShippingCountry(code);
     writeShippingCountryCode(code);
     setShipping(next);
     setCountry(shippingToCountry(next));
   }, []);
+
+  useEffect(() => {
+    const code = readShippingCountryCode();
+    if (code) {
+      const next = getShippingCountry(code);
+      setShipping(next);
+      setCountry(shippingToCountry(next));
+      return;
+    }
+    if (readShippingManual()) return;
+    fetch("/api/geo")
+      .then((r) => r.json())
+      .then((data: { countryCode?: string | null }) => {
+        const geo = data.countryCode?.toUpperCase();
+        if (geo && getShippingCountry(geo)) setShippingCountryCode(geo);
+      })
+      .catch(() => {});
+  }, [setShippingCountryCode]);
+
+  useEffect(() => {
+    const onLocale = (e: Event) => {
+      if (readShippingManual()) return;
+      const locale = (e as CustomEvent<Locale>).detail;
+      const code = LOCALE_DEFAULT_COUNTRY[locale];
+      if (code) setShippingCountryCode(code);
+    };
+    window.addEventListener(LOCALE_CHANGED_EVENT, onLocale);
+    return () => window.removeEventListener(LOCALE_CHANGED_EVENT, onLocale);
+  }, [setShippingCountryCode]);
 
   const setCountryLegacy = useCallback(
     (c: Country) => {
