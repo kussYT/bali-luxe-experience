@@ -63,10 +63,19 @@ export type SpotlightProductContent = {
   ctaLabel: string;
 };
 
+export type SiteNavigationContent = {
+  newCollection: string;
+  shop: string;
+  sales: string;
+  aboutUs: string;
+  popularSearches: string[];
+};
+
 export type HomepageContent = {
   hero: HeroContent;
   photoStrip: PhotoStripContent;
   spotlightProduct: SpotlightProductContent;
+  navigation: SiteNavigationContent;
   editorial: EditorialContent;
   featuredSection: { eyebrow: string; title: string };
   lookbook: {

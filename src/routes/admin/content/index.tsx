@@ -421,6 +421,69 @@ function AdminContentPage() {
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Navigation (libellés menu)</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <CmsField
+              label="New Collection"
+              value={homepage.navigation?.newCollection ?? ""}
+              onChange={(v) =>
+                setHomepage({
+                  ...homepage,
+                  navigation: { ...(homepage.navigation ?? { popularSearches: [] }), newCollection: v },
+                })
+              }
+            />
+            <CmsField
+              label="Shop"
+              value={homepage.navigation?.shop ?? ""}
+              onChange={(v) =>
+                setHomepage({
+                  ...homepage,
+                  navigation: { ...(homepage.navigation ?? { popularSearches: [] }), shop: v },
+                })
+              }
+            />
+            <CmsField
+              label="Sales"
+              value={homepage.navigation?.sales ?? ""}
+              onChange={(v) =>
+                setHomepage({
+                  ...homepage,
+                  navigation: { ...(homepage.navigation ?? { popularSearches: [] }), sales: v },
+                })
+              }
+            />
+            <CmsField
+              label="About us"
+              value={homepage.navigation?.aboutUs ?? ""}
+              onChange={(v) =>
+                setHomepage({
+                  ...homepage,
+                  navigation: { ...(homepage.navigation ?? { popularSearches: [] }), aboutUs: v },
+                })
+              }
+            />
+            <div className="sm:col-span-2">
+              <CmsField
+                label="Recherches populaires (séparées par des virgules)"
+                value={(homepage.navigation?.popularSearches ?? []).join(", ")}
+                onChange={(v) =>
+                  setHomepage({
+                    ...homepage,
+                    navigation: {
+                      ...(homepage.navigation ?? { newCollection: "", shop: "", sales: "", aboutUs: "" }),
+                      popularSearches: v.split(",").map((s) => s.trim()).filter(Boolean),
+                    },
+                  })
+                }
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         <Button type="submit" disabled={saving}>
           {saving ? "Enregistrement…" : "Enregistrer"}
         </Button>

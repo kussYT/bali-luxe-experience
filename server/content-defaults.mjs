@@ -41,6 +41,13 @@ export const DEFAULT_HOMEPAGE = {
     image: "",
     ctaLabel: "Discover the piece",
   },
+  navigation: {
+    newCollection: "",
+    shop: "",
+    sales: "",
+    aboutUs: "",
+    popularSearches: [],
+  },
   photoStrip: {
     layout: "grid",
     tiles: [
@@ -292,6 +299,33 @@ export const DEFAULT_PAGES = [
       "Unworn pieces may be returned within 14 days of delivery. Items must be in original condition with tags attached.",
       "To start a return, contact us at info@bingindiaries.com with your order number.",
       "Refunds are processed within 5–10 business days after we receive your return.",
+    ],
+  },
+  {
+    slug: "faq",
+    title: "Frequently asked questions",
+    eyebrow: "Customer care",
+    metaDescription: "Answers to common questions about Bingin Diaries orders, sizing, and care.",
+    body: [
+      "How long does shipping take? Orders leave our atelier within 2–4 business days. Delivery is typically 3–7 days in Europe and 7–14 days internationally.",
+      "Can I return a hat? Unworn pieces may be returned within 14 days. See our return policy or email info@bingindiaries.com with your order number.",
+      "How do I choose a size? Each style fits differently — use our size guide or contact us with your head measurement and we will help.",
+      "Are your hats really hand-woven? Yes. Each piece is woven by artisans we work with directly in Bali, with finishing in France.",
+      "Still have a question? Write to info@bingindiaries.com — we reply within one business day.",
+    ],
+  },
+  {
+    slug: "terms",
+    title: "Terms & conditions",
+    eyebrow: "Legal",
+    metaDescription: "Terms and conditions for purchases on bingindiaries.com.",
+    body: [
+      "These terms apply to all orders placed on bingindiaries.com. By completing a purchase you agree to them.",
+      "Prices are shown in EUR unless another currency is selected at checkout. Payment is processed securely via Stripe.",
+      "We reserve the right to cancel an order in case of stock error, pricing mistake, or suspected fraud — you will be refunded in full.",
+      "Products remain our property until payment is received in full. Risk passes to you upon delivery to the carrier.",
+      "For returns, shipping, and privacy, see the linked policies in the footer. Questions: info@bingindiaries.com.",
+      "French law applies. Any dispute shall be submitted to the competent courts in France, subject to mandatory consumer rights in your country of residence.",
     ],
   },
   {

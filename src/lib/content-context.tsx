@@ -40,6 +40,22 @@ const FALLBACK_SITE: SiteContent = {
       linkHref: "/about",
     },
     featuredSection: { eyebrow: "Curated", title: "Pieces of the season" },
+    spotlightProduct: {
+      enabled: false,
+      productSlug: "",
+      eyebrow: "Spotlight",
+      title: "",
+      description: "",
+      image: "",
+      ctaLabel: "Discover the piece",
+    },
+    navigation: {
+      newCollection: "",
+      shop: "",
+      sales: "",
+      aboutUs: "",
+      popularSearches: [],
+    },
     photoStrip: {
       layout: "grid",
       tiles: [

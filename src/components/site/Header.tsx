@@ -9,6 +9,9 @@ import { NavMenu } from "@/components/site/NavMenu";
 import { NavSectionMegaBand } from "@/components/site/NavSectionMegaBand";
 import { NavMegaTrigger } from "@/components/site/NavMegaTrigger";
 import { SearchDrawer } from "@/components/site/SearchDrawer";
+import { LanguageSelector } from "@/components/site/LanguageSelector";
+import { useLocale } from "@/lib/i18n/locale-context";
+import { useSiteContent } from "@/lib/content-context";
 import { MarketSelector } from "@/components/site/MarketSelector";
 
 const navLink =
@@ -20,7 +23,16 @@ const iconBtn =
 export function Header() {
   const { count, setOpen } = useCart();
   const { collections, publishedProducts } = useCatalog();
-  const navMain = buildNavMain(collections, publishedProducts);
+  const { homepage } = useSiteContent();
+  const { t } = useLocale();
+  const nav = homepage.navigation;
+  const navMain = buildNavMain(collections, publishedProducts, {
+    newCollection: nav?.newCollection || t("nav.newCollection"),
+    shop: nav?.shop || t("nav.shop"),
+    sales: nav?.sales || t("nav.sales"),
+    aboutUs: nav?.aboutUs || t("nav.aboutUs"),
+    popularSearches: nav?.popularSearches,
+  });
   const [navOpen, setNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [megaMenu, setMegaMenu] = useState<MegaMenuId | null>(null);
@@ -96,13 +108,16 @@ export function Header() {
 
           <div className="flex items-center justify-end gap-1.5 sm:gap-3 md:gap-7 min-w-0">
             <div className="hidden md:block">
+              <LanguageSelector />
+            </div>
+            <div className="hidden md:block">
               <MarketSelector variant="header" />
             </div>
             <Link to="/account" className={`hidden sm:inline-block ${navLink}`}>
-              Account
+              {t("nav.account")}
             </Link>
             <Link to="/account" search={{ tab: "wishlist" } as never} className={`hidden lg:inline-block ${navLink}`}>
-              Wishlist
+              {t("nav.wishlist")}
             </Link>
             <button
               type="button"
@@ -112,7 +127,7 @@ export function Header() {
               }}
               className={`${navLink} hidden md:inline-block`}
             >
-              Search
+              {t("nav.search")}
             </button>
             <button
               type="button"
@@ -133,7 +148,7 @@ export function Header() {
               }}
               className={`relative hidden md:inline-block ${navLink}`}
             >
-              Bag
+              {t("nav.bag")}
               {count > 0 && (
                 <span className="absolute -top-1 -right-2.5 min-w-[1rem] h-4 px-1 flex items-center justify-center bg-accent text-surface text-[8px] tracking-[0.15em] rounded-sm">
                   {count}

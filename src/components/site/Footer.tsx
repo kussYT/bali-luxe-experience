@@ -66,7 +66,7 @@ export function Footer() {
             <FooterLink to="/contact">Contact us</FooterLink>
             <FooterLink to="/sizing">Size guide</FooterLink>
             <FooterLink to="/care">Care guide</FooterLink>
-            <FooterLink to="/contact">FAQ</FooterLink>
+            <FooterLink to="/faq">FAQ</FooterLink>
             <FooterLink to="/shipping">Shipping</FooterLink>
             <FooterLink to="/returns">Return policy</FooterLink>
           </FooterColumn>
@@ -84,7 +84,7 @@ export function Footer() {
             <div>
               <CookiePreferencesLink />
             </div>
-            <FooterLink to="/contact">Terms &amp; conditions</FooterLink>
+            <FooterLink to="/terms">Terms &amp; conditions</FooterLink>
             <FooterLink to="/about" hash="artisans">
               Artisans &amp; ethics
             </FooterLink>

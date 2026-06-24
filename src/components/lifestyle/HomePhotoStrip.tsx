@@ -2,14 +2,16 @@ import { Link } from "@tanstack/react-router";
 import { useSiteContent } from "@/lib/content-context";
 import type { HomePhotoTile } from "@/lib/content-types";
 
-/** Portrait strip — equal columns, full bleed, hero-scale height. */
+/** Portrait strip — stacked on mobile, equal columns on md+. */
+const TILE_HEIGHT_MOBILE = "min-h-[72vh] sm:min-h-[80vh]";
 const STRIP_HEIGHT =
   "min-h-[72vh] sm:min-h-[80vh] md:min-h-[92vh] lg:min-h-[96vh]";
 
 function TileLink({ tile }: { tile: HomePhotoTile }) {
   const inner = (
-    <div className={`group relative overflow-hidden bg-neutral-100 h-full ${STRIP_HEIGHT}`}>
-      <img
+    <div
+      className={`group relative overflow-hidden bg-neutral-100 ${TILE_HEIGHT_MOBILE} md:min-h-0 md:h-full`}
+    >      <img
         src={tile.image}
         alt={tile.label}
         loading="lazy"
@@ -24,18 +26,17 @@ function TileLink({ tile }: { tile: HomePhotoTile }) {
 
   if (tile.href.startsWith("http")) {
     return (
-      <a href={tile.href} className="block h-full min-w-0">
+      <a href={tile.href} className="block min-w-0 md:h-full">
         {inner}
       </a>
     );
   }
 
   return (
-    <Link to={tile.href} search={tile.search as never} className="block h-full min-w-0">
+    <Link to={tile.href} search={tile.search as never} className="block min-w-0 md:h-full">
       {inner}
     </Link>
-  );
-}
+  );}
 
 export function HomePhotoStrip() {
   const { homepage } = useSiteContent();
@@ -78,11 +79,10 @@ export function HomePhotoStrip() {
   return (
     <section className="w-full bg-white">
       <div
-        className={`grid gap-0 ${STRIP_HEIGHT} ${
-          tileCount === 2 ? "grid-cols-2" : "grid-cols-3"
+        className={`grid gap-0 grid-cols-1 md:min-h-[92vh] lg:min-h-[96vh] ${
+          tileCount === 2 ? "md:grid-cols-2" : "md:grid-cols-3"
         }`}
-      >
-        {strip.tiles.map((tile) => (
+      >        {strip.tiles.map((tile) => (
           <TileLink key={tile.label} tile={tile} />
         ))}
       </div>

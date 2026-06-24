@@ -49,6 +49,7 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
       p.featured,
       p.origin,
       p.default_warehouse,
+      p.video_url,
       c.slug AS collection_slug,
       c.name AS collection_name
     FROM products p
@@ -81,6 +82,14 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
     `SELECT product_id, url, position FROM product_images
      WHERE product_id = ANY($1::uuid[])
      ORDER BY position ASC`,
+    [productIds],
+  );
+
+  const { rows: membershipRows } = await query(
+    `SELECT pcm.product_id, c.slug
+     FROM product_collection_memberships pcm
+     JOIN collections c ON c.id = pcm.collection_id
+     WHERE pcm.product_id = ANY($1::uuid[])`,
     [productIds],
   );
 
@@ -122,6 +131,14 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
     imagesByProduct.get(img.product_id).push(img.url);
   }
 
+  const extraCollectionsByProduct = new Map();
+  for (const row of membershipRows) {
+    if (!extraCollectionsByProduct.has(row.product_id)) {
+      extraCollectionsByProduct.set(row.product_id, []);
+    }
+    extraCollectionsByProduct.get(row.product_id).push(row.slug);
+  }
+
   const inventoryByVariant = new Map();
   for (const inv of inventoryRows) {
     if (!inventoryByVariant.has(inv.variant_id)) {
@@ -160,6 +177,9 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
     const stock = stockFrance + stockBali;
     const onSale = p.compare_at_eur != null && p.compare_at_eur < p.price_eur;
     const available = stock > 0 && p.status === "published";
+    const extraSlugs = extraCollectionsByProduct.get(p.id) ?? [];
+    const primarySlug = p.collection_slug || "shop";
+    const allSlugs = [...new Set([primarySlug, ...extraSlugs])];
 
     return {
       id: p.id,
@@ -167,7 +187,8 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
       name: p.name,
       story: p.story,
       collection: p.collection_name || "Shop",
-      collectionSlug: p.collection_slug || "shop",
+      collectionSlug: primarySlug,
+      collectionSlugs: allSlugs.length > 1 ? allSlugs : extraSlugs.length ? extraSlugs : undefined,
       subcategory: p.subcategory,
       category: p.category,
       productType: p.product_type,
@@ -177,6 +198,7 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
       priceIDR: p.price_idr,
       image: images[0] || "/shopify-import/placeholder.jpg",
       images,
+      videoUrl: p.video_url || undefined,
       details: p.product_type ? [p.product_type] : [],
       tags: [],
       stock,

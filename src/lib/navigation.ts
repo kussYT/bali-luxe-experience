@@ -135,7 +135,7 @@ export const NAV_ABOUT_COLUMNS: NavColumn[] = [
       { label: "Contact us", to: "/contact" },
       { label: "Size guide", to: "/sizing" },
       { label: "Care guide", to: "/care" },
-      { label: "FAQ", to: "/contact" },
+      { label: "FAQ", to: "/faq" },
       { label: "Shipping", to: "/shipping" },
       { label: "Return policy", to: "/returns" },
     ],
@@ -153,7 +153,7 @@ export const NAV_ABOUT_COLUMNS: NavColumn[] = [
     items: [
       { label: "Artisans & ethics", to: "/about", hash: "artisans" },
       { label: "Materials & quality", to: "/about", hash: "quality" },
-      { label: "Terms & conditions", to: "/contact" },
+      { label: "Terms & conditions", to: "/terms" },
     ],
   },
 ];
@@ -248,13 +248,25 @@ export function getMegaMenuContent(
   }
 }
 
-export function buildNavMain(collections: Collection[], products: Product[]) {
+export function buildNavMain(
+  collections: Collection[],
+  products: Product[],
+  labels?: Partial<SiteNavigationContent>,
+) {
   return [
-    { label: "New Collection", mega: "new-collection" as const, items: NAV_NEW_COLLECTION },
-    { label: "Shop", mega: "shop" as const, items: buildNavShop(collections) },
-    { label: "Sales", mega: "sales" as const, items: buildNavSales(products) },
-    { label: "About us", mega: "about" as const, items: NAV_ABOUT },
+    { label: labels?.newCollection || "New Collection", mega: "new-collection" as const, items: NAV_NEW_COLLECTION },
+    { label: labels?.shop || "Shop", mega: "shop" as const, items: buildNavShop(collections) },
+    { label: labels?.sales || "Sales", mega: "sales" as const, items: buildNavSales(products) },
+    { label: labels?.aboutUs || "About us", mega: "about" as const, items: NAV_ABOUT },
   ] as const;
 }
+
+export type SiteNavigationContent = {
+  newCollection: string;
+  shop: string;
+  sales: string;
+  aboutUs: string;
+  popularSearches: string[];
+};
 
 export type NavMainSection = ReturnType<typeof buildNavMain>[number];

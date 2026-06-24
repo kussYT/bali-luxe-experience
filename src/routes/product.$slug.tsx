@@ -65,24 +65,48 @@ function ProductPage() {
     : publishedProducts.filter((p) => p.slug !== product.slug).slice(0, 3);
 
   const gallery = product.images.length > 0 ? product.images : [product.image];
+  const showVideo = Boolean(product.videoUrl);
+  const isVideoActive = showVideo && activeImage === 0;
+  const imageIndex = showVideo ? activeImage - 1 : activeImage;
 
   return (
     <>
       <section className="grid md:grid-cols-[1.1fr_0.9fr] min-h-[calc(100vh-4.25rem)] md:min-h-[calc(100vh-5.25rem)]">
         <div className="bg-secondary md:sticky md:top-[5.25rem] md:self-start md:max-h-[calc(100vh-5.25rem)] overflow-hidden">
-          <img
-            src={gallery[activeImage]}
-            alt={product.name}
-            className="w-full h-full object-cover aspect-[4/5] md:aspect-auto md:min-h-[calc(100vh-5.25rem)] image-editorial animate-fade-in"
-          />
-          {gallery.length > 1 && (
+          {isVideoActive ? (
+            <video
+              src={product.videoUrl}
+              className="w-full h-full object-cover aspect-[4/5] md:aspect-auto md:min-h-[calc(100vh-5.25rem)]"
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster={gallery[0]}
+            />
+          ) : (
+            <img
+              src={gallery[Math.max(0, imageIndex)] ?? gallery[0]}
+              alt={product.name}
+              className="w-full h-full object-cover aspect-[4/5] md:aspect-auto md:min-h-[calc(100vh-5.25rem)] image-editorial animate-fade-in"
+            />
+          )}
+          {(gallery.length > 1 || showVideo) && (
             <div className="flex gap-2 p-4 overflow-x-auto border-t border-border bg-surface/90">
+              {showVideo && (
+                <button
+                  type="button"
+                  onClick={() => setActiveImage(0)}
+                  className={`shrink-0 size-14 overflow-hidden rounded-sm border transition-colors duration-300 flex items-center justify-center text-[0.6rem] uppercase tracking-wider ${activeImage === 0 ? "border-foreground" : "border-transparent opacity-60 hover:opacity-100"}`}
+                >
+                  Video
+                </button>
+              )}
               {gallery.map((src, i) => (
                 <button
                   key={src}
                   type="button"
-                  onClick={() => setActiveImage(i)}
-                  className={`shrink-0 size-14 overflow-hidden rounded-sm border transition-colors duration-300 ${activeImage === i ? "border-foreground" : "border-transparent opacity-60 hover:opacity-100"}`}
+                  onClick={() => setActiveImage(showVideo ? i + 1 : i)}
+                  className={`shrink-0 size-14 overflow-hidden rounded-sm border transition-colors duration-300 ${activeImage === (showVideo ? i + 1 : i) ? "border-foreground" : "border-transparent opacity-60 hover:opacity-100"}`}
                 >
                   <img src={src} alt="" className="size-full object-cover image-editorial" />
                 </button>
