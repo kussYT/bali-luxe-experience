@@ -104,6 +104,9 @@ function AdminDashboard() {
             <Link to="/admin/orders" className="link-underline w-fit">
               View orders &amp; marketplace
             </Link>
+            <Link to="/admin/customers" className="link-underline w-fit">
+              Customer wishlists
+            </Link>
             <Link to="/admin/newsletter" className="link-underline w-fit">
               Newsletter settings
             </Link>

@@ -1,7 +1,8 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Product } from "@/lib/catalog-types";
 import { useCatalog } from "@/lib/catalog-context";
 import { useCurrency } from "@/lib/currency";
+import { useAccount } from "@/lib/account-context";
 import { maxCartQty } from "@/lib/warehouse-allocation";
 import {
   type CartItem,
@@ -63,9 +64,30 @@ function sameLine(a: CartItem, slug: string, variantId?: string) {
 export function CartProvider({ children }: { children: ReactNode }) {
   const { products } = useCatalog();
   const { shipping } = useCurrency();
+  const { email, wishlist: accountWishlist, loading: accountLoading, syncWishlist } = useAccount();
   const [items, setItems] = useState<CartItem[]>(readStoredCart);
   const [wishlist, setWishlist] = useState<string[]>(readStoredWishlist);
   const [open, setOpen] = useState(false);
+  const mergedForEmail = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (accountLoading || !email) {
+      mergedForEmail.current = null;
+      return;
+    }
+    if (mergedForEmail.current === email) return;
+    mergedForEmail.current = email;
+
+    setWishlist((local) => {
+      const merged = [...new Set([...accountWishlist, ...local])];
+      const needsSync =
+        merged.length !== accountWishlist.length || merged.some((slug) => !accountWishlist.includes(slug));
+      if (needsSync) {
+        void syncWishlist(merged).catch(() => {});
+      }
+      return merged;
+    });
+  }, [email, accountLoading, accountWishlist, syncWishlist]);
 
   useEffect(() => {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
@@ -115,8 +137,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clear = () => setItems([]);
 
-  const toggleWish = (slug: string) =>
-    setWishlist((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
+  const toggleWish = (slug: string) => {
+    setWishlist((prev) => {
+      const next = prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug];
+      if (email) {
+        void syncWishlist(next).catch(() => {});
+      }
+      return next;
+    });
+  };
 
   const resolved = items
     .map((i) => {

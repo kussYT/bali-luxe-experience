@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog-context";
@@ -31,29 +31,33 @@ export const Route = createFileRoute("/account")({
 
 function Account() {
   const { tab: tabFromUrl, verify } = Route.useSearch();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<"login" | "wishlist" | "orders">(tabFromUrl ?? "login");
   const [emailInput, setEmailInput] = useState("");
   const [devLink, setDevLink] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const { wishlist: localWishlist } = useCart();
+  const verifyStarted = useRef(false);
+  const { wishlist } = useCart();
   const { publishedProducts } = useCatalog();
-  const { email, wishlist: accountWishlist, orders, loading, requestLink, verify: verifyAccount, logout, syncWishlist } =
-    useAccount();
+  const { email, orders, loading, requestLink, verify: verifyAccount, logout } = useAccount();
   const { t } = useLocale();
 
-  const activeWishlist = email ? accountWishlist : localWishlist;
-  const wished = publishedProducts.filter((p) => activeWishlist.includes(p.slug));
+  const wished = publishedProducts.filter((p) => wishlist.includes(p.slug));
 
   useEffect(() => {
     if (tabFromUrl) setTab(tabFromUrl);
   }, [tabFromUrl]);
 
   useEffect(() => {
-    if (!verify) return;
+    if (!verify || verifyStarted.current) return;
+    verifyStarted.current = true;
     verifyAccount(verify)
-      .then(() => toast.success(t("account.linkSent")))
+      .then(() => {
+        toast.success(t("account.signedIn"));
+        navigate({ to: "/account", search: { tab: "login" }, replace: true });
+      })
       .catch((e) => toast.error(e instanceof Error ? e.message : "Invalid link"));
-  }, [verify, verifyAccount, t]);
+  }, [verify, verifyAccount, navigate, t]);
 
   async function handleRequestLink(e: React.FormEvent) {
     e.preventDefault();
@@ -71,12 +75,12 @@ function Account() {
   }
 
   async function handleShareWishlist() {
-    if (!activeWishlist.length) return;
+    if (!wishlist.length) return;
     try {
       const res = await fetch("/api/wishlist/share", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slugs: activeWishlist }),
+        body: JSON.stringify({ slugs: wishlist }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Share failed");
@@ -117,7 +121,7 @@ function Account() {
       <div className="mt-12">
         {tab === "login" && !email && (
           <div className="grid md:grid-cols-2 gap-12 max-w-3xl">
-            <form className="space-y-5" onSubmit={handleRequestLink}>
+            <form id="account-email-form" className="space-y-5" onSubmit={handleRequestLink}>
               <h2 className="font-display text-2xl">{t("account.login")}</h2>
               <input
                 type="email"
@@ -142,12 +146,34 @@ function Account() {
             <div className="md:border-l md:border-border md:pl-12 pt-8 md:pt-0 border-t md:border-t-0 border-border">
               <h2 className="font-display text-2xl">{t("account.newHere")}</h2>
               <p className="text-muted-foreground mt-3 text-sm leading-relaxed">{t("account.newHereBody")}</p>
+              <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{t("account.newHereHint")}</p>
+              <button
+                type="submit"
+                form="account-email-form"
+                disabled={submitting || !emailInput.trim()}
+                className="mt-6 border border-ink px-8 py-3.5 text-eyebrow w-full disabled:opacity-50"
+              >
+                {submitting ? "…" : t("account.createAccount")}
+              </button>
             </div>
           </div>
         )}
 
         {tab === "login" && email && (
-          <p className="text-muted-foreground">{t("account.linkSent")}</p>
+          <div className="max-w-xl">
+            <p className="text-muted-foreground">{t("account.signedInWelcome")}</p>
+            <div className="mt-8 flex flex-wrap gap-6">
+              <Link to="/collection" className="text-eyebrow link-underline">
+                {t("account.browse")}
+              </Link>
+              <Link to="/account" search={{ tab: "wishlist" }} className="text-eyebrow link-underline">
+                {t("account.wishlist")}
+              </Link>
+              <Link to="/account" search={{ tab: "orders" }} className="text-eyebrow link-underline">
+                {t("account.orders")}
+              </Link>
+            </div>
+          </div>
         )}
 
         {tab === "wishlist" && (

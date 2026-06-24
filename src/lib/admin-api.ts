@@ -395,3 +395,25 @@ export type AdminCmsStatus = {
 export async function fetchAdminCmsStatus() {
   return request<AdminCmsStatus>("/api/admin/cms/status");
 }
+
+export type AdminCustomer = {
+  id: string;
+  email: string;
+  wishlist: string[];
+  createdAt: string;
+  updatedAt: string;
+  orderCount: number;
+};
+
+export async function fetchAdminCustomers(wishlistOnly = false) {
+  const qs = wishlistOnly ? "?wishlist=1" : "";
+  return request<{
+    customers: AdminCustomer[];
+    stats: { total: number; withWishlist: number; totalWishlistItems: number };
+    source: string;
+  }>(`/api/admin/customers${qs}`);
+}
+
+export function adminCustomersExportUrl(wishlistOnly = false) {
+  return wishlistOnly ? "/api/admin/customers/export.csv?wishlist=1" : "/api/admin/customers/export.csv";
+}

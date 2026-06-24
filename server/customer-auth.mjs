@@ -172,3 +172,54 @@ export function requireCustomerSession(req) {
   }
   return data;
 }
+
+export async function listCustomers({ wishlistOnly = false } = {}) {
+  if (!isDatabaseConfigured()) return [];
+
+  let sql = `
+    SELECT c.id, c.email, c.wishlist, c.created_at, c.updated_at,
+      COALESCE((
+        SELECT COUNT(*)::int FROM orders o
+        WHERE LOWER(o.customer_email) = LOWER(c.email) AND o.status = 'paid'
+      ), 0) AS order_count
+    FROM customers c
+  `;
+  if (wishlistOnly) {
+    sql += ` WHERE jsonb_array_length(c.wishlist) > 0`;
+  }
+  sql += ` ORDER BY c.updated_at DESC LIMIT 1000`;
+
+  const { rows } = await query(sql);
+  return rows.map((row) => ({
+    id: row.id,
+    email: row.email,
+    wishlist: Array.isArray(row.wishlist) ? row.wishlist : [],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    orderCount: row.order_count,
+  }));
+}
+
+function csvCell(value) {
+  const text = value == null ? "" : String(value);
+  if (/[",\n\r]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
+  return text;
+}
+
+export async function exportCustomersCsv({ wishlistOnly = false } = {}) {
+  const customers = await listCustomers({ wishlistOnly });
+  const lines = ["email,wishlist_slugs,wishlist_count,paid_orders,created_at,updated_at"];
+  for (const customer of customers) {
+    lines.push(
+      [
+        csvCell(customer.email),
+        csvCell(customer.wishlist.join(";")),
+        csvCell(customer.wishlist.length),
+        csvCell(customer.orderCount),
+        csvCell(customer.createdAt),
+        csvCell(customer.updatedAt),
+      ].join(","),
+    );
+  }
+  return lines.join("\n");
+}

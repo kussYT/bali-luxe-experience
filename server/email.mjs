@@ -19,8 +19,14 @@ export function formatMoneyEmail(amount, currency) {
   return `€${value.toFixed(2)}`;
 }
 
+/** Public site origin only — ignores any path suffix on SITE_URL (e.g. `/admin`). */
 export function siteUrl() {
-  return (process.env.SITE_URL || "http://localhost:8080").replace(/\/$/, "");
+  const raw = (process.env.SITE_URL || "http://localhost:8080").trim();
+  try {
+    return new URL(raw).origin;
+  } catch {
+    return raw.replace(/\/$/, "");
+  }
 }
 
 export { opsInbox };
