@@ -58,7 +58,7 @@ export async function getAdminPagesResponse() {
 }
 
 export async function getAdminPageResponse(slug) {
-  const page = await getPageBySlug(slug, { includeDraft: true });
+  const page = await getPageBySlug(slug, { includeDraft: true, includeLocales: true });
   if (!page) {
     const err = new Error("Page not found");
     err.status = 404;

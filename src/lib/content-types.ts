@@ -192,6 +192,13 @@ export type JournalPost = {
   status?: string;
 };
 
+export type CmsPageLocaleFields = {
+  title: string;
+  eyebrow: string;
+  metaDescription: string;
+  body: string[];
+};
+
 export type CmsPage = {
   slug: string;
   title: string;
@@ -199,6 +206,8 @@ export type CmsPage = {
   metaDescription: string;
   body: string[];
   status?: string;
+  /** All translations — present in admin API responses */
+  locales?: Partial<Record<import("@/lib/i18n/messages").Locale, CmsPageLocaleFields>>;
 };
 
 export type AdminCollectionMeta = {

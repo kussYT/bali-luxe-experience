@@ -124,7 +124,7 @@ type ContentContextValue = {
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
-  fetchPage: (slug: string) => Promise<CmsPage | null>;
+  fetchPage: (slug: string, locale?: string) => Promise<CmsPage | null>;
 };
 
 const ContentContext = createContext<ContentContextValue | null>(null);
@@ -175,11 +175,15 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     refresh();
   }, [refresh]);
 
-  const fetchPage = useCallback(async (slug: string) => {
-    if (pageCacheRef.current[slug]) return pageCacheRef.current[slug];
+  const fetchPage = useCallback(async (slug: string, locale = "en") => {
+    const cacheKey = `${slug}:${locale}`;
+    if (pageCacheRef.current[cacheKey]) return pageCacheRef.current[cacheKey];
     try {
-      const res = await fetchJson<{ page: CmsPage }>(`/api/content/pages/${encodeURIComponent(slug)}`);
-      pageCacheRef.current[slug] = res.page;
+      const qs = locale ? `?locale=${encodeURIComponent(locale)}` : "";
+      const res = await fetchJson<{ page: CmsPage }>(
+        `/api/content/pages/${encodeURIComponent(slug)}${qs}`,
+      );
+      pageCacheRef.current[cacheKey] = res.page;
       return res.page;
     } catch {
       return null;

@@ -1,9 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 import { InfoPage } from "@/components/site/InfoPage";
-import { useSiteContent } from "@/lib/content-context";
-import { BRAND_CONTENT } from "@/data/brand-content";
+import { useCmsPage } from "@/lib/use-cms-page";
 import type { CmsPage } from "@/lib/content-types";
+import { BRAND_CONTENT } from "@/data/brand-content";
 
 const FALLBACK: CmsPage = {
   slug: "shipping",
@@ -19,14 +18,7 @@ export const Route = createFileRoute("/shipping")({
 });
 
 function ShippingPage() {
-  const { fetchPage } = useSiteContent();
-  const [page, setPage] = useState<CmsPage>(FALLBACK);
-
-  useEffect(() => {
-    fetchPage("shipping").then((p) => {
-      if (p) setPage(p);
-    });
-  }, [fetchPage]);
+  const page = useCmsPage("shipping", FALLBACK);
 
   return (
     <InfoPage eyebrow={page.eyebrow} title={page.title}>

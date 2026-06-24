@@ -29,7 +29,9 @@
     "stripe:webhook:live": "stripe listen --live --forward-to localhost:8080/api/stripe/webhook",
     "preview:cf": "npm run build && wrangler dev",
     "deploy": "npm run build && wrangler deploy",
-    "deploy:secrets": "node scripts/print-wrangler-secrets.mjs"
+    "deploy:secrets": "node scripts/print-wrangler-secrets.mjs",
+    "test:staging": "node scripts/test-staging-admin.mjs",
+    "test:db": "npm run db:validate-s1"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",
@@ -69,6 +71,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "country-flag-icons": "^1.6.19",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",

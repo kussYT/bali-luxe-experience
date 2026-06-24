@@ -76,18 +76,93 @@ async function api(path, init = {}) {
 async function main() {
   console.log(`\nStaging smoke test → ${BASE}\n`);
 
-  const publicPages = ["/", "/collection", "/about", "/find-us", "/contact", "/admin/login"];
+  const publicPages = ["/", "/collection", "/about", "/find-us", "/contact", "/account", "/faq", "/terms", "/admin/login"];
   for (const path of publicPages) {
     const res = await fetch(`${BASE}${path}`);
     if (res.ok) pass(`Public ${path}`, String(res.status));
     else fail(`Public ${path}`, String(res.status));
   }
 
-  for (const path of ["/api/catalog", "/api/content/site", "/api/instagram"]) {
+  for (const path of ["/api/catalog", "/api/content/site", "/api/instagram", "/api/newsletter/copy"]) {
     const { res, json } = await api(path);
     if (res.ok) pass(`API GET ${path}`, typeof json === "object" ? "json ok" : "ok");
     else fail(`API GET ${path}`, String(res.status));
   }
+
+  // Customer account APIs must work without admin session
+  const savedAdminCookie = cookie;
+  cookie = "";
+  const testEmail = `smoke-${Date.now()}@bingindiaries.test`;
+  const linkReq = await api("/api/account/request-link", {
+    method: "POST",
+    body: JSON.stringify({ email: testEmail }),
+  });
+  if (linkReq.res.ok && linkReq.json?.ok) {
+    pass("Account request-link (public)", linkReq.json.devLink ? "devLink returned" : "email queued");
+  } else {
+    fail("Account request-link (public)", linkReq.json?.error || String(linkReq.res.status));
+  }
+
+  let verifyToken = "";
+  if (typeof linkReq.json?.devLink === "string") {
+    try {
+      verifyToken = new URL(linkReq.json.devLink).searchParams.get("verify") || "";
+    } catch {
+      verifyToken = "";
+    }
+  }
+
+  if (verifyToken) {
+    const verify = await api(`/api/account/verify?token=${encodeURIComponent(verifyToken)}`);
+    if (verify.res.ok && verify.json?.customer?.email === testEmail) {
+      pass("Account verify + session cookie", testEmail);
+    } else {
+      fail("Account verify + session cookie", verify.json?.error || String(verify.res.status));
+    }
+
+    const meAccount = await api("/api/account/me");
+    if (meAccount.res.ok && meAccount.json?.customer?.email === testEmail) {
+      pass("Account /me with session");
+    } else {
+      fail("Account /me with session", meAccount.json?.error || String(meAccount.res.status));
+    }
+
+    const catalog = await api("/api/catalog");
+    const sampleSlug = catalog.json?.products?.find((p) => p.status === "published")?.slug;
+    if (sampleSlug) {
+      const wishPatch = await api("/api/account/wishlist", {
+        method: "POST",
+        body: JSON.stringify({ slugs: [sampleSlug] }),
+      });
+      if (wishPatch.res.ok && wishPatch.json?.wishlist?.includes(sampleSlug)) {
+        pass("Account wishlist sync", sampleSlug);
+      } else {
+        fail("Account wishlist sync", wishPatch.json?.error || "missing slug in response");
+      }
+    } else {
+      fail("Account wishlist sync", "no published product slug in catalog");
+    }
+
+    const share = await api("/api/wishlist/share", {
+      method: "POST",
+      body: JSON.stringify({ slugs: sampleSlug ? [sampleSlug] : ["test-slug"] }),
+    });
+    if (share.res.ok && share.json?.token) {
+      pass("Wishlist share link", share.json.token.slice(0, 8));
+      const shared = await api(`/api/wishlist/share/${encodeURIComponent(share.json.token)}`);
+      if (shared.res.ok && Array.isArray(shared.json?.slugs)) pass("Wishlist share read");
+      else fail("Wishlist share read", String(shared.res.status));
+    } else {
+      fail("Wishlist share link", share.json?.error || String(share.res.status));
+    }
+
+    await api("/api/account/logout", { method: "POST" });
+    pass("Account logout");
+  } else if (linkReq.res.ok) {
+    fail("Account verify flow", "no devLink token (Resend configured?) — skipped verify/wishlist tests");
+  }
+
+  cookie = savedAdminCookie;
 
   const adminPages = [
     "/admin",
@@ -101,6 +176,7 @@ async function main() {
     "/admin/pages",
     "/admin/collections",
     "/admin/newsletter",
+    "/admin/customers",
   ];
   for (const path of adminPages) {
     const res = await fetch(`${BASE}${path}`);
@@ -138,11 +214,31 @@ async function main() {
     "/api/admin/content/posts",
     "/api/admin/content/pages",
     "/api/admin/collections",
+    "/api/admin/customers",
+    "/api/admin/analytics",
+    "/api/admin/newsletter",
   ];
   for (const path of adminApis) {
     const { res } = await api(path);
     if (res.ok) pass(`Admin API ${path}`);
     else fail(`Admin API ${path}`, String(res.status));
+  }
+
+  for (const [path, needle] of [
+    ["/api/admin/customers/export.csv", "email"],
+    ["/api/admin/customers/export-brevo.csv", "EMAIL"],
+  ]) {
+    const { res, json } = await api(path);
+    const body = typeof json === "string" ? json : "";
+    if (res.ok && body.includes(needle)) pass(`Admin export ${path}`);
+    else fail(`Admin export ${path}`, String(res.status));
+  }
+
+  const customers = await api("/api/admin/customers?wishlist=1");
+  if (customers.res.ok && Array.isArray(customers.json?.customers)) {
+    pass("Admin customers wishlist filter", `${customers.json.customers.length} rows`);
+  } else {
+    fail("Admin customers wishlist filter", String(customers.res.status));
   }
 
   const siteBefore = await api("/api/admin/content/site");

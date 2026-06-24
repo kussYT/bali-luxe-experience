@@ -9,10 +9,8 @@ import { NavMenu } from "@/components/site/NavMenu";
 import { NavSectionMegaBand } from "@/components/site/NavSectionMegaBand";
 import { NavMegaTrigger } from "@/components/site/NavMegaTrigger";
 import { SearchDrawer } from "@/components/site/SearchDrawer";
-import { LanguageSelector } from "@/components/site/LanguageSelector";
 import { useLocale } from "@/lib/i18n/locale-context";
 import { useSiteContent } from "@/lib/content-context";
-import { MarketSelector } from "@/components/site/MarketSelector";
 
 const navLink =
   "text-[0.6875rem] font-medium tracking-[0.22em] uppercase py-2 link-underline text-foreground/80 hover:text-foreground transition-colors duration-[450ms]";
@@ -108,12 +106,6 @@ export function Header() {
           <BrandLogo variant="header" className="px-0.5 sm:px-1 max-w-[min(100%,11rem)] sm:max-w-none" />
 
           <div className="flex items-center justify-end gap-1.5 sm:gap-3 md:gap-7 min-w-0">
-            <div className="hidden md:block">
-              <LanguageSelector />
-            </div>
-            <div className="hidden md:block">
-              <MarketSelector variant="header" />
-            </div>
             <Link to="/account" className={`hidden sm:inline-block ${navLink}`}>
               {t("nav.account")}
             </Link>

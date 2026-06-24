@@ -25,6 +25,7 @@ import { CartDrawer } from "@/components/site/CartDrawer";
 import { AmbientSoundProvider } from "@/lib/ambient-sound-context";
 
 import { AmbientSoundToggle } from "@/components/site/AmbientSoundToggle";
+import { SitePreferencesDock } from "@/components/site/SitePreferencesDock";
 
 import { BinginSounds } from "@/components/lifestyle/BinginSounds";
 
@@ -199,6 +200,7 @@ function RootComponent() {
               {!isAdmin && <CartDrawer />}
 
               {!isAdmin && <AmbientSoundToggle />}
+              {!isAdmin && <SitePreferencesDock />}
 
               {!isAdmin && <CookieConsent />}
 

@@ -4,7 +4,6 @@ import type { NavColumn, NavFeaturedImage } from "@/lib/navigation";
 import { getMegaMenuContent, type MegaMenuId } from "@/lib/navigation";
 import { useCatalog } from "@/lib/catalog-context";
 import { BrandLogo } from "@/components/site/BrandLogo";
-import { MarketSelector } from "@/components/site/MarketSelector";
 
 type NavSection = {
   label: string;
@@ -105,11 +104,6 @@ export function NavMenu({ open, onClose, sections }: NavMenuProps) {
         </div>
 
         <nav className="p-6 space-y-10">
-          <div className="space-y-3 pb-6 border-b border-border">
-            <p className="text-eyebrow text-muted-foreground">Ship to</p>
-            <MarketSelector variant="nav" />
-          </div>
-
           {sections.map((section) => {
             const { columns, featured } = getMegaMenuContent(
               section.mega,

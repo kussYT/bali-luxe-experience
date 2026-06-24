@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { fetchAdminPages } from "@/lib/admin-api";
+import { CMS_LOCALES } from "@/lib/i18n/cms-locales";
 import type { CmsPage } from "@/lib/content-types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +26,9 @@ function AdminPagesListPage() {
       <div>
         <p className="text-eyebrow text-muted-foreground">CMS</p>
         <h2 className="font-display text-4xl mt-2">Pages info</h2>
-        <p className="text-sm text-muted-foreground mt-2">Shipping, returns, FAQ, terms — editable in admin.</p>
+        <p className="text-sm text-muted-foreground mt-2">
+          Shipping, returns, FAQ, terms — une URL par page, contenu par langue (FR · EN · ID · ES).
+        </p>
       </div>
 
       {error && <p className="text-destructive text-sm">{error}</p>}
@@ -45,6 +48,23 @@ function AdminPagesListPage() {
               <div>
                 <p className="font-medium">{page.title}</p>
                 <p className="text-sm text-muted-foreground">/{page.slug} · {page.status || "published"}</p>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {CMS_LOCALES.map(({ code }) => {
+                    const filled = Boolean(page.locales?.[code]?.title?.trim());
+                    return (
+                      <span
+                        key={code}
+                        className={`text-[0.6rem] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border ${
+                          filled
+                            ? "border-foreground/30 text-foreground"
+                            : "border-border text-muted-foreground"
+                        }`}
+                      >
+                        {code}
+                      </span>
+                    );
+                  })}
+                </div>
               </div>
               <Button variant="outline" size="sm" asChild>
                 <Link to="/admin/pages/$slug" params={{ slug: page.slug }}>
