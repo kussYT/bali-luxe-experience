@@ -80,6 +80,7 @@ import {
 import {
   getAdminCustomersResponse,
   getAdminCustomersExportCsv,
+  getAdminCustomersExportBrevoCsv,
 } from "./api/customers-admin.mjs";
 
 function jsonResponse(status, body, extraHeaders = {}) {
@@ -530,6 +531,17 @@ export async function handleApiRequest(request, context = {}) {
         headers: {
           "Content-Type": "text/csv; charset=utf-8",
           "Content-Disposition": 'attachment; filename="bingin-customers-wishlists.csv"',
+        },
+      });
+    }
+
+    if (pathname === "/api/admin/customers/export-brevo.csv" && method === "GET") {
+      const csv = await getAdminCustomersExportBrevoCsv(request);
+      return new Response(csv, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": 'attachment; filename="bingin-customers-brevo.csv"',
         },
       });
     }

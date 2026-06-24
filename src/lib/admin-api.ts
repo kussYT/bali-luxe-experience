@@ -417,3 +417,9 @@ export async function fetchAdminCustomers(wishlistOnly = false) {
 export function adminCustomersExportUrl(wishlistOnly = false) {
   return wishlistOnly ? "/api/admin/customers/export.csv?wishlist=1" : "/api/admin/customers/export.csv";
 }
+
+export function adminCustomersBrevoExportUrl(wishlistOnly = false) {
+  return wishlistOnly
+    ? "/api/admin/customers/export-brevo.csv?wishlist=1"
+    : "/api/admin/customers/export-brevo.csv";
+}

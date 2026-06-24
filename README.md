@@ -22,6 +22,7 @@ E-commerce storefront and proprietary back office — full replacement of the Sh
 | Premium white design + homepage CMS | ✅ |
 | About / Find us CMS + media upload | ✅ |
 | Deploy Cloudflare Workers (staging) | ✅ |
+| Customer accounts + wishlist admin | ✅ |
 | DNS `bingindiaries.com` (go-live) | ⏳ |
 
 ---

@@ -101,7 +101,7 @@
 | Shared `server/api-router.mjs` (dev + prod) | ✅ |
 | `npm run deploy` / `preview:cf` | ✅ |
 | R2 uploads (optional binding) | ✅ |
-| Staging on `*.workers.dev` | ⏳ manual |
+| Staging on `*.workers.dev` | ✅ |
 | DNS `bingindiaries.com` | ⏳ manual (go-live only) |
 | Stripe production webhook | ⏳ manual |
 | SEO 301 Shopify → new site | ⏳ manual |
@@ -130,11 +130,18 @@
 
 ---
 
-## S6 — Customer accounts (optional)
+## S6 — Customer accounts ✅
 
-- Email auth
-- Order history
-- Persisted wishlist
+| Deliverable | Status |
+|-------------|--------|
+| Magic link auth (email) | ✅ |
+| Order history on `/account` | ✅ |
+| Wishlist sync (local ↔ server on login + heart toggle) | ✅ |
+| Wishlist share link | ✅ |
+| Admin `/admin/customers` (wishlists + order count) | ✅ |
+| Export CSV + Brevo (semicolon, custom attributes) | ✅ |
+| Header wishlist counter | ✅ |
+| Resend emails (production magic links) | ⏳ `RESEND_API_KEY` |
 
 ---
 

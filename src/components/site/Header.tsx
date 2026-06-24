@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Menu, Search, ShoppingBag } from "lucide-react";
+import { Heart, Menu, Search, ShoppingBag } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog-context";
 import { buildNavMain, type MegaMenuId } from "@/lib/navigation";
@@ -21,7 +21,8 @@ const iconBtn =
   "flex items-center justify-center size-9 text-foreground/80 hover:text-foreground transition-colors md:hidden";
 
 export function Header() {
-  const { count, setOpen } = useCart();
+  const { count, wishlist, setOpen } = useCart();
+  const wishCount = wishlist.length;
   const { collections, publishedProducts } = useCatalog();
   const { homepage } = useSiteContent();
   const { t } = useLocale();
@@ -116,8 +117,13 @@ export function Header() {
             <Link to="/account" className={`hidden sm:inline-block ${navLink}`}>
               {t("nav.account")}
             </Link>
-            <Link to="/account" search={{ tab: "wishlist" } as never} className={`hidden lg:inline-block ${navLink}`}>
+            <Link to="/account" search={{ tab: "wishlist" } as never} className={`relative hidden md:inline-block ${navLink}`}>
               {t("nav.wishlist")}
+              {wishCount > 0 && (
+                <span className="absolute -top-1 -right-2.5 min-w-[1rem] h-4 px-1 flex items-center justify-center bg-accent text-surface text-[8px] tracking-[0.15em] rounded-sm">
+                  {wishCount}
+                </span>
+              )}
             </Link>
             <button
               type="button"
@@ -129,6 +135,20 @@ export function Header() {
             >
               {t("nav.search")}
             </button>
+            <Link
+              to="/account"
+              search={{ tab: "wishlist" } as never}
+              onClick={closePanels}
+              className={`relative md:hidden ${iconBtn}`}
+              aria-label={`${t("nav.wishlist")}${wishCount > 0 ? `, ${wishCount} items` : ""}`}
+            >
+              <Heart className="size-[1.125rem] stroke-[1.15]" />
+              {wishCount > 0 && (
+                <span className="absolute top-0.5 right-0.5 min-w-[0.875rem] h-3.5 px-0.5 flex items-center justify-center bg-accent text-surface text-[7px] tracking-[0.1em] rounded-sm">
+                  {wishCount}
+                </span>
+              )}
+            </Link>
             <button
               type="button"
               onClick={() => {

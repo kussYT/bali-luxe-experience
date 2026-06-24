@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   adminCustomersExportUrl,
+  adminCustomersBrevoExportUrl,
   fetchAdminCatalog,
   fetchAdminCustomers,
   type AdminCustomer,
@@ -78,6 +79,11 @@ function AdminCustomersPage() {
           <Button variant="outline" asChild>
             <a href={adminCustomersExportUrl(wishlistOnly)} download>
               Export CSV
+            </a>
+          </Button>
+          <Button variant="outline" asChild>
+            <a href={adminCustomersBrevoExportUrl(wishlistOnly)} download>
+              Export Brevo
             </a>
           </Button>
         </div>
@@ -170,6 +176,13 @@ function AdminCustomersPage() {
       <p className="text-xs text-muted-foreground max-w-2xl">
         Seuls les clients ayant confirmé leur e-mail (magic link) apparaissent ici. Les visiteurs non connectés
         gardent une wishlist locale dans leur navigateur jusqu&apos;à création de compte.
+        {" "}
+        <strong>Export Brevo</strong> : CSV séparateur point-virgule — créez d&apos;abord les attributs contact{" "}
+        <code className="text-[0.65rem]">WISHLIST_SLUGS</code>,{" "}
+        <code className="text-[0.65rem]">WISHLIST_PRODUCTS</code>,{" "}
+        <code className="text-[0.65rem]">WISHLIST_COUNT</code>,{" "}
+        <code className="text-[0.65rem]">PAID_ORDERS</code>,{" "}
+        <code className="text-[0.65rem]">LAST_ACTIVE</code> dans Brevo, puis importez le fichier.
       </p>
     </div>
   );
