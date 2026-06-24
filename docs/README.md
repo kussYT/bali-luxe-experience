@@ -2,7 +2,7 @@
 
 Living documentation so a developer can pick up the project without verbal handover.
 
-**Last updated:** June 2026 · **Current focus:** S5 deployment (Cloudflare staging → go-live)
+**Last updated:** June 2026 · **Current focus:** Premium design + CMS on Cloudflare staging → go-live
 
 ---
 
@@ -17,6 +17,8 @@ Living documentation so a developer can pick up the project without verbal hando
 | [05-stripe.md](./05-stripe.md) | Payments, webhooks, env vars |
 | [06-deployment.md](./06-deployment.md) | Cloudflare, Postgres, secrets |
 | [07-roadmap.md](./07-roadmap.md) | Sprints, priorities, definition of done |
+| [08-content-cms-and-design.md](./08-content-cms-and-design.md) | **Homepage design, CMS admin, Beatrice workflow, uploads** |
+| [instagram-automation.md](./instagram-automation.md) | Instagram sync (GitHub Actions) |
 | [sprint-s5-deployment.md](./sprint-s5-deployment.md) | **Deploy guide (staging + prod)** |
 | [sprint-s4-emails.md](./sprint-s4-emails.md) | Resend, Brevo, transactional email |
 | [sprint-s3-validation.md](./sprint-s3-validation.md) | Checkout validation |

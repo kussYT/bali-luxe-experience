@@ -78,3 +78,10 @@ If automation fails and the token expires:
 ## Admin status
 
 `/admin` dashboard → CMS status card shows Instagram source, post count, and whether a token is configured.
+
+---
+
+## Related docs
+
+- [08-content-cms-and-design.md](./08-content-cms-and-design.md) — homepage Instagram grid layout (`gap-0`, full bleed)
+- [06-deployment.md](./06-deployment.md) — `INSTAGRAM_ACCESS_TOKEN` secret

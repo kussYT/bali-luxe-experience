@@ -4,11 +4,11 @@
  */
 
 function emailFrom() {
-  return process.env.EMAIL_FROM?.trim() || "Bingin Diaries <hello@bingindiaries.com>";
+  return process.env.EMAIL_FROM?.trim() || "Bingin Diaries <info@bingindiaries.com>";
 }
 
 function opsInbox() {
-  return process.env.EMAIL_OPS?.trim() || process.env.CONTACT_TO?.trim() || "hello@bingindiaries.com";
+  return process.env.EMAIL_OPS?.trim() || process.env.CONTACT_TO?.trim() || "info@bingindiaries.com";
 }
 
 export function formatMoneyEmail(amount, currency) {
@@ -19,8 +19,14 @@ export function formatMoneyEmail(amount, currency) {
   return `€${value.toFixed(2)}`;
 }
 
+/** Public site origin only — ignores any path suffix on SITE_URL (e.g. `/admin`). */
 export function siteUrl() {
-  return (process.env.SITE_URL || "http://localhost:8080").replace(/\/$/, "");
+  const raw = (process.env.SITE_URL || "http://localhost:8080").trim();
+  try {
+    return new URL(raw).origin;
+  } catch {
+    return raw.replace(/\/$/, "");
+  }
 }
 
 export { opsInbox };

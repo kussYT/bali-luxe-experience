@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { fetchAdminCmsStatus, type AdminCmsStatus } from "@/lib/admin-api";
+import { UPLOADS_UNAVAILABLE_MESSAGE } from "@/lib/use-uploads-available";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 function formatDate(iso: string | null) {
@@ -58,6 +59,16 @@ export function CmsStatusCard({ compact = false }: { compact?: boolean }) {
             <p className="text-eyebrow text-muted-foreground">Base de données</p>
             <p className="mt-1">{status.database ? "Postgres connecté" : "Non configurée"}</p>
           </div>
+          <div>
+            <p className="text-eyebrow text-muted-foreground">Upload médias</p>
+            <p className="mt-1">
+              {status.uploads === "r2" && "Cloudflare R2 (production)"}
+              {status.uploads === "filesystem" && "Disque local (dev)"}
+              {(!status.uploads || status.uploads === "unavailable") && (
+                <span className="text-amber-700 dark:text-amber-400">{UPLOADS_UNAVAILABLE_MESSAGE}</span>
+              )}
+            </p>
+          </div>
           {status.cms && (
             <div>
               <p className="text-eyebrow text-muted-foreground">Contenu</p>
@@ -67,6 +78,12 @@ export function CmsStatusCard({ compact = false }: { compact?: boolean }) {
             </div>
           )}
         </div>
+
+        {(!status.uploads || status.uploads === "unavailable") && (
+          <p className="rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+            {UPLOADS_UNAVAILABLE_MESSAGE} Paste an image URL in the field for now.
+          </p>
+        )}
 
         <div className="border-t border-border pt-4 grid gap-3 sm:grid-cols-2">
           <div>

@@ -53,9 +53,29 @@ export type PhotoStripContent = {
   tiles: HomePhotoTile[];
 };
 
+export type SpotlightProductContent = {
+  enabled: boolean;
+  productSlug: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  image: string;
+  ctaLabel: string;
+};
+
+export type SiteNavigationContent = {
+  newCollection: string;
+  shop: string;
+  sales: string;
+  aboutUs: string;
+  popularSearches: string[];
+};
+
 export type HomepageContent = {
   hero: HeroContent;
   photoStrip: PhotoStripContent;
+  spotlightProduct: SpotlightProductContent;
+  navigation: SiteNavigationContent;
   editorial: EditorialContent;
   featuredSection: { eyebrow: string; title: string };
   lookbook: {
@@ -83,6 +103,10 @@ export type HomepageContent = {
     spotifyUrl: string;
     spotifyPlaylistId: string;
   };
+  /** Looping audio for the fixed Sound on/off control (not Spotify). */
+  ambientSound: {
+    audioSrc: string;
+  };
   travelDiariesPage: {
     eyebrow: string;
     title: string;
@@ -90,9 +114,71 @@ export type HomepageContent = {
   };
 };
 
+export type AboutSection = {
+  id: string;
+  eyebrow: string;
+  title: string;
+  body: string;
+};
+
+export type AboutValue = {
+  n: string;
+  t: string;
+  d: string;
+};
+
+export type AboutSidebarLink = {
+  label: string;
+  to: string;
+  hash?: string;
+  image: string;
+};
+
+export type AboutContent = {
+  eyebrow: string;
+  title: string;
+  metaDescription: string;
+  youtubeId: string;
+  sections: AboutSection[];
+  values: AboutValue[];
+  sidebarLinks: AboutSidebarLink[];
+};
+
+export type StockistStore = {
+  name: string;
+  instagram?: string;
+  url?: string;
+};
+
+export type StockistArea = {
+  name: string;
+  stores: StockistStore[];
+};
+
+export type StockistCountry = {
+  country: string;
+  areas: StockistArea[];
+};
+
+export type FindUsContent = {
+  eyebrow: string;
+  title: string;
+  metaDescription: string;
+  description: string;
+  atlistEmbedUrl: string;
+  atlistMapUrl: string;
+  wholesaleEmail: string;
+  wholesaleTitle: string;
+  wholesaleCtaLabel: string;
+  showStockistList: boolean;
+  countries: StockistCountry[];
+};
+
 export type SiteContent = {
   announcement: AnnouncementContent;
   homepage: HomepageContent;
+  about: AboutContent;
+  findUs: FindUsContent;
 };
 
 export type JournalPost = {

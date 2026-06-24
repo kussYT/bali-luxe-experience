@@ -21,6 +21,9 @@ export function normalizeAdminProductBody(body) {
       : body.image
         ? [body.image]
         : [];
+  const extraSlugs = Array.isArray(body.collectionSlugs)
+    ? [...new Set(body.collectionSlugs.map((s) => slugify(s)).filter(Boolean))]
+    : [];
 
   return {
     slug: slugify(body.slug || body.name || "product"),
@@ -28,6 +31,7 @@ export function normalizeAdminProductBody(body) {
     story: body.story || "",
     collection: body.collection || "Shop",
     collectionSlug: slugify(body.collectionSlug || body.collection || "shop"),
+    collectionSlugs: extraSlugs.filter((s) => s !== slugify(body.collectionSlug || body.collection || "shop")),
     subcategory: body.subcategory || "",
     category: body.category || "hats",
     productType: body.productType || "",
@@ -40,6 +44,7 @@ export function normalizeAdminProductBody(body) {
     origin: body.origin === "France" ? "France" : "Bali",
     stock: Math.max(0, Number(body.stock ?? 0)),
     images,
+    videoUrl: typeof body.videoUrl === "string" ? body.videoUrl.trim() : "",
     variants: parseAdminVariants(body),
   };
 }
@@ -68,6 +73,21 @@ async function upsertCollection(client, { slug, name, season = "" }) {
     [slug, name, season],
   );
   return rows[0].id;
+}
+
+async function replaceExtraCollections(client, productId, primaryCollectionId, extraSlugs) {
+  await client.query(`DELETE FROM product_collection_memberships WHERE product_id = $1`, [productId]);
+  for (const slug of extraSlugs) {
+    const { rows } = await client.query(`SELECT id FROM collections WHERE slug = $1`, [slug]);
+    if (!rows.length) continue;
+    const collectionId = rows[0].id;
+    if (collectionId === primaryCollectionId) continue;
+    await client.query(
+      `INSERT INTO product_collection_memberships (product_id, collection_id) VALUES ($1, $2)
+       ON CONFLICT DO NOTHING`,
+      [productId, collectionId],
+    );
+  }
 }
 
 async function replaceImages(client, productId, images) {
@@ -229,8 +249,8 @@ export async function createProductInDb(rawBody) {
     const { rows } = await client.query(
       `INSERT INTO products (
          slug, name, story, collection_id, subcategory, category, product_type,
-         price_eur, compare_at_eur, price_usd, price_idr, status, featured, origin, default_warehouse
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+         price_eur, compare_at_eur, price_usd, price_idr, status, featured, origin, default_warehouse, video_url
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
        RETURNING id`,
       [
         p.slug,
@@ -248,11 +268,13 @@ export async function createProductInDb(rawBody) {
         p.featured,
         p.origin,
         defaultWarehouse,
+        p.videoUrl || "",
       ],
     );
 
     const productId = rows[0].id;
     await replaceImages(client, productId, p.images);
+    await replaceExtraCollections(client, productId, collectionId, p.collectionSlugs);
     for (let i = 0; i < p.variants.length; i++) {
       await createVariantWithInventory(client, productId, p, p.variants[i], i, i === 0);
     }
@@ -319,6 +341,7 @@ export async function updateProductInDb(currentSlug, rawBody) {
          featured = $14,
          origin = $15,
          default_warehouse = $16,
+         video_url = $17,
          updated_at = now()
        WHERE id = $1`,
       [
@@ -338,10 +361,12 @@ export async function updateProductInDb(currentSlug, rawBody) {
         p.featured,
         p.origin,
         defaultWarehouse,
+        p.videoUrl || "",
       ],
     );
 
     await replaceImages(client, productId, p.images);
+    await replaceExtraCollections(client, productId, collectionId, p.collectionSlugs);
     await syncProductVariants(client, productId, p);
 
     return productId;

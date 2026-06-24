@@ -15,7 +15,7 @@ import {
 } from "../db/pages.mjs";
 import { listCollectionsAdmin, updateCollection } from "../db/collections-admin.mjs";
 import { getSetting, setSetting } from "../db/settings-store.mjs";
-import { DEFAULT_HOMEPAGE, DEFAULT_ANNOUNCEMENT } from "../content-defaults.mjs";
+import { DEFAULT_HOMEPAGE, DEFAULT_ANNOUNCEMENT, DEFAULT_ABOUT, DEFAULT_FIND_US } from "../content-defaults.mjs";
 
 export async function getAdminContentResponse() {
   const data = await getAdminSiteContent();
@@ -93,5 +93,9 @@ export async function seedCmsContent() {
   if (!hasHomepage) await setSetting("homepage", DEFAULT_HOMEPAGE);
   const hasAnnouncement = await getSetting("announcement", null);
   if (!hasAnnouncement) await setSetting("announcement", DEFAULT_ANNOUNCEMENT);
+  const hasAbout = await getSetting("about", null);
+  if (!hasAbout) await setSetting("about", DEFAULT_ABOUT);
+  const hasFindUs = await getSetting("findUs", null);
+  if (!hasFindUs) await setSetting("findUs", DEFAULT_FIND_US);
   return { posts, pages, source: "postgres" };
 }

@@ -50,6 +50,7 @@ export type Product = {
   priceIDR: number;
   image: string;
   images: string[];
+  videoUrl?: string;
   details: string[];
   tags: string[];
   stock: number;

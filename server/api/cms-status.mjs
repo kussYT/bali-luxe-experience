@@ -6,7 +6,9 @@ import { getSetting } from "../db/settings-store.mjs";
 import { getStaticInstagramFeed } from "../instagram-static.mjs";
 import { summarizeInstagramFeed } from "../instagram-utils.mjs";
 
-export async function getAdminCmsStatusResponse() {
+import { getUploadsStorageMode } from "../uploads.mjs";
+
+export async function getAdminCmsStatusResponse(env) {
   const instagram = summarizeInstagramFeed(getStaticInstagramFeed());
   const instagramApi = {
     hasToken: Boolean(process.env.INSTAGRAM_ACCESS_TOKEN?.trim()),
@@ -17,6 +19,7 @@ export async function getAdminCmsStatusResponse() {
     return {
       source: "fallback",
       database: false,
+      uploads: getUploadsStorageMode(env),
       instagram,
       instagramApi,
       cms: null,
@@ -34,6 +37,7 @@ export async function getAdminCmsStatusResponse() {
   return {
     source: "postgres",
     database: true,
+    uploads: getUploadsStorageMode(env),
     instagram,
     instagramApi,
     cms: {

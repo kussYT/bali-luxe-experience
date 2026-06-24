@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { siteUrl } from "./email.mjs";
 
 let stripe;
 
@@ -14,5 +15,5 @@ export function getStripe() {
 }
 
 export function getSiteUrl() {
-  return (process.env.SITE_URL || "http://localhost:8080").replace(/\/$/, "");
+  return siteUrl();
 }

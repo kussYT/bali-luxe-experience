@@ -1,15 +1,17 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Menu, Search, ShoppingBag } from "lucide-react";
+import { Heart, Menu, Search, ShoppingBag } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog-context";
-import { buildNavMain } from "@/lib/navigation";
+import { buildNavMain, type MegaMenuId } from "@/lib/navigation";
 import { BrandLogo } from "@/components/site/BrandLogo";
 import { NavMenu } from "@/components/site/NavMenu";
-import { NavAboutBand } from "@/components/site/NavAboutBand";
-import { NavAboutTrigger } from "@/components/site/NavAboutTrigger";
-import { NavDropdown } from "@/components/site/NavDropdown";
+import { NavSectionMegaBand } from "@/components/site/NavSectionMegaBand";
+import { NavMegaTrigger } from "@/components/site/NavMegaTrigger";
 import { SearchDrawer } from "@/components/site/SearchDrawer";
+import { LanguageSelector } from "@/components/site/LanguageSelector";
+import { useLocale } from "@/lib/i18n/locale-context";
+import { useSiteContent } from "@/lib/content-context";
 import { MarketSelector } from "@/components/site/MarketSelector";
 
 const navLink =
@@ -19,21 +21,31 @@ const iconBtn =
   "flex items-center justify-center size-9 text-foreground/80 hover:text-foreground transition-colors md:hidden";
 
 export function Header() {
-  const { count, setOpen } = useCart();
+  const { count, wishlist, setOpen } = useCart();
+  const wishCount = wishlist.length;
   const { collections, publishedProducts } = useCatalog();
-  const navMain = buildNavMain(collections, publishedProducts);
+  const { homepage } = useSiteContent();
+  const { t } = useLocale();
+  const nav = homepage.navigation;
+  const navMain = buildNavMain(collections, publishedProducts, {
+    newCollection: nav?.newCollection || t("nav.newCollection"),
+    shop: nav?.shop || t("nav.shop"),
+    sales: nav?.sales || t("nav.sales"),
+    aboutUs: nav?.aboutUs || t("nav.aboutUs"),
+    popularSearches: nav?.popularSearches,
+  });
   const [navOpen, setNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [aboutOpen, setAboutOpen] = useState(false);
+  const [megaMenu, setMegaMenu] = useState<MegaMenuId | null>(null);
   const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (!aboutOpen) return;
+    if (!megaMenu) return;
     const onPointerDown = (e: MouseEvent) => {
-      if (!headerRef.current?.contains(e.target as Node)) setAboutOpen(false);
+      if (!headerRef.current?.contains(e.target as Node)) setMegaMenu(null);
     };
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setAboutOpen(false);
+      if (e.key === "Escape") setMegaMenu(null);
     };
     document.addEventListener("mousedown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
@@ -41,7 +53,7 @@ export function Header() {
       document.removeEventListener("mousedown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [aboutOpen]);
+  }, [megaMenu]);
 
   const closePanels = () => {
     setNavOpen(false);
@@ -51,8 +63,11 @@ export function Header() {
   const handleHeaderMouseLeave = (e: React.MouseEvent<HTMLElement>) => {
     const related = e.relatedTarget as Node | null;
     if (related && headerRef.current?.contains(related)) return;
-    setAboutOpen(false);
+    setMegaMenu(null);
   };
+
+  const openMega = (id: MegaMenuId) => setMegaMenu(id);
+  const toggleMega = (id: MegaMenuId) => setMegaMenu((v) => (v === id ? null : id));
 
   return (
     <>
@@ -60,7 +75,7 @@ export function Header() {
         ref={headerRef}
         onMouseLeave={handleHeaderMouseLeave}
         className={`sticky top-0 z-40 bg-white/90 backdrop-blur-[12px] relative ${
-          aboutOpen ? "" : "border-b border-border/60"
+          megaMenu ? "" : "border-b border-border/60"
         }`}
       >
         <div className="page-wrap section-pad grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center h-[4.25rem] md:h-[5.25rem] gap-1.5 sm:gap-2 md:gap-4">
@@ -78,18 +93,15 @@ export function Header() {
             </button>
 
             <nav className="hidden md:flex items-center gap-7 lg:gap-9" aria-label="Main">
-              {navMain.map((section) =>
-                section.label === "About us" ? (
-                  <NavAboutTrigger
-                    key={section.label}
-                    open={aboutOpen}
-                    onOpen={() => setAboutOpen(true)}
-                    onToggle={() => setAboutOpen((v) => !v)}
-                  />
-                ) : (
-                  <NavDropdown key={section.label} label={section.label} items={[...section.items]} />
-                ),
-              )}
+              {navMain.map((section) => (
+                <NavMegaTrigger
+                  key={section.label}
+                  label={section.label}
+                  open={megaMenu === section.mega}
+                  onOpen={() => openMega(section.mega)}
+                  onToggle={() => toggleMega(section.mega)}
+                />
+              ))}
             </nav>
           </div>
 
@@ -97,13 +109,21 @@ export function Header() {
 
           <div className="flex items-center justify-end gap-1.5 sm:gap-3 md:gap-7 min-w-0">
             <div className="hidden md:block">
+              <LanguageSelector />
+            </div>
+            <div className="hidden md:block">
               <MarketSelector variant="header" />
             </div>
             <Link to="/account" className={`hidden sm:inline-block ${navLink}`}>
-              Account
+              {t("nav.account")}
             </Link>
-            <Link to="/account" search={{ tab: "wishlist" } as never} className={`hidden lg:inline-block ${navLink}`}>
-              Wishlist
+            <Link to="/account" search={{ tab: "wishlist" } as never} className={`relative hidden md:inline-block ${navLink}`}>
+              {t("nav.wishlist")}
+              {wishCount > 0 && (
+                <span className="absolute -top-1 -right-2.5 min-w-[1rem] h-4 px-1 flex items-center justify-center bg-accent text-surface text-[8px] tracking-[0.15em] rounded-sm">
+                  {wishCount}
+                </span>
+              )}
             </Link>
             <button
               type="button"
@@ -113,8 +133,22 @@ export function Header() {
               }}
               className={`${navLink} hidden md:inline-block`}
             >
-              Search
+              {t("nav.search")}
             </button>
+            <Link
+              to="/account"
+              search={{ tab: "wishlist" } as never}
+              onClick={closePanels}
+              className={`relative md:hidden ${iconBtn}`}
+              aria-label={`${t("nav.wishlist")}${wishCount > 0 ? `, ${wishCount} items` : ""}`}
+            >
+              <Heart className="size-[1.125rem] stroke-[1.15]" />
+              {wishCount > 0 && (
+                <span className="absolute top-0.5 right-0.5 min-w-[0.875rem] h-3.5 px-0.5 flex items-center justify-center bg-accent text-surface text-[7px] tracking-[0.1em] rounded-sm">
+                  {wishCount}
+                </span>
+              )}
+            </Link>
             <button
               type="button"
               onClick={() => {
@@ -134,7 +168,7 @@ export function Header() {
               }}
               className={`relative hidden md:inline-block ${navLink}`}
             >
-              Bag
+              {t("nav.bag")}
               {count > 0 && (
                 <span className="absolute -top-1 -right-2.5 min-w-[1rem] h-4 px-1 flex items-center justify-center bg-accent text-surface text-[8px] tracking-[0.15em] rounded-sm">
                   {count}
@@ -160,10 +194,11 @@ export function Header() {
           </div>
         </div>
 
-        {aboutOpen && (
-          <NavAboutBand
+        {megaMenu && (
+          <NavSectionMegaBand
+            mega={megaMenu}
             className="absolute left-0 right-0 top-full z-50 hidden md:block"
-            onNavigate={() => setAboutOpen(false)}
+            onNavigate={() => setMegaMenu(null)}
           />
         )}
       </header>

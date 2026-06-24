@@ -31,6 +31,10 @@ Local dev still uses Vite middleware (`vite.admin-api.mjs`) which calls the same
 
 Deploy to the default `*.workers.dev` URL **before** attaching `bingindiaries.com`. The Shopify site stays live until DNS cutover.
 
+**Current staging:** https://bingin-diaries.bingindiaries-d08.workers.dev  
+_(Legacy URL `bingin-diaries.bingindiaries.workers.dev` — old account, no R2 uploads.)_  
+**CMS / design guide:** [08-content-cms-and-design.md](./08-content-cms-and-design.md)
+
 1. `npx wrangler login`
 2. Set secrets (see below) with `SITE_URL` = your `workers.dev` URL after first deploy
 3. `npm run deploy`
@@ -89,19 +93,38 @@ Wrangler deploys `dist/server` as the Worker and serves `dist/client` as static 
 
 ## R2 image uploads (admin)
 
-Admin product image upload uses local disk in dev. In production:
+**Required for CMS media upload on staging/production.** Cloudflare Workers have no filesystem — uploads go to R2.
+
+### 1. Enable R2 (one-time, Cloudflare Dashboard)
+
+1. [Cloudflare Dashboard](https://dash.cloudflare.com) → **R2 Object Storage**
+2. Click **Purchase R2** / enable R2 (free tier covers CMS usage)
+
+### 2. Create bucket + bind Worker
 
 ```bash
 npx wrangler r2 bucket create bingin-diaries-uploads
 ```
 
-Uncomment in `wrangler.jsonc`:
+Ensure `wrangler.jsonc` targets the **Bingindiaries@gmail.com** account:
 
 ```jsonc
+"account_id": "d089bcfdcc69ca589716cc8f4b9971a0",
+"workers_dev": true,
 "r2_buckets": [{ "binding": "UPLOADS", "bucket_name": "bingin-diaries-uploads" }]
 ```
 
-Redeploy. Images are served at `/uploads/products/...` via `src/routes/uploads/$.ts`.
+**One-time:** register the `workers.dev` subdomain on that account (Wrangler will prompt, or open [Workers onboarding](https://dash.cloudflare.com/d089bcfdcc69ca589716cc8f4b9971a0/workers/onboarding)). Without this step, deploy uploads the Worker but does not publish the new version with R2.
+
+```bash
+npm run deploy
+```
+
+Images are served at `/uploads/cms/...` or `/uploads/products/...` via `src/routes/uploads/$.ts`.
+
+**Without R2:** admin upload returns `503` — Beatrice can paste an external image URL manually until R2 is enabled.
+
+**Local dev:** uploads save to `public/uploads/` (no R2 needed).
 
 ---
 

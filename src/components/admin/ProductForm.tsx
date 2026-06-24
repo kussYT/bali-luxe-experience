@@ -12,7 +12,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { uploadProductImages } from "@/lib/admin-api";
-import { Plus, X } from "lucide-react";
+import { CmsMediaGuide } from "@/components/admin/CmsMediaGuide";
+import { UPLOADS_UNAVAILABLE_MESSAGE, useUploadsAvailable } from "@/lib/use-uploads-available";
+import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 
 export type VariantFormRow = {
   id?: string;
@@ -35,6 +37,8 @@ export type ProductFormValues = {
   featured: boolean;
   images: string[];
   origin: "Bali" | "France";
+  collectionSlugs: string[];
+  videoUrl: string;
 };
 
 type ProductFormProps = {
@@ -84,6 +88,8 @@ const empty: ProductFormValues = {
   featured: false,
   images: [],
   origin: "Bali",
+  collectionSlugs: [],
+  videoUrl: "",
 };
 
 function slugify(value: string) {
@@ -107,10 +113,15 @@ export function ProductForm({
     ...initial,
     variants: variantsFromProduct(initial),
     images: initial?.images?.length ? initial.images : initial?.image ? [initial.image] : [],
+    collectionSlugs: (initial?.collectionSlugs ?? []).filter(
+      (slug) => slug && slug !== (initial?.collectionSlug ?? ""),
+    ),
+    videoUrl: initial?.videoUrl ?? "",
   }));
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const { available: uploadsAvailable, loading: uploadsLoading } = useUploadsAvailable();
 
   const set = <K extends keyof ProductFormValues>(key: K, val: ProductFormValues[K]) => {
     setValues((prev) => ({ ...prev, [key]: val }));
@@ -137,12 +148,38 @@ export function ProductForm({
   const handleCollectionPick = (slug: string) => {
     const col = collections.find((c) => c.slug === slug);
     if (!col) return;
-    set("collectionSlug", col.slug);
-    set("collection", col.name);
+    setValues((prev) => ({
+      ...prev,
+      collectionSlug: col.slug,
+      collection: col.name,
+      collectionSlugs: prev.collectionSlugs.filter((s) => s !== col.slug),
+    }));
+  };
+
+  const toggleExtraCollection = (slug: string) => {
+    setValues((prev) => {
+      const has = prev.collectionSlugs.includes(slug);
+      return {
+        ...prev,
+        collectionSlugs: has
+          ? prev.collectionSlugs.filter((s) => s !== slug)
+          : [...prev.collectionSlugs, slug],
+      };
+    });
+  };
+
+  const moveImage = (index: number, direction: -1 | 1) => {
+    setValues((prev) => {
+      const next = [...prev.images];
+      const target = index + direction;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target], next[index]];
+      return { ...prev, images: next };
+    });
   };
 
   const handleFiles = async (files: FileList | null) => {
-    if (!files?.length) return;
+    if (!uploadsAvailable || !files?.length) return;
     const slug = values.slug || slugify(values.name);
     if (!slug) {
       setError("Enter a product name before uploading images.");
@@ -337,6 +374,32 @@ export function ProductForm({
         </div>
       </div>
 
+      {collections.filter((c) => c.slug !== values.collectionSlug).length > 0 && (
+        <div className="space-y-3 border border-border p-5">
+          <div>
+            <Label>Also appears in</Label>
+            <p className="text-xs text-muted-foreground mt-1">
+              Extra collections for navigation (e.g. Special Occasions). Primary collection above stays unchanged.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {collections
+              .filter((c) => c.slug !== values.collectionSlug)
+              .map((col) => (
+                <label key={col.slug} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={values.collectionSlugs.includes(col.slug)}
+                    onChange={() => toggleExtraCollection(col.slug)}
+                    className="size-4"
+                  />
+                  {col.name}
+                </label>
+              ))}
+          </div>
+        </div>
+      )}
+
       <div className="grid md:grid-cols-3 gap-5">
         <div className="space-y-2">
           <Label>Shop category</Label>
@@ -377,6 +440,17 @@ export function ProductForm({
         </div>
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor="videoUrl">Product video URL (optional MP4)</Label>
+        <Input
+          id="videoUrl"
+          value={values.videoUrl}
+          onChange={(e) => set("videoUrl", e.target.value)}
+          placeholder="https://…/video.mp4 or /uploads/…"
+        />
+        <p className="text-xs text-muted-foreground">Shown on the product page when set. Keep file under 4 MB.</p>
+      </div>
+
       <label className="flex items-center gap-2 text-sm">
         <input
           type="checkbox"
@@ -389,20 +463,51 @@ export function ProductForm({
 
       <div className="space-y-3 border border-border p-5">
         <Label>Images</Label>
-        <Input type="file" accept="image/*" multiple onChange={(e) => handleFiles(e.target.files)} disabled={uploading} />
+        {!uploadsLoading && uploadsAvailable && (
+          <Input type="file" accept="image/*" multiple onChange={(e) => handleFiles(e.target.files)} disabled={uploading} />
+        )}
+        {!uploadsLoading && !uploadsAvailable && (
+          <p className="text-sm text-amber-700 dark:text-amber-400">{UPLOADS_UNAVAILABLE_MESSAGE}</p>
+        )}
         {uploading && <p className="text-sm text-muted-foreground">Uploading…</p>}
+        <CmsMediaGuide compact />
         {values.images.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-3">
-            {values.images.map((src) => (
+            {values.images.map((src, index) => (
               <div key={src} className="relative group aspect-square bg-sand overflow-hidden">
                 <img src={src} alt="" className="size-full object-cover" />
-                <button
-                  type="button"
-                  className="absolute inset-x-0 bottom-0 bg-ink/80 text-bone text-xs py-1 opacity-0 group-hover:opacity-100"
-                  onClick={() => set("images", values.images.filter((i) => i !== src))}
-                >
-                  Remove
-                </button>
+                {index === 0 && (
+                  <span className="absolute top-2 left-2 bg-ink/80 text-bone text-[0.65rem] uppercase tracking-wider px-2 py-0.5">
+                    Cover
+                  </span>
+                )}
+                <div className="absolute inset-x-0 bottom-0 flex bg-ink/80 text-bone text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    type="button"
+                    className="flex-1 py-1.5 flex items-center justify-center disabled:opacity-40"
+                    onClick={() => moveImage(index, -1)}
+                    disabled={index === 0}
+                    aria-label="Move image earlier"
+                  >
+                    <ChevronLeft className="size-4" />
+                  </button>
+                  <button
+                    type="button"
+                    className="flex-1 py-1.5 border-x border-surface/20"
+                    onClick={() => set("images", values.images.filter((i) => i !== src))}
+                  >
+                    Remove
+                  </button>
+                  <button
+                    type="button"
+                    className="flex-1 py-1.5 flex items-center justify-center disabled:opacity-40"
+                    onClick={() => moveImage(index, 1)}
+                    disabled={index === values.images.length - 1}
+                    aria-label="Move image later"
+                  >
+                    <ChevronRight className="size-4" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

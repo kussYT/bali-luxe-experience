@@ -61,6 +61,7 @@ function normalizeProduct(raw) {
     priceIDR: Number(raw.priceIDR) || Math.round(priceEUR * 17_000),
     image: images[0] || "/shopify-import/placeholder.jpg",
     images,
+    videoUrl: typeof raw.videoUrl === "string" ? raw.videoUrl : undefined,
     details: Array.isArray(raw.details) ? raw.details : [],
     tags: Array.isArray(raw.tags) ? raw.tags : [],
     stock,

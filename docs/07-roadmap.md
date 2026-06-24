@@ -101,7 +101,7 @@
 | Shared `server/api-router.mjs` (dev + prod) | ✅ |
 | `npm run deploy` / `preview:cf` | ✅ |
 | R2 uploads (optional binding) | ✅ |
-| Staging on `*.workers.dev` | ⏳ manual |
+| Staging on `*.workers.dev` | ✅ |
 | DNS `bingindiaries.com` | ⏳ manual (go-live only) |
 | Stripe production webhook | ⏳ manual |
 | SEO 301 Shopify → new site | ⏳ manual |
@@ -110,11 +110,38 @@
 
 ---
 
-## S6 — Customer accounts (optional)
+## S8 — Premium design & editorial CMS ✅
 
-- Email auth
-- Order history
-- Persisted wishlist
+| Deliverable | Status |
+|-------------|--------|
+| White theme + minimal product cards | ✅ |
+| Homepage: hero → photo strip → products → Instagram | ✅ |
+| Hero poster + optional video (graceful fallback) | ✅ |
+| Home photo strip CMS (3 portrait tiles, full bleed) | ✅ |
+| Instagram grid full-bleed (`gap-0`) | ✅ |
+| Collection scoped sub-filters (`?c=`) | ✅ |
+| Mi Paradisio catalog sync (13 products) | ✅ |
+| About page + Find us (Atlist + stockists) | ✅ |
+| CMS: `/admin/content`, `/about`, `/find-us` | ✅ |
+| CMS media upload (hero, photo strip, About sidebar) | ✅ |
+| Staging deploy `*.workers.dev` | ✅ |
+
+**Guide:** [08-content-cms-and-design.md](./08-content-cms-and-design.md)
+
+---
+
+## S6 — Customer accounts ✅
+
+| Deliverable | Status |
+|-------------|--------|
+| Magic link auth (email) | ✅ |
+| Order history on `/account` | ✅ |
+| Wishlist sync (local ↔ server on login + heart toggle) | ✅ |
+| Wishlist share link | ✅ |
+| Admin `/admin/customers` (wishlists + order count) | ✅ |
+| Export CSV + Brevo (semicolon, custom attributes) | ✅ |
+| Header wishlist counter | ✅ |
+| Resend emails (production magic links) | ⏳ `RESEND_API_KEY` |
 
 ---
 

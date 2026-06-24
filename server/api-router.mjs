@@ -68,6 +68,20 @@ import {
 } from "./api/products-admin.mjs";
 import { isDatabaseConfigured } from "./db/pool.mjs";
 import { saveUploadedImage, getUploadedImage } from "./uploads.mjs";
+import {
+  postAccountRequestLink,
+  getAccountVerify,
+  getAccountMe,
+  postAccountWishlist,
+  postAccountLogout,
+  postWishlistShare,
+  getWishlistShareResponse,
+} from "./api/account.mjs";
+import {
+  getAdminCustomersResponse,
+  getAdminCustomersExportCsv,
+  getAdminCustomersExportBrevoCsv,
+} from "./api/customers-admin.mjs";
 
 function jsonResponse(status, body, extraHeaders = {}) {
   return Response.json(body, { status, headers: extraHeaders });
@@ -235,6 +249,47 @@ export async function handleApiRequest(request, context = {}) {
       return jsonResponse(200, { authenticated: verifySessionToken(token) });
     }
 
+    if (pathname === "/api/account/request-link" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await postAccountRequestLink(body);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/account/verify" && method === "GET") {
+      const token = url.searchParams.get("token");
+      const result = await getAccountVerify(token, request);
+      return jsonResponse(200, { ok: true, customer: result.customer }, result.headers || {});
+    }
+
+    if (pathname === "/api/account/me" && method === "GET") {
+      const result = await getAccountMe(request);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/account/wishlist" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await postAccountWishlist(request, body);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/account/logout" && method === "POST") {
+      const result = await postAccountLogout();
+      return jsonResponse(200, { ok: true }, result.headers || {});
+    }
+
+    if (pathname === "/api/wishlist/share" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await postWishlistShare(body);
+      return jsonResponse(200, result);
+    }
+
+    const wishlistShareMatch = pathname.match(/^\/api\/wishlist\/share\/([^/]+)$/);
+    if (wishlistShareMatch && method === "GET") {
+      const token = decodeURIComponent(wishlistShareMatch[1]);
+      const result = await getWishlistShareResponse(token);
+      return jsonResponse(200, result);
+    }
+
     requireAdmin(request);
 
     if (pathname === "/api/admin/catalog" && method === "GET") {
@@ -383,7 +438,7 @@ export async function handleApiRequest(request, context = {}) {
     }
 
     if (pathname === "/api/admin/cms/status" && method === "GET") {
-      const result = await getAdminCmsStatusResponse();
+      const result = await getAdminCmsStatusResponse(context.env);
       return jsonResponse(200, result);
     }
 
@@ -462,6 +517,33 @@ export async function handleApiRequest(request, context = {}) {
       const body = await readJsonBody(request);
       const result = await patchAdminCollectionResponse(slug, body);
       return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/customers" && method === "GET") {
+      const result = await getAdminCustomersResponse(request);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/customers/export.csv" && method === "GET") {
+      const csv = await getAdminCustomersExportCsv(request);
+      return new Response(csv, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": 'attachment; filename="bingin-customers-wishlists.csv"',
+        },
+      });
+    }
+
+    if (pathname === "/api/admin/customers/export-brevo.csv" && method === "GET") {
+      const csv = await getAdminCustomersExportBrevoCsv(request);
+      return new Response(csv, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": 'attachment; filename="bingin-customers-brevo.csv"',
+        },
+      });
     }
 
     return jsonResponse(404, { error: "Not found" });

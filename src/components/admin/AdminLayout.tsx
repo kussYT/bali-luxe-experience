@@ -2,6 +2,8 @@ import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-route
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { adminLogout, checkAdminSession } from "@/lib/admin-api";
+import { UploadsUnavailableBanner } from "@/components/admin/UploadsUnavailableBanner";
+import { useUploadsAvailable } from "@/lib/use-uploads-available";
 import { Button } from "@/components/ui/button";
 
 const links = [
@@ -9,6 +11,7 @@ const links = [
   { to: "/admin/products", label: "Products" },
   { to: "/admin/inventory", label: "Inventory" },
   { to: "/admin/orders", label: "Orders" },
+  { to: "/admin/customers", label: "Clients" },
   { to: "/admin/content", label: "Content" },
   { to: "/admin/blog", label: "Blog" },
   { to: "/admin/pages", label: "Pages" },
@@ -43,6 +46,16 @@ function AdminNav({
         View site
       </Link>
     </nav>
+  );
+}
+
+function AdminUploadsNotice() {
+  const { available, loading } = useUploadsAvailable();
+  if (loading || available) return null;
+  return (
+    <div className="mb-6">
+      <UploadsUnavailableBanner hint="Paste an image URL in the field, or ask Mario to enable Cloudflare R2." />
+    </div>
   );
 }
 
@@ -153,6 +166,7 @@ export function AdminLayout() {
       </aside>
 
       <main className="flex-1 p-4 sm:p-6 md:p-10 overflow-auto min-w-0">
+        <AdminUploadsNotice />
         <Outlet />
       </main>
     </div>

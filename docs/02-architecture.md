@@ -9,8 +9,9 @@
 | Hosting target | Cloudflare Workers (`wrangler.jsonc`) |
 | Database | **PostgreSQL** (`pg`) — Neon, Supabase, local Docker, etc. |
 | Payments | Stripe Checkout + webhooks |
-| Media | `/public`, `/public/shopify-import` (migrated images) |
-| Instagram | Graph API → `/api/instagram` |
+| Media | `/public`, `/public/shopify-import`, `/uploads` (R2 or local) |
+| Instagram | Graph API → `/api/instagram` + static cache |
+| Editorial CMS | Postgres `site_settings` → `/api/content/site` |
 
 ---
 
@@ -106,6 +107,17 @@ In **Cloudflare production**, the same handlers must be exposed on the Worker (m
 - Signed session cookie (`ADMIN_SECRET`)
 - Password `ADMIN_PASSWORD`
 - `/api/admin/*` routes protected by `requireAdmin`
+
+---
+
+## Editorial CMS flow (S8)
+
+1. `ContentProvider` (`src/lib/content-context.tsx`) calls `GET /api/content/site`
+2. `getSiteContent()` (`server/db/cms-site.mjs`) merges Postgres settings with defaults from `server/content-defaults.mjs`
+3. Admin edits via `PATCH /api/admin/content/site` (keys: `announcement`, `homepage`, `about`, `findUs`)
+4. CMS media uploads → `POST /api/admin/upload?slug=cms/…` → R2 or `public/uploads/`
+
+**Full guide:** [08-content-cms-and-design.md](./08-content-cms-and-design.md)
 
 ---
 

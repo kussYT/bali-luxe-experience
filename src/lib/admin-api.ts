@@ -1,7 +1,9 @@
 import type { Catalog, Product } from "@/lib/catalog-types";
 import type {
+  AboutContent,
   AnnouncementContent,
   CmsPage,
+  FindUsContent,
   HomepageContent,
   JournalPost,
   AdminCollectionMeta,
@@ -241,6 +243,15 @@ export async function updateInventoryQuantity(payload: {
 }
 
 export async function uploadProductImages(slug: string, files: FileList | File[]) {
+  return uploadAdminFiles(slug, files);
+}
+
+/** Upload CMS assets (hero, photo strip, about sidebar…) under /uploads/cms/… */
+export async function uploadCmsMedia(folder: string, files: FileList | File[]) {
+  return uploadAdminFiles(`cms/${folder}`, files);
+}
+
+async function uploadAdminFiles(slug: string, files: FileList | File[]) {
   const form = new FormData();
   for (const file of files) form.append("images", file);
   const res = await fetch(`/api/admin/upload?slug=${encodeURIComponent(slug)}`, {
@@ -257,7 +268,14 @@ export async function fetchAdminSiteContent() {
   return request<{
     announcement: AnnouncementContent;
     homepage: HomepageContent;
-    stored: { announcement: Partial<AnnouncementContent>; homepage: Partial<HomepageContent> };
+    about: AboutContent;
+    findUs: FindUsContent;
+    stored: {
+      announcement: Partial<AnnouncementContent>;
+      homepage: Partial<HomepageContent>;
+      about: Partial<AboutContent>;
+      findUs: Partial<FindUsContent>;
+    };
     source: string;
   }>("/api/admin/content/site");
 }
@@ -265,11 +283,20 @@ export async function fetchAdminSiteContent() {
 export async function updateAdminSiteContent(payload: {
   announcement?: Partial<AnnouncementContent>;
   homepage?: Partial<HomepageContent>;
+  about?: AboutContent;
+  findUs?: FindUsContent;
 }) {
   return request<{
     announcement: AnnouncementContent;
     homepage: HomepageContent;
-    stored: { announcement: Partial<AnnouncementContent>; homepage: Partial<HomepageContent> };
+    about: AboutContent;
+    findUs: FindUsContent;
+    stored: {
+      announcement: Partial<AnnouncementContent>;
+      homepage: Partial<HomepageContent>;
+      about: Partial<AboutContent>;
+      findUs: Partial<FindUsContent>;
+    };
     source: string;
   }>("/api/admin/content/site", { method: "PATCH", body: JSON.stringify(payload) });
 }
@@ -343,6 +370,7 @@ export async function updateAdminCollection(slug: string, patch: Partial<AdminCo
 export type AdminCmsStatus = {
   source: string;
   database: boolean;
+  uploads: "r2" | "filesystem" | "unavailable";
   instagram: {
     source: string;
     syncedAt: string | null;
@@ -366,4 +394,32 @@ export type AdminCmsStatus = {
 
 export async function fetchAdminCmsStatus() {
   return request<AdminCmsStatus>("/api/admin/cms/status");
+}
+
+export type AdminCustomer = {
+  id: string;
+  email: string;
+  wishlist: string[];
+  createdAt: string;
+  updatedAt: string;
+  orderCount: number;
+};
+
+export async function fetchAdminCustomers(wishlistOnly = false) {
+  const qs = wishlistOnly ? "?wishlist=1" : "";
+  return request<{
+    customers: AdminCustomer[];
+    stats: { total: number; withWishlist: number; totalWishlistItems: number };
+    source: string;
+  }>(`/api/admin/customers${qs}`);
+}
+
+export function adminCustomersExportUrl(wishlistOnly = false) {
+  return wishlistOnly ? "/api/admin/customers/export.csv?wishlist=1" : "/api/admin/customers/export.csv";
+}
+
+export function adminCustomersBrevoExportUrl(wishlistOnly = false) {
+  return wishlistOnly
+    ? "/api/admin/customers/export-brevo.csv?wishlist=1"
+    : "/api/admin/customers/export-brevo.csv";
 }

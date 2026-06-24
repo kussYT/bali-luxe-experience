@@ -2,6 +2,8 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouterState } f
 
 import appCss from "../styles.css?url";
 
+import { LocaleProvider } from "@/lib/i18n/locale-context";
+import { AccountProvider } from "@/lib/account-context";
 import { CurrencyProvider } from "@/lib/currency";
 
 import { CartProvider } from "@/lib/cart";
@@ -168,13 +170,17 @@ function RootComponent() {
 
       <ContentProvider>
 
+      <LocaleProvider>
+
+      <AccountProvider>
+
+      <AmbientSoundProvider>
+
       <CurrencyProvider>
 
         <CartProvider>
 
           <CookieConsentProvider>
-
-            <AmbientSoundProvider>
 
               {!isAdmin && <Marquee />}
 
@@ -198,13 +204,17 @@ function RootComponent() {
 
               <Toaster position="top-center" />
 
-            </AmbientSoundProvider>
-
           </CookieConsentProvider>
 
         </CartProvider>
 
       </CurrencyProvider>
+
+      </AmbientSoundProvider>
+
+      </AccountProvider>
+
+      </LocaleProvider>
 
       </ContentProvider>
 
