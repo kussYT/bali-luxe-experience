@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 
 import { NewsletterForm } from "@/components/site/NewsletterForm";
-import { MarketSelector } from "@/components/site/MarketSelector";
 import { CookiePreferencesLink } from "@/components/site/CookieConsent";
 import { SocialIconLinks } from "@/components/site/SocialIconLinks";
 
@@ -44,9 +43,6 @@ export function Footer() {
       <div className="page-wrap section-pad section-gap grid md:grid-cols-12 gap-12 md:gap-8 lg:gap-10">
         <div className="md:col-span-12 lg:col-span-4">
           <NewsletterForm source="footer" variant="footer" />
-          <div className="mt-6">
-            <MarketSelector variant="footer" />
-          </div>
         </div>
 
         <div className="md:col-span-3 lg:col-span-2">

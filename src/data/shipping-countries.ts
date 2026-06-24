@@ -1,5 +1,4 @@
 import type { Currency } from "@/lib/currency";
-import { flagEmoji } from "@/lib/flags";
 
 export type ShippingCountry = {
   code: string;
@@ -124,8 +123,6 @@ export function getShippingCountry(code: string): ShippingCountry {
   return SHIPPING_COUNTRIES.find((c) => c.code === code) ?? SHIPPING_COUNTRIES[0];
 }
 
-export function formatShippingLabel(c: ShippingCountry, compact = false) {
-  const flag = flagEmoji(c.code);
-  if (compact) return `${flag} ${c.currencyLabel}`;
-  return `${flag} ${c.name} (${c.currencyLabel})`;
+export function formatShippingLabel(c: ShippingCountry) {
+  return `${c.name} (${c.currencyLabel})`;
 }

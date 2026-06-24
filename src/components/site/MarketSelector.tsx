@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { formatShippingLabel, SHIPPING_COUNTRIES } from "@/data/shipping-countries";
+import { CountryFlag } from "@/components/site/CountryFlag";
+import { SHIPPING_COUNTRIES } from "@/data/shipping-countries";
 import { useCurrency } from "@/lib/currency";
-import { flagEmoji } from "@/lib/flags";
 import { writeShippingManual } from "@/lib/market";
 import {
   Dialog,
@@ -12,11 +12,18 @@ import {
 } from "@/components/ui/dialog";
 
 const headerTriggerClass =
-  "text-[0.6875rem] font-medium tracking-[0.22em] uppercase py-2 link-underline text-foreground/80 hover:text-foreground transition-colors duration-[450ms] max-w-[11rem] lg:max-w-[14rem] truncate";
+  "inline-flex items-center gap-2 text-sm font-normal py-2 link-underline text-foreground/80 hover:text-foreground transition-colors duration-[450ms] max-w-[11rem] lg:max-w-[15rem] truncate normal-case tracking-normal";
 
 type MarketSelectorProps = {
-  variant?: "header" | "footer" | "nav";
+  variant?: "header" | "footer" | "nav" | "dock";
 };
+
+const dockShell =
+  "bg-surface/90 backdrop-blur-md border border-border shadow-[0_8px_32px_-8px_rgba(28,26,23,0.12)]";
+
+function marketLabel(name: string, currencyLabel: string) {
+  return `${name} (${currencyLabel})`;
+}
 
 export function MarketSelector({ variant = "header" }: MarketSelectorProps) {
   const { shipping, setShippingCountryCode } = useCurrency();
@@ -38,13 +45,15 @@ export function MarketSelector({ variant = "header" }: MarketSelectorProps) {
     setQuery("");
   };
 
-  const triggerLabel = formatShippingLabel(shipping, true);
+  const label = marketLabel(shipping.name, shipping.currencyLabel);
 
   const triggerClass =
     variant === "nav"
-      ? "w-full text-left text-sm py-3 px-4 border border-border bg-background hover:border-accent/60 transition-colors"
+      ? "w-full text-left text-sm py-3 px-4 border border-border bg-background hover:border-accent/60 transition-colors normal-case tracking-normal"
+      : variant === "dock"
+        ? `px-3 py-2 ${dockShell} text-xs font-normal text-foreground/80 hover:text-foreground hover:border-foreground/30 transition-all duration-300 normal-case tracking-normal max-w-[min(100vw-2.5rem,14rem)]`
       : variant === "footer"
-        ? "text-eyebrow !text-surface/70 link-underline hover:!text-surface text-left"
+        ? "text-eyebrow !text-surface/70 link-underline hover:!text-surface text-left normal-case tracking-normal inline-flex items-center gap-2"
         : headerTriggerClass;
 
   return (
@@ -54,9 +63,9 @@ export function MarketSelector({ variant = "header" }: MarketSelectorProps) {
         onClick={() => setOpen(true)}
         className={triggerClass}
         aria-haspopup="dialog"
-        title={triggerLabel}
+        title={label}
       >
-        {triggerLabel}
+        <span className="truncate">{label}</span>
       </button>
 
       <CountryDialog
@@ -124,9 +133,7 @@ function CountryDialog({
                   className={`w-full flex items-center justify-between gap-4 text-sm py-2.5 px-3 rounded-sm transition-colors duration-300 text-left ${selectedCode === c.code ? "bg-secondary" : "hover:bg-secondary/70"}`}
                 >
                   <span className="flex items-center gap-2 text-foreground/90 min-w-0">
-                    <span className="text-lg leading-none shrink-0" aria-hidden>
-                      {flagEmoji(c.code)}
-                    </span>
+                    <CountryFlag code={c.code} className="shrink-0" />
                     <span className="truncate">{c.name}</span>
                   </span>
                   <span className="text-caption shrink-0">{c.currencyLabel}</span>
