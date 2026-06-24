@@ -5,7 +5,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const BASE = process.argv[2] || "https://bingin-diaries.bingindiaries.workers.dev";
+const BASE = process.argv[2] || "https://bingin-diaries.bingindiaries-d08.workers.dev";
 const MARKER = `__smoke_${Date.now()}__`;
 
 function loadEnvLocal() {

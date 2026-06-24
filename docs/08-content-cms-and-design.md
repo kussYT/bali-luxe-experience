@@ -2,7 +2,7 @@
 
 Living guide for the **public storefront design**, **editorial CMS**, and **Beatrice self-service workflow**.
 
-**Staging:** https://bingin-diaries.bingindiaries.workers.dev  
+**Staging:** https://bingin-diaries.bingindiaries-d08.workers.dev  
 **Branch:** `design/premium-lifestyle`
 
 ---
@@ -25,8 +25,8 @@ Living guide for the **public storefront design**, **editorial CMS**, and **Beat
 
 | Page | URL |
 |------|-----|
-| Public site | https://bingin-diaries.bingindiaries.workers.dev |
-| Admin login | https://bingin-diaries.bingindiaries.workers.dev/admin/login |
+| Public site | https://bingin-diaries.bingindiaries-d08.workers.dev |
+| Admin login | https://bingin-diaries.bingindiaries-d08.workers.dev/admin/login |
 | Content — Homepage | `/admin/content` |
 | Content — About | `/admin/content/about` |
 | Content — Find us | `/admin/content/find-us` |

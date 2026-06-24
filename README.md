@@ -4,7 +4,7 @@ E-commerce storefront and proprietary back office — full replacement of the Sh
 
 **Stack:** TanStack Start · React 19 · PostgreSQL · Stripe · Cloudflare Workers
 
-**Status (June 2026):** S1–S4 ✅ · S7 admin ✅ · **Premium design + CMS** ✅ · **Staging** https://bingin-diaries.bingindiaries.workers.dev · Go-live DNS ⏳
+**Status (June 2026):** S1–S4 ✅ · S7 admin ✅ · **Premium design + CMS** ✅ · **Staging** https://bingin-diaries.bingindiaries-d08.workers.dev · Go-live DNS ⏳
 
 ---
 
