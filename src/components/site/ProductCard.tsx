@@ -3,6 +3,7 @@ import { Heart } from "lucide-react";
 import type { Product } from "@/lib/catalog-types";
 import { useCurrency } from "@/lib/currency";
 import { useCart } from "@/lib/cart";
+import { productObjectPosition } from "@/lib/image-focal";
 import { productMiniDescription } from "@/lib/product-display";
 
 export function ProductCard({
@@ -27,7 +28,13 @@ export function ProductCard({
       style={{ animationDelay: `${index * 70}ms` }}
     >
       <div className="product-image-wrap relative mb-3 md:mb-4 bg-white">
-        <img src={product.image} alt={product.name} loading="lazy" className="image-editorial" />
+        <img
+          src={product.image}
+          alt={product.name}
+          loading="lazy"
+          className="image-editorial"
+          style={{ objectPosition: productObjectPosition(product) }}
+        />
         <button
           onClick={(e) => {
             e.preventDefault();

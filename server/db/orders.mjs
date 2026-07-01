@@ -22,6 +22,11 @@ function mapOrderRow(row, items = []) {
     amountSubtotal: row.amount_subtotal ?? null,
     amountShipping: row.amount_shipping ?? null,
     amountTotal: row.amount_total ?? null,
+    promoCode: row.promo_code || null,
+    recoveryEmailSentAt: row.recovery_email_sent_at
+      ? new Date(row.recovery_email_sent_at).toISOString()
+      : null,
+    recoveryEmailCount: row.recovery_email_count ?? 0,
     paidAt: row.paid_at ? new Date(row.paid_at).toISOString() : null,
     shippedAt: row.shipped_at ? new Date(row.shipped_at).toISOString() : null,
     trackingNumber: row.tracking_number || null,
@@ -123,6 +128,9 @@ export async function createPendingOrder({
   countryCode,
   customerEmail,
   promoCode,
+  amountSubtotal,
+  amountShipping,
+  amountTotal,
 }) {
   if (!isDatabaseConfigured()) {
     const err = new Error("Database not configured");
@@ -135,9 +143,22 @@ export async function createPendingOrder({
 
   return withTransaction(async (client) => {
     await client.query(
-      `INSERT INTO orders (id, status, channel, currency, country_code, fulfillment_warehouse, customer_email, promo_code)
-       VALUES ($1, 'pending', 'website', $2, $3, $4, $5, $6)`,
-      [orderId, currency, countryCode || null, fulfillmentWarehouse, customerEmail || null, promoCode || null],
+      `INSERT INTO orders (
+         id, status, channel, currency, country_code, fulfillment_warehouse,
+         customer_email, promo_code, amount_subtotal, amount_shipping, amount_total
+       )
+       VALUES ($1, 'pending', 'website', $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        orderId,
+        currency,
+        countryCode || null,
+        fulfillmentWarehouse,
+        customerEmail || null,
+        promoCode || null,
+        amountSubtotal ?? null,
+        amountShipping ?? null,
+        amountTotal ?? null,
+      ],
     );
 
     for (const item of items) {
@@ -312,6 +333,49 @@ export async function listOrdersAdmin({ channel } = {}) {
   const ids = rows.map((r) => r.id);
   const itemsMap = await loadItemsForOrders(ids);
   return rows.map((r) => mapOrderRow(r, itemsMap.get(r.id) || []));
+}
+
+/** Pending website checkouts older than minAgeHours (default 1h). */
+export async function listAbandonedCheckouts({ minAgeHours = 1, limit = 200 } = {}) {
+  const hours = Math.max(1, Number(minAgeHours) || 1);
+  const { rows } = await query(
+    `SELECT * FROM orders
+     WHERE status = 'pending'
+       AND channel = 'website'
+       AND created_at < now() - ($1::text || ' hours')::interval
+     ORDER BY created_at DESC
+     LIMIT $2`,
+    [String(hours), limit],
+  );
+  const ids = rows.map((r) => r.id);
+  const itemsMap = await loadItemsForOrders(ids);
+  return rows.map((r) => mapOrderRow(r, itemsMap.get(r.id) || []));
+}
+
+export async function markRecoveryEmailSent(orderId) {
+  const { rows } = await query(
+    `UPDATE orders
+     SET recovery_email_sent_at = now(),
+         recovery_email_count = recovery_email_count + 1,
+         updated_at = now()
+     WHERE id = $1
+     RETURNING id`,
+    [orderId],
+  );
+  if (rows.length === 0) {
+    const err = new Error("Order not found");
+    err.status = 404;
+    throw err;
+  }
+  return findOrderById(orderId);
+}
+
+export function estimateOrderTotalCents(order) {
+  if (order.amountTotal != null) return order.amountTotal;
+  const sub = (order.items || []).reduce((sum, item) => sum + item.unitPrice * item.qty, 0);
+  if (!sub) return null;
+  if (order.currency === "IDR") return sub;
+  return sub * 100;
 }
 
 export async function createMarketplaceOrder({

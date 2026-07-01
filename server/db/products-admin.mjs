@@ -47,6 +47,11 @@ export function normalizeAdminProductBody(body) {
     videoUrl: typeof body.videoUrl === "string" ? body.videoUrl.trim() : "",
     seoTitle: typeof body.seoTitle === "string" ? body.seoTitle.trim() : "",
     metaDescription: typeof body.metaDescription === "string" ? body.metaDescription.trim() : "",
+    imageFocal: {
+      x: Number(body.imageFocal?.x ?? body.imageFocalX) || 50,
+      y: Number(body.imageFocal?.y ?? body.imageFocalY) || 50,
+    },
+    sortOrder: body.sortOrder != null ? Number(body.sortOrder) : undefined,
     variants: parseAdminVariants(body),
   };
 }
@@ -92,12 +97,14 @@ async function replaceExtraCollections(client, productId, primaryCollectionId, e
   }
 }
 
-async function replaceImages(client, productId, images) {
+async function replaceImages(client, productId, images, imageFocal) {
   await client.query(`DELETE FROM product_images WHERE product_id = $1`, [productId]);
+  const focalX = Number(imageFocal?.x) || 50;
+  const focalY = Number(imageFocal?.y) || 50;
   for (let i = 0; i < images.length; i++) {
     await client.query(
-      `INSERT INTO product_images (product_id, url, position) VALUES ($1, $2, $3)`,
-      [productId, images[i], i],
+      `INSERT INTO product_images (product_id, url, position, focal_x, focal_y) VALUES ($1, $2, $3, $4, $5)`,
+      [productId, images[i], i, i === 0 ? focalX : 50, i === 0 ? focalY : 50],
     );
   }
 }
@@ -278,7 +285,7 @@ export async function createProductInDb(rawBody) {
     );
 
     const productId = rows[0].id;
-    await replaceImages(client, productId, p.images);
+    await replaceImages(client, productId, p.images, p.imageFocal);
     await replaceExtraCollections(client, productId, collectionId, p.collectionSlugs);
     for (let i = 0; i < p.variants.length; i++) {
       await createVariantWithInventory(client, productId, p, p.variants[i], i, i === 0);
@@ -374,7 +381,7 @@ export async function updateProductInDb(currentSlug, rawBody) {
       ],
     );
 
-    await replaceImages(client, productId, p.images);
+    await replaceImages(client, productId, p.images, p.imageFocal);
     await replaceExtraCollections(client, productId, collectionId, p.collectionSlugs);
     await syncProductVariants(client, productId, p);
 
@@ -401,4 +408,45 @@ export async function deleteProductInDb(slug) {
 export async function findProductBySlug(slug) {
   const { rows } = await query(`SELECT id, slug FROM products WHERE slug = $1`, [slug]);
   return rows[0] ?? null;
+}
+
+export async function reorderProducts(orders) {
+  if (!isDatabaseConfigured()) {
+    const err = new Error("Database not configured");
+    err.status = 503;
+    throw err;
+  }
+  if (!Array.isArray(orders) || orders.length === 0) {
+    const err = new Error("orders array required");
+    err.status = 400;
+    throw err;
+  }
+  return withTransaction(async (client) => {
+    for (const item of orders) {
+      if (!item?.slug) continue;
+      await client.query(`UPDATE products SET sort_order = $2, updated_at = now() WHERE slug = $1`, [
+        item.slug,
+        Number(item.sortOrder) || 0,
+      ]);
+    }
+  });
+}
+
+export async function patchProductStatus(slug, status) {
+  if (!isDatabaseConfigured()) {
+    const err = new Error("Database not configured");
+    err.status = 503;
+    throw err;
+  }
+  const next = status === "draft" ? "draft" : "published";
+  const { rowCount } = await query(
+    `UPDATE products SET status = $2::product_status, updated_at = now() WHERE slug = $1`,
+    [slug, next],
+  );
+  if (!rowCount) {
+    const err = new Error("Product not found");
+    err.status = 404;
+    throw err;
+  }
+  return { slug, status: next };
 }

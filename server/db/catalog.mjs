@@ -58,12 +58,13 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
       p.video_url,
       p.seo_title,
       p.meta_description,
+      p.sort_order,
       c.slug AS collection_slug,
       c.name AS collection_name
     FROM products p
     LEFT JOIN collections c ON c.id = p.collection_id
     ${statusFilter}
-    ORDER BY p.name ASC
+    ORDER BY p.sort_order ASC, p.name ASC
     `,
   );
 
@@ -88,7 +89,7 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
   const productIds = productRows.map((p) => p.id);
 
   const { rows: imageRows } = await query(
-    `SELECT product_id, url, position FROM product_images
+    `SELECT product_id, url, position, focal_x, focal_y FROM product_images
      WHERE product_id = ANY($1::uuid[])
      ORDER BY position ASC`,
     [productIds],
@@ -135,9 +136,16 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
   }
 
   const imagesByProduct = new Map();
+  const focalByProduct = new Map();
   for (const img of imageRows) {
     if (!imagesByProduct.has(img.product_id)) imagesByProduct.set(img.product_id, []);
     imagesByProduct.get(img.product_id).push(img.url);
+    if (img.position === 0) {
+      focalByProduct.set(img.product_id, {
+        x: Number(img.focal_x) || 50,
+        y: Number(img.focal_y) || 50,
+      });
+    }
   }
 
   const extraCollectionsByProduct = new Map();
@@ -180,6 +188,7 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
 
   const products = productRows.map((p) => {
     const images = imagesByProduct.get(p.id) || [];
+    const focal = focalByProduct.get(p.id) || { x: 50, y: 50 };
     const variants = variantsByProduct.get(p.id) || [];
     const stockFrance = variants.reduce((s, v) => s + v.inventory.france, 0);
     const stockBali = variants.reduce((s, v) => s + v.inventory.bali, 0);
@@ -207,6 +216,7 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
       priceIDR: p.price_idr,
       image: images[0] || "/shopify-import/placeholder.jpg",
       images,
+      imageFocal: focal,
       videoUrl: p.video_url || undefined,
       seoTitle: p.seo_title?.trim() || undefined,
       metaDescription: p.meta_description?.trim() || undefined,
@@ -217,6 +227,7 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
       stockBali,
       status: p.status,
       featured: p.featured,
+      sortOrder: p.sort_order ?? 0,
       onSale,
       available,
       origin: p.origin,

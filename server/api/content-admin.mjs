@@ -13,7 +13,7 @@ import {
   seedPages,
   getPageBySlug,
 } from "../db/pages.mjs";
-import { listCollectionsAdmin, updateCollection } from "../db/collections-admin.mjs";
+import { listCollectionsAdmin, updateCollection, reorderCollections } from "../db/collections-admin.mjs";
 import { getSetting, setSetting } from "../db/settings-store.mjs";
 import { DEFAULT_HOMEPAGE, DEFAULT_ANNOUNCEMENT, DEFAULT_ABOUT, DEFAULT_FIND_US, DEFAULT_CONTACT, DEFAULT_CARE, DEFAULT_SIZING, DEFAULT_FOOTER } from "../content-defaults.mjs";
 
@@ -33,7 +33,7 @@ export async function getAdminPostsResponse() {
 }
 
 export async function getAdminPostResponse(slug) {
-  const post = await getPostBySlug(slug, { includeDraft: true });
+  const post = await getPostBySlug(slug, { includeDraft: true, includeLocales: true });
   if (!post) {
     const err = new Error("Post not found");
     err.status = 404;
@@ -85,6 +85,12 @@ export async function getAdminCollectionsResponse() {
 export async function patchAdminCollectionResponse(slug, body) {
   const collection = await updateCollection(slug, body);
   return { collection, source: "postgres" };
+}
+
+export async function reorderAdminCollectionsResponse(body) {
+  const orders = Array.isArray(body.orders) ? body.orders : [];
+  const collections = await reorderCollections(orders);
+  return { collections, source: "postgres" };
 }
 
 export async function seedCmsContent() {

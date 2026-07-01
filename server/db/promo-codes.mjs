@@ -1,5 +1,7 @@
 import { query, isDatabaseConfigured } from "./pool.mjs";
 
+import { normalizePromoRules, DEFAULT_PROMO_RULES } from "../promo-rules.mjs";
+
 function mapRow(row) {
   return {
     id: row.id,
@@ -13,6 +15,7 @@ function mapRow(row) {
     influencerName: row.influencer_name || "",
     active: Boolean(row.active),
     expiresAt: row.expires_at,
+    rules: normalizePromoRules(row.rules),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -97,8 +100,8 @@ export async function createPromoCode(payload) {
   const { rows } = await query(
     `INSERT INTO promo_codes (
        code, label, discount_type, discount_value, free_shipping,
-       max_uses, influencer_name, active, expires_at
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       max_uses, influencer_name, active, expires_at, rules
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb)
      RETURNING *`,
     [
       code,
@@ -110,6 +113,7 @@ export async function createPromoCode(payload) {
       payload.influencerName || null,
       payload.active !== false,
       payload.expiresAt || null,
+      JSON.stringify(normalizePromoRules(payload.rules || DEFAULT_PROMO_RULES)),
     ],
   );
   return mapRow(rows[0]);
@@ -126,6 +130,7 @@ export async function updatePromoCode(id, patch) {
        influencer_name = COALESCE($7, influencer_name),
        active = COALESCE($8, active),
        expires_at = COALESCE($9, expires_at),
+       rules = COALESCE($10::jsonb, rules),
        updated_at = now()
      WHERE id = $1::uuid
      RETURNING *`,
@@ -139,6 +144,7 @@ export async function updatePromoCode(id, patch) {
       patch.influencerName ?? null,
       patch.active != null ? Boolean(patch.active) : null,
       patch.expiresAt !== undefined ? patch.expiresAt : null,
+      patch.rules != null ? JSON.stringify(normalizePromoRules(patch.rules)) : null,
     ],
   );
   if (!rows.length) {

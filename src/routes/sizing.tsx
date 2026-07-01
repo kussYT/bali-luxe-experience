@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSiteContent } from "@/lib/content-context";
-import { PageMeta } from "@/components/site/PageMeta";
+import { focalObjectPosition } from "@/lib/image-focal";
 
 export const Route = createFileRoute("/sizing")({
   head: () => ({
@@ -31,7 +31,8 @@ function SizingPage() {
           <img
             src={sizing.image}
             alt={sizing.imageAlt}
-            className="mt-12 w-full max-w-3xl image-editorial"
+            className="mt-12 w-full max-w-3xl image-editorial object-cover"
+            style={{ objectPosition: focalObjectPosition(sizing.imageFocal) }}
             loading="lazy"
           />
         )}

@@ -94,6 +94,8 @@ function AdminSizingContentPage() {
                 onChange={(v) => setSizing({ ...sizing, image: v })}
                 folder="sizing"
                 accept="image/*"
+                focal={sizing.imageFocal}
+                onFocalChange={(imageFocal) => setSizing({ ...sizing, imageFocal })}
               />
             </div>
             <CmsField

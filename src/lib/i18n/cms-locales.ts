@@ -10,3 +10,7 @@ export const CMS_LOCALES: { code: Locale; label: string; adminLabel: string }[] 
 export function emptyPageLocaleFields() {
   return { title: "", eyebrow: "", metaDescription: "", body: [] as string[] };
 }
+
+export function emptyPostLocaleFields() {
+  return { title: "", excerpt: "", category: "", body: [] as string[] };
+}

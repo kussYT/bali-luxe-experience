@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { deleteAdminPost, fetchAdminPosts } from "@/lib/admin-api";
+import { CMS_LOCALES } from "@/lib/i18n/cms-locales";
 import type { JournalPost } from "@/lib/content-types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +44,9 @@ function AdminBlogListPage() {
         <div>
           <p className="text-eyebrow text-muted-foreground">CMS</p>
           <h2 className="font-display text-4xl mt-2">Blog</h2>
+          <p className="text-sm text-muted-foreground mt-2">
+            Articles journal — contenu par langue (FR · EN · ID · ES), comme les pages info.
+          </p>
         </div>
         <Button asChild>
           <Link to="/admin/blog/$slug" params={{ slug: "new" }}>
@@ -66,6 +70,23 @@ function AdminBlogListPage() {
                 <p className="text-sm text-muted-foreground">
                   /journal/{post.slug} · {post.status || "published"}
                 </p>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {CMS_LOCALES.map(({ code }) => {
+                    const filled = Boolean(post.locales?.[code]?.title?.trim());
+                    return (
+                      <span
+                        key={code}
+                        className={`text-[0.6rem] uppercase tracking-wider px-1.5 py-0.5 rounded-sm border ${
+                          filled
+                            ? "border-foreground/30 text-foreground"
+                            : "border-border text-muted-foreground"
+                        }`}
+                      >
+                        {code}
+                      </span>
+                    );
+                  })}
+                </div>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" asChild>

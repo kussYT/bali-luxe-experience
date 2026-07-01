@@ -36,7 +36,6 @@ function AdminPageEditPage() {
   const [activeLocale, setActiveLocale] = useState<Locale>("fr");
   const [sourceLocale, setSourceLocale] = useState<Locale>("en");
   const [translateAvailable, setTranslateAvailable] = useState<boolean | null>(null);
-  const [translateHint, setTranslateHint] = useState<string | null>(null);
   const [bodyTextByLocale, setBodyTextByLocale] = useState<Partial<Record<Locale, string>>>({});
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -45,10 +44,7 @@ function AdminPageEditPage() {
 
   useEffect(() => {
     fetchTranslateStatus()
-      .then((s) => {
-        setTranslateAvailable(s.available);
-        setTranslateHint(s.hint);
-      })
+      .then((s) => setTranslateAvailable(s.available))
       .catch(() => setTranslateAvailable(false));
   }, []);
 
@@ -233,19 +229,11 @@ function AdminPageEditPage() {
             variant="secondary"
             disabled={translating || translateAvailable === false}
             onClick={handleAutoTranslate}
-            title={translateHint || undefined}
           >
             {translating ? "Traduction…" : "Traduire vers les autres langues"}
           </Button>
         </div>
       </div>
-
-      {translateAvailable === false && translateHint && (
-        <p className="text-sm text-muted-foreground bg-muted/40 border border-border px-3 py-2 rounded-sm">
-          <strong className="text-foreground">Traduction auto (optionnelle)</strong> — {translateHint} Vous pouvez
-          éditer chaque langue manuellement sans DeepL.
-        </p>
-      )}
 
       <form onSubmit={handleSave}>
         <Card>

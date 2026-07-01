@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   fetchAdminInventory,
+  patchProductStatus,
   updateInventoryQuantity,
   type AdminInventoryResponse,
   type InventoryRow,
@@ -9,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -29,6 +31,7 @@ function AdminInventoryPage() {
   const [filter, setFilter] = useState("");
   const [collectionFilter, setCollectionFilter] = useState("");
   const [saving, setSaving] = useState<string | null>(null);
+  const [statusSaving, setStatusSaving] = useState<string | null>(null);
   const [draft, setDraft] = useState<Record<string, { france: string; bali: string }>>({});
 
   const load = useCallback(async () => {
@@ -100,14 +103,29 @@ function AdminInventoryPage() {
     }
   };
 
+  const toggleProductStatus = async (slug: string, visible: boolean) => {
+    setStatusSaving(slug);
+    setError(null);
+    try {
+      await patchProductStatus(slug, visible ? "published" : "draft");
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Impossible de changer le statut");
+    } finally {
+      setStatusSaving(null);
+    }
+  };
+
+  const seenProductSlugs = new Set<string>();
+
   return (
     <div className="space-y-8">
       <div>
         <p className="text-eyebrow text-muted-foreground">Sprint S2</p>
         <h2 className="font-display text-4xl mt-2">France / Bali inventory</h2>
         <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
-          Quantités Paris / Bali par variante. Filtrez par collection pour vérifier qu&apos;une ligne est complète
-          avant mise en ligne (photo + stock + statut publié dans Products).
+          Quantités Paris / Bali par variante. Basculez <strong>Visible / Brouillon</strong> pour masquer un article
+          de la boutique sans le supprimer.
         </p>
       </div>
 
@@ -191,7 +209,10 @@ function AdminInventoryPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
+              {rows.map((row) => {
+                const showStatus = !seenProductSlugs.has(row.productSlug);
+                if (showStatus) seenProductSlugs.add(row.productSlug);
+                return (
                 <tr key={row.variantId} className="border-t border-border">
                   <td className="p-3">
                     <p className="font-medium">{row.productName}</p>
@@ -241,9 +262,23 @@ function AdminInventoryPage() {
                       <p className="text-xs text-muted-foreground mt-1">reserved {row.baliReserved}</p>
                     )}
                   </td>
-                  <td className="p-3 text-muted-foreground capitalize">{row.status}</td>
+                  <td className="p-3">
+                    {showStatus ? (
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={row.status === "published"}
+                          disabled={statusSaving === row.productSlug}
+                          onCheckedChange={(v) => toggleProductStatus(row.productSlug, v)}
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          {row.status === "published" ? "Visible" : "Brouillon"}
+                        </span>
+                      </div>
+                    ) : null}
+                  </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

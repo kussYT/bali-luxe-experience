@@ -207,6 +207,9 @@ function AdminContentPage() {
               onChange={(v) => setHomepage({ ...homepage, hero: { ...hero, poster: v } })}
               folder="hero"
               accept="image/*"
+              focal={hero.posterFocal}
+              onFocalChange={(posterFocal) => setHomepage({ ...homepage, hero: { ...hero, posterFocal } })}
+              focalAspect={16 / 9}
             />
             <CmsMediaField
               label="Vidéo (URL ou fichier MP4)"
@@ -263,6 +266,9 @@ function AdminContentPage() {
                   onChange={(v) => patchSpotlight({ image: v })}
                   folder="spotlight"
                   accept="image/*"
+                  focal={spotlight.imageFocal}
+                  onFocalChange={(imageFocal) => patchSpotlight({ imageFocal })}
+                  focalAspect={3 / 4}
                 />
               </div>
             </div>
@@ -317,6 +323,13 @@ function AdminContentPage() {
                   }}
                   folder={`photo-strip-${i + 1}`}
                   accept="image/*"
+                  focal={tile.imageFocal}
+                  onFocalChange={(imageFocal) => {
+                    const tiles = [...(homepage.photoStrip?.tiles ?? [])];
+                    tiles[i] = { ...tiles[i], imageFocal };
+                    setHomepage({ ...homepage, photoStrip: { ...homepage.photoStrip!, tiles } });
+                  }}
+                  focalAspect={3 / 4}
                 />
                 <CmsField
                   label="Lien"

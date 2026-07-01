@@ -51,6 +51,8 @@ export type Product = {
   priceIDR: number;
   image: string;
   images: string[];
+  /** Cover image focal point (0–100), for object-position in grids */
+  imageFocal?: { x: number; y: number };
   videoUrl?: string;
   details: string[];
   tags: string[];
@@ -60,6 +62,8 @@ export type Product = {
   stockBali?: number;
   status: ProductStatus;
   featured: boolean;
+  /** Lower = shown first in Shop All / collection grids */
+  sortOrder?: number;
   onSale?: boolean;
   outlet?: boolean;
   available: boolean;

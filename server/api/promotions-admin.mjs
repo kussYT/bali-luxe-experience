@@ -10,6 +10,7 @@ import { validateCartItems } from "../checkout.mjs";
 import { shippingAmountForCountry } from "../shipping-rates.mjs";
 import { computePromoAmounts } from "../promo-apply.mjs";
 import { toStripeAmount } from "../pricing.mjs";
+import { promoApplyMessage, promoScopeLabel } from "../promo-rules.mjs";
 
 export async function getAdminPromotionsResponse() {
   const promos = await listPromoCodes();
@@ -44,16 +45,28 @@ export async function postValidatePromo(body) {
   const shippingDisplay = await shippingAmountForCountry(countryCode, currency);
   const shippingSmallest = toStripeAmount(shippingDisplay, currency);
 
-  const amounts =
-    resolved.length > 0
-      ? computePromoAmounts({ promo, resolved, currency, shippingSmallest })
-      : {
-          subtotalSmallest: 0,
-          productDiscount: 0,
-          shippingDiscount: promo.freeShipping ? shippingSmallest : 0,
-          totalSmallest: 0,
-          isFullyFree: promo.discountType === "free" && promo.freeShipping,
-        };
+  let amounts;
+  try {
+    amounts =
+      resolved.length > 0
+        ? computePromoAmounts({ promo, resolved, currency, shippingSmallest })
+        : {
+            subtotalSmallest: 0,
+            eligibleSubtotalSmallest: 0,
+            productDiscount: 0,
+            shippingDiscount: promo.freeShipping ? shippingSmallest : 0,
+            totalSmallest: 0,
+            isFullyFree: promo.discountType === "free" && promo.freeShipping,
+            eligibleCount: 0,
+            ineligibleCount: 0,
+            eligible: [],
+            ineligible: [],
+          };
+  } catch (e) {
+    const err = new Error(e.message || "Code invalide pour ce panier");
+    err.status = e.status || 400;
+    throw err;
+  }
 
   return {
     valid: true,
@@ -64,7 +77,18 @@ export async function postValidatePromo(body) {
       discountValue: promo.discountValue,
       freeShipping: promo.freeShipping,
       influencerName: promo.influencerName,
+      scopeLabel: promoScopeLabel(promo.rules),
     },
-    amounts,
+    amounts: {
+      isFullyFree: amounts.isFullyFree,
+      totalSmallest: amounts.totalSmallest,
+      eligibleCount: amounts.eligibleCount,
+      ineligibleCount: amounts.ineligibleCount,
+    },
+    applyMessage: promoApplyMessage({
+      eligible: amounts.eligible,
+      ineligible: amounts.ineligible,
+      rules: promo.rules,
+    }),
   };
 }

@@ -2,6 +2,9 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { getProjectRoot, requireProjectRoot } from "./runtime-root.mjs";
 
+const MAX_UPLOAD_BYTES = 12 * 1024 * 1024;
+const BLOCKED_EXTENSIONS = new Set([".heic", ".heif", ".tif", ".tiff", ".bmp"]);
+
 function guessContentType(filename) {
   const ext = path.extname(filename).toLowerCase();
   if (ext === ".png") return "image/png";
@@ -9,7 +12,29 @@ function guessContentType(filename) {
   if (ext === ".gif") return "image/gif";
   if (ext === ".mp4") return "video/mp4";
   if (ext === ".webm") return "video/webm";
+  if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
   return "image/jpeg";
+}
+
+export function validateUploadFile(filename, buffer) {
+  const ext = path.extname(filename).toLowerCase();
+  if (BLOCKED_EXTENSIONS.has(ext)) {
+    const err = new Error(
+      "Format HEIC/TIFF non supporté pour l’affichage web. Envoyez un JPEG ou PNG (iPhone : Réglages → Appareil photo → Formats → Plus compatible).",
+    );
+    err.status = 400;
+    throw err;
+  }
+  if (!buffer?.length) {
+    const err = new Error("Fichier vide");
+    err.status = 400;
+    throw err;
+  }
+  if (buffer.length > MAX_UPLOAD_BYTES) {
+    const err = new Error(`Fichier trop lourd (max ${Math.round(MAX_UPLOAD_BYTES / (1024 * 1024))} Mo après compression)`);
+    err.status = 413;
+    throw err;
+  }
 }
 
 function objectKey(slug, filename) {
@@ -34,6 +59,7 @@ export function getUploadsStorageMode(env) {
 
 /** Save product image — local disk in dev, R2 on Cloudflare when UPLOADS binding is set. */
 export async function saveUploadedImage(slug, filename, buffer, env) {
+  validateUploadFile(filename, buffer);
   const { safeName, key } = objectKey(slug, filename);
 
   if (env?.UPLOADS) {

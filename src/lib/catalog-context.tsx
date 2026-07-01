@@ -2,6 +2,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { Catalog, Collection, Product } from "@/lib/catalog-types";
 import fallbackCatalog from "@/data/catalog.json";
 import { fetchPublicCatalog } from "@/lib/admin-api";
+import { sortProductsForDisplay } from "@/lib/sort-products";
+
+const PENDING_CATALOG: Catalog = { products: [], collections: [] };
 
 type CatalogContextValue = {
   catalog: Catalog;
@@ -21,7 +24,7 @@ function normalizeFallback(): Catalog {
 }
 
 export function CatalogProvider({ children }: { children: ReactNode }) {
-  const [catalog, setCatalog] = useState<Catalog>(normalizeFallback);
+  const [catalog, setCatalog] = useState<Catalog>(PENDING_CATALOG);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,7 +47,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   const publishedProducts = useMemo(
-    () => catalog.products.filter((p) => p.status === "published"),
+    () => sortProductsForDisplay(catalog.products.filter((p) => p.status === "published")),
     [catalog.products],
   );
 

@@ -4,6 +4,8 @@ import {
   updateProductInDb,
   deleteProductInDb,
   normalizeAdminProductBody,
+  reorderProducts,
+  patchProductStatus,
 } from "../db/products-admin.mjs";
 import { fetchCatalogFromDb } from "../db/catalog.mjs";
 
@@ -32,4 +34,19 @@ export async function deleteAdminProduct(slug) {
   await deleteProductInDb(slug);
   const catalog = await getCatalogResponse({ includeDrafts: true });
   return { ok: true, catalog };
+}
+
+export async function reorderAdminProducts(body) {
+  const orders = Array.isArray(body.orders) ? body.orders : [];
+  await reorderProducts(orders);
+  const catalog = await getCatalogResponse({ includeDrafts: true });
+  return { catalog, source: "postgres" };
+}
+
+export async function patchAdminProductStatus(slug, body) {
+  const status = body.status === "draft" ? "draft" : "published";
+  await patchProductStatus(slug, status);
+  const product = await productFromCatalog(slug);
+  const catalog = await getCatalogResponse({ includeDrafts: true });
+  return { product, catalog, source: "postgres" };
 }

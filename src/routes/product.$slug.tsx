@@ -8,6 +8,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { PageMeta } from "@/components/site/PageMeta";
 import { VariantSelector } from "@/components/site/VariantSelector";
 import { getDefaultVariant, getVariant, maxCartQty } from "@/lib/warehouse-allocation";
+import { productObjectPosition } from "@/lib/image-focal";
 
 export const Route = createFileRoute("/product/$slug")({
   head: ({ params }) => ({
@@ -92,6 +93,11 @@ function ProductPage() {
               src={gallery[Math.max(0, imageIndex)] ?? gallery[0]}
               alt={product.name}
               className="w-full h-full object-cover aspect-[4/5] md:aspect-auto md:min-h-[calc(100vh-5.25rem)] image-editorial animate-fade-in"
+              style={
+                (showVideo ? imageIndex : activeImage) === 0
+                  ? { objectPosition: productObjectPosition(product) }
+                  : undefined
+              }
             />
           )}
           {(gallery.length > 1 || showVideo) && (

@@ -77,8 +77,15 @@ export function PromoCodeField() {
       {preview?.promo && (
         <p className="text-xs text-muted-foreground">
           {preview.promo.label || preview.promo.code}
+          {preview.promo.scopeLabel ? ` · ${preview.promo.scopeLabel}` : ""}
           {preview.promo.influencerName ? ` · ${preview.promo.influencerName}` : ""}
           {preview.amounts?.isFullyFree ? " — commande offerte" : ""}
+          {preview.applyMessage ? (
+            <>
+              <br />
+              <span className="text-foreground/80">{preview.applyMessage}</span>
+            </>
+          ) : null}
         </p>
       )}
     </div>

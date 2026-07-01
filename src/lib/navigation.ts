@@ -28,6 +28,7 @@ export type NavFeaturedImage = {
   search?: Record<string, string>;
   hash?: string;
   image: string;
+  imageFocal?: import("@/lib/image-focal").ImageFocal;
 };
 
 const HIDDEN_NAV_COLLECTION_SLUGS = new Set(["archives", "all-products"]);
@@ -247,6 +248,7 @@ export function megaTileToFeatured(tile: MegaMenuFeaturedTile): NavFeaturedImage
     label: tile.label,
     to: tile.to,
     image: tile.image,
+    imageFocal: tile.imageFocal,
     hash: tile.hash,
     search: Object.keys(search).length ? search : undefined,
   };

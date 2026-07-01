@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSiteContent } from "@/lib/content-context";
+import { focalObjectPosition } from "@/lib/image-focal";
 import { NAV_ABOUT } from "@/lib/navigation";
 
 export const Route = createFileRoute("/about")({
@@ -70,6 +70,7 @@ function About() {
                       src={item.image}
                       alt=""
                       className="absolute inset-0 size-full object-cover"
+                      style={{ objectPosition: focalObjectPosition(item.imageFocal) }}
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-foreground/25" />
@@ -118,6 +119,7 @@ function About() {
                     src={item.image}
                     alt=""
                     className="absolute inset-0 size-full object-cover transition-transform duration-[1.6s] group-hover:scale-105"
+                    style={{ objectPosition: focalObjectPosition(item.imageFocal) }}
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-foreground/20 group-hover:bg-foreground/35 transition-colors" />

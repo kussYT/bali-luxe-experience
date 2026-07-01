@@ -70,7 +70,8 @@ function AdminShippingPage() {
         <p className="text-eyebrow text-muted-foreground">Logistique</p>
         <h2 className="font-display text-4xl mt-2">Zones de livraison</h2>
         <p className="text-sm text-muted-foreground mt-2">
-          Tarifs par zone et devise (centimes pour EUR/USD, unité pour IDR). Pays = codes ISO séparés par des virgules (ex. FR, BE, CH).
+          Tarifs par zone et devise en <strong>unités entières</strong> (ex. 8 = 8 €, 12 = 12 $, 120000 = 120 000 Rp).
+          Pays = codes ISO séparés par des virgules (ex. FR, BE, CH). <code>*</code> = reste du monde.
         </p>
       </div>
 
@@ -106,7 +107,7 @@ function AdminShippingPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>EUR (centimes)</Label>
+                <Label>EUR (€ entiers, ex. 8)</Label>
                 <Input
                   type="number"
                   value={zone.rates.EUR}
@@ -116,7 +117,7 @@ function AdminShippingPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>USD (centimes)</Label>
+                <Label>USD ($ entiers, ex. 12)</Label>
                 <Input
                   type="number"
                   value={zone.rates.USD}

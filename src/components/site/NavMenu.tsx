@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { focalObjectPosition } from "@/lib/image-focal";
 import { X } from "lucide-react";
 import type { NavColumn, NavFeaturedImage } from "@/lib/navigation";
 import { getMegaMenuContent, type MegaMenuId } from "@/lib/navigation";
@@ -81,6 +81,7 @@ function FeaturedNavLink({ item, onClose }: { item: NavFeaturedImage; onClose: (
           src={item.image}
           alt=""
           className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+          style={{ objectPosition: focalObjectPosition(item.imageFocal) }}
           loading="lazy"
         />
       </div>

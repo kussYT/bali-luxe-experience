@@ -83,7 +83,7 @@ function AdminUploadsNotice() {
   if (loading || available) return null;
   return (
     <div className="mb-6">
-      <UploadsUnavailableBanner hint="Paste an image URL in the field, or ask Mario to enable Cloudflare R2." />
+      <UploadsUnavailableBanner hint="Collez une URL d'image dans le champ si l'upload fichier n'est pas disponible." />
     </div>
   );
 }

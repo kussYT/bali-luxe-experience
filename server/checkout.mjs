@@ -17,7 +17,7 @@ import {
 } from "./pricing.mjs";
 import { sendOrderConfirmationEmail } from "./emails/order-emails.mjs";
 import { validatePromoCode, incrementPromoUsage } from "./db/promo-codes.mjs";
-import { computePromoAmounts } from "./promo-apply.mjs";
+import { computePromoAmounts, lineUnitAfterPromo } from "./promo-apply.mjs";
 import { shippingAmountForCountry } from "./shipping-rates.mjs";
 
 /** ISO codes for Stripe shipping_address_collection */
@@ -182,7 +182,13 @@ export async function createCheckoutSession({
 
   if (promoCode?.trim()) {
     promo = await validatePromoCode(promoCode);
-    amounts = { ...computePromoAmounts({ promo, resolved, currency, shippingSmallest }), shippingSmallest };
+    try {
+      amounts = { ...computePromoAmounts({ promo, resolved, currency, shippingSmallest }), shippingSmallest };
+    } catch (e) {
+      const err = new Error(e.message || "Code promo invalide pour ce panier");
+      err.status = e.status || 400;
+      throw err;
+    }
   } else {
     amounts.totalSmallest = amounts.subtotalSmallest + shippingSmallest;
   }
@@ -194,6 +200,9 @@ export async function createCheckoutSession({
     countryCode: countryCode || null,
     customerEmail: customerEmail || null,
     promoCode: promo?.code || null,
+    amountSubtotal: amounts.subtotalSmallest - amounts.productDiscount,
+    amountShipping: Math.max(0, amounts.shippingSmallest - amounts.shippingDiscount),
+    amountTotal: amounts.totalSmallest,
   });
 
   if (amounts.isFullyFree) {
@@ -218,14 +227,13 @@ export async function createCheckoutSession({
   }
 
   const stripe = getStripe();
-  const discountRatio =
-    amounts.productDiscount > 0 && amounts.subtotalSmallest > 0
-      ? (amounts.subtotalSmallest - amounts.productDiscount) / amounts.subtotalSmallest
-      : 1;
 
-  const line_items = resolved.map(({ product, variant, qty }) => {
-    const amount = unitPrice(product, currency);
-    const discounted = Math.max(0, Math.round(amount * discountRatio * 100) / 100);
+  const line_items = resolved.map((line) => {
+    const { product, variant, qty } = line;
+    const discounted =
+      promo && amounts.productDiscount > 0
+        ? lineUnitAfterPromo(line, currency, amounts)
+        : unitPrice(product, currency);
     const displayName = lineDisplayName(product, variant);
     return {
       quantity: qty,
@@ -284,6 +292,169 @@ export async function createCheckoutSession({
   });
 
   await attachStripeSession(order.id, session.id);
+
+  return { url: session.url, sessionId: session.id, orderId: order.id };
+}
+
+const CHECKOUT_RESUME_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+async function createStripeSessionForPendingOrder({
+  order,
+  resolved,
+  amounts,
+  promo,
+  currency,
+  countryCode,
+  customerEmail,
+}) {
+  const siteUrl = getSiteUrl();
+  const stripe = getStripe();
+  const shippingSmallest = amounts.shippingSmallest;
+
+  const line_items = resolved.map((line) => {
+    const { product, variant, qty } = line;
+    const discounted =
+      promo && amounts.productDiscount > 0
+        ? lineUnitAfterPromo(line, currency, amounts)
+        : unitPrice(product, currency);
+    const displayName = lineDisplayName(product, variant);
+    return {
+      quantity: qty,
+      price_data: {
+        currency: stripeCurrency(currency),
+        unit_amount: toStripeAmount(discounted, currency),
+        product_data: {
+          name: displayName,
+          description: product.collection,
+          images: [absoluteImageUrl(siteUrl, product.image)].filter(Boolean),
+          metadata: {
+            slug: product.slug,
+            variantId: variant?.id || "",
+            variantTitle: variant?.title || "",
+          },
+        },
+      },
+    };
+  });
+
+  const finalShipping = Math.max(0, shippingSmallest - (amounts.shippingDiscount || 0));
+
+  const session = await stripe.checkout.sessions.create({
+    mode: "payment",
+    line_items,
+    client_reference_id: order.id,
+    metadata: { orderId: order.id, promoCode: promo?.code || "" },
+    success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${siteUrl}/checkout/cancel`,
+    shipping_address_collection: {
+      allowed_countries: SHIPPING_COUNTRY_CODES,
+    },
+    shipping_options: [
+      {
+        shipping_rate_data: {
+          type: "fixed_amount",
+          fixed_amount: {
+            amount: finalShipping,
+            currency: stripeCurrency(currency),
+          },
+          display_name: promo?.freeShipping ? "Complimentary shipping" : "Standard shipping",
+          delivery_estimate: {
+            minimum: { unit: "business_day", value: 5 },
+            maximum: { unit: "business_day", value: 14 },
+          },
+        },
+      },
+    ],
+    automatic_tax: { enabled: false },
+    billing_address_collection: "required",
+    phone_number_collection: { enabled: true },
+    customer_email: customerEmail?.trim() || undefined,
+  });
+
+  await attachStripeSession(order.id, session.id);
+  return session;
+}
+
+/** Resume Stripe checkout for an existing pending order (recovery link in emails). */
+export async function resumeCheckoutSession(orderId) {
+  const order = await findOrderById(orderId);
+  if (!order) {
+    const err = new Error("Commande introuvable");
+    err.status = 404;
+    throw err;
+  }
+  if (order.status !== "pending") {
+    const err = new Error("Cette commande a déjà été finalisée");
+    err.status = 400;
+    throw err;
+  }
+  if (order.channel && order.channel !== "website") {
+    const err = new Error("Reprise de paiement indisponible pour cette commande");
+    err.status = 400;
+    throw err;
+  }
+  const age = Date.now() - new Date(order.createdAt).getTime();
+  if (age > CHECKOUT_RESUME_MAX_AGE_MS) {
+    const err = new Error("Ce lien de paiement a expiré — recommencez depuis la boutique");
+    err.status = 410;
+    throw err;
+  }
+  if (!order.items?.length) {
+    const err = new Error("Panier vide");
+    err.status = 400;
+    throw err;
+  }
+
+  const currency = order.currency || "EUR";
+  const countryCode = order.countryCode || order.shippingCountryCode || "FR";
+  const catalog = await readCatalog();
+  const cartLines = order.items.map((item) => ({
+    slug: item.slug,
+    variantId: item.variantId || undefined,
+    qty: item.qty,
+  }));
+  const resolved = validateCartItems(catalog, cartLines, countryCode);
+
+  const shippingAmount = await shippingAmountForCountry(countryCode, currency);
+  const shippingSmallest = toStripeAmount(shippingAmount, currency);
+
+  let promo = null;
+  let amounts = {
+    subtotalSmallest: resolved.reduce(
+      (s, { product, variant, qty }) =>
+        s + toStripeAmount(unitPrice(product, currency), currency) * qty,
+      0,
+    ),
+    productDiscount: 0,
+    shippingDiscount: 0,
+    shippingSmallest,
+    totalSmallest: 0,
+    isFullyFree: false,
+  };
+
+  const promoCode = order.promoCode?.trim();
+  if (promoCode) {
+    promo = await validatePromoCode(promoCode);
+    amounts = { ...computePromoAmounts({ promo, resolved, currency, shippingSmallest }), shippingSmallest };
+  } else {
+    amounts.totalSmallest = amounts.subtotalSmallest + shippingSmallest;
+  }
+
+  if (amounts.isFullyFree) {
+    const err = new Error("Commande gratuite — contactez-nous pour finaliser");
+    err.status = 400;
+    throw err;
+  }
+
+  const session = await createStripeSessionForPendingOrder({
+    order,
+    resolved,
+    amounts,
+    promo,
+    currency,
+    countryCode,
+    customerEmail: order.customerEmail,
+  });
 
   return { url: session.url, sessionId: session.id, orderId: order.id };
 }

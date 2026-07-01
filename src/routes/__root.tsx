@@ -166,9 +166,9 @@ function RootComponent() {
 
     <CatalogProvider>
 
-      <ContentProvider>
-
       <LocaleProvider>
+
+      <ContentProvider>
 
       <AccountProvider>
 
@@ -208,9 +208,9 @@ function RootComponent() {
 
       </AccountProvider>
 
-      </LocaleProvider>
-
       </ContentProvider>
+
+      </LocaleProvider>
 
     </CatalogProvider>
 

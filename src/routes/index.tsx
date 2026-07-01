@@ -23,7 +23,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  const { featuredProducts } = useCatalog();
+  const { featuredProducts, loading: catalogLoading } = useCatalog();
   const { homepage } = useSiteContent();
   const featured = homepage.featuredSection;
   const seo = homepage.seo ?? {
@@ -57,9 +57,10 @@ function Home() {
           </div>
         </Reveal>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-10 md:gap-x-5 md:gap-y-14">
-          {featuredProducts.map((p, i) => (
-            <ProductCard key={p.slug} product={p} index={i} />
-          ))}
+          {!catalogLoading &&
+            featuredProducts.map((p, i) => (
+              <ProductCard key={p.slug} product={p} index={i} />
+            ))}
         </div>
       </section>
 

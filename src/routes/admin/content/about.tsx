@@ -269,6 +269,13 @@ function AdminAboutContentPage() {
                   }}
                   folder={`sidebar-${i + 1}`}
                   accept="image/*"
+                  focal={link.imageFocal}
+                  onFocalChange={(imageFocal) => {
+                    const sidebarLinks = [...about.sidebarLinks];
+                    sidebarLinks[i] = { ...sidebarLinks[i], imageFocal };
+                    setAbout({ ...about, sidebarLinks });
+                  }}
+                  focalAspect={3 / 4}
                 />
               </div>
             ))}

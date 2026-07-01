@@ -10,9 +10,7 @@ export function getTranslateStatus() {
   return {
     available: isTranslateConfigured(),
     provider: isTranslateConfigured() ? "deepl" : null,
-    hint: isTranslateConfigured()
-      ? null
-      : "Traduction auto optionnelle : sans clé DeepL, remplissez chaque langue à la main (FR · EN · ID · ES). La clé DeepL sert uniquement au bouton « Traduire » — compte gratuit sur deepl.com/pro-api (~500k car./mois), à ajouter dans les secrets serveur par Mario.",
+    hint: null,
   };
 }
 
@@ -74,7 +72,7 @@ export async function translatePageLocales({ sourceLocale, targetLocales, fields
     throw err;
   }
   if (!isTranslateConfigured()) {
-    const err = new Error(getTranslateStatus().hint || "Translation not configured");
+    const err = new Error("Traduction indisponible : configurez DEEPL_API_KEY.");
     err.status = 503;
     throw err;
   }
@@ -95,6 +93,46 @@ export async function translatePageLocales({ sourceLocale, targetLocales, fields
       metaDescription: fields.metaDescription?.trim()
         ? await translateText(fields.metaDescription, source, target)
         : "",
+      body: translatedBody.filter(Boolean),
+    };
+  }
+
+  return { locales: out, provider: "deepl" };
+}
+
+export async function translatePostLocales({ sourceLocale, targetLocales, fields }) {
+  const source = sourceLocale?.trim().toLowerCase();
+  const targets = (targetLocales || []).filter((t) => t && t !== source);
+  if (!source || !SITE_LOCALE_CODES.includes(source)) {
+    const err = new Error("Invalid source locale");
+    err.status = 400;
+    throw err;
+  }
+  if (!fields?.title?.trim()) {
+    const err = new Error("Source title is required");
+    err.status = 400;
+    throw err;
+  }
+  if (!isTranslateConfigured()) {
+    const err = new Error("Traduction indisponible : configurez DEEPL_API_KEY.");
+    err.status = 503;
+    throw err;
+  }
+
+  const out = {};
+
+  for (const target of targets) {
+    if (!SITE_LOCALE_CODES.includes(target)) continue;
+    const body = Array.isArray(fields.body) ? fields.body : [];
+    const translatedBody = [];
+    for (const paragraph of body) {
+      translatedBody.push(paragraph?.trim() ? await translateText(paragraph, source, target) : "");
+    }
+
+    out[target] = {
+      title: await translateText(fields.title, source, target),
+      excerpt: fields.excerpt?.trim() ? await translateText(fields.excerpt, source, target) : "",
+      category: fields.category?.trim() ? await translateText(fields.category, source, target) : "",
       body: translatedBody.filter(Boolean),
     };
   }

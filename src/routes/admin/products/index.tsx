@@ -46,9 +46,14 @@ function AdminProductsPage() {
           <p className="text-eyebrow text-muted-foreground">Catalog</p>
           <h2 className="font-display text-4xl mt-2">Products</h2>
         </div>
-        <Button asChild>
-          <Link to="/admin/products/new">Add product</Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild>
+            <Link to="/admin/products/new">Add product</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/admin/products/order">Ordre boutique (Shop All)</Link>
+          </Button>
+        </div>
       </div>
 
       {message && (

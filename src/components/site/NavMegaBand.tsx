@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { focalObjectPosition } from "@/lib/image-focal";
 import type { NavColumn, NavFeaturedImage } from "@/lib/navigation";
 
 type NavMegaBandProps = {
@@ -66,6 +66,7 @@ export function NavMegaBand({ columns, featured = [], onNavigate, className = ""
                       src={item.image}
                       alt=""
                       className="size-full object-cover transition-transform duration-[1.4s] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
+                      style={{ objectPosition: focalObjectPosition(item.imageFocal) }}
                       loading="lazy"
                     />
                   </div>

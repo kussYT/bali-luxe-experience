@@ -12,11 +12,15 @@ export type PromoPreview = {
     discountValue: number;
     freeShipping: boolean;
     influencerName?: string;
+    scopeLabel?: string;
   };
   amounts?: {
     isFullyFree: boolean;
     totalSmallest: number;
+    eligibleCount?: number;
+    ineligibleCount?: number;
   };
+  applyMessage?: string | null;
 };
 
 export function readStoredPromo(): string {

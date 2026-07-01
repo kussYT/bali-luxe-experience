@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { fetchAdminCollections, updateAdminCollection } from "@/lib/admin-api";
+import { fetchAdminCollections, reorderAdminCollections, updateAdminCollection } from "@/lib/admin-api";
 import type { AdminCollectionMeta } from "@/lib/content-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,33 @@ function AdminCollectionsPage() {
   const [collections, setCollections] = useState<AdminCollectionMeta[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [savingSlug, setSavingSlug] = useState<string | null>(null);
+  const [savingOrder, setSavingOrder] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  function sortList(list: AdminCollectionMeta[]) {
+    return [...list].sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
+  }
+
+  function renumberOrders(list: AdminCollectionMeta[]) {
+    return list.map((c, i) => ({ ...c, sortOrder: (i + 1) * 10 }));
+  }
+
+  async function persistOrder(list: AdminCollectionMeta[]) {
+    const ordered = renumberOrders(sortList(list));
+    setSavingOrder(true);
+    setError(null);
+    try {
+      const res = await reorderAdminCollections(
+        ordered.map((c) => ({ slug: c.slug, sortOrder: c.sortOrder })),
+      );
+      setCollections(sortList(res.collections));
+      setMessage("Ordre des collections enregistré.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Impossible d'enregistrer l'ordre");
+    } finally {
+      setSavingOrder(false);
+    }
+  }
 
   useEffect(() => {
     load();
@@ -28,9 +54,7 @@ function AdminCollectionsPage() {
   async function load() {
     try {
       const res = await fetchAdminCollections();
-      setCollections(
-        [...res.collections].sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name)),
-      );
+      setCollections(sortList(res.collections));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load collections");
     }
@@ -49,11 +73,7 @@ function AdminCollectionsPage() {
         sortOrder: col.sortOrder,
         hidden: col.hidden,
       });
-      setCollections((prev) =>
-        [...prev.map((c) => (c.slug === col.slug ? res.collection : c))].sort(
-          (a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name),
-        ),
-      );
+      setCollections((prev) => sortList(prev.map((c) => (c.slug === col.slug ? res.collection : c))));
       setMessage(`Collection « ${col.name} » enregistrée.`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed");
@@ -66,17 +86,15 @@ function AdminCollectionsPage() {
     setCollections((prev) => prev.map((c) => (c.slug === slug ? { ...c, ...patch } : c)));
   }
 
-  function move(slug: string, direction: -1 | 1) {
-    const sorted = [...collections].sort((a, b) => a.sortOrder - b.sortOrder);
+  async function move(slug: string, direction: -1 | 1) {
+    const sorted = sortList(collections);
     const index = sorted.findIndex((c) => c.slug === slug);
-    const swap = sorted[index + direction];
-    if (!swap || index < 0) return;
-    const current = sorted[index];
-    patch(current.slug, { sortOrder: swap.sortOrder });
-    patch(swap.slug, { sortOrder: current.sortOrder });
-    setCollections((prev) =>
-      [...prev].sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name)),
-    );
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= sorted.length) return;
+    const next = [...sorted];
+    [next[index], next[target]] = [next[target], next[index]];
+    setCollections(renumberOrders(next));
+    await persistOrder(next);
   }
 
   return (
@@ -85,8 +103,20 @@ function AdminCollectionsPage() {
         <p className="text-eyebrow text-muted-foreground">CMS</p>
         <h2 className="font-display text-4xl mt-2">Collections</h2>
         <p className="text-sm text-muted-foreground mt-2">
-          Ordre d&apos;affichage, visibilité boutique et métadonnées. Les produits restent dans Products.
+          Ordre d&apos;affichage, visibilité boutique et métadonnées. Les flèches enregistrent l&apos;ordre
+          immédiatement. Vous pouvez aussi saisir un numéro puis cliquer Enregistrer sur la carte.
         </p>
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={savingOrder || collections.length === 0}
+          onClick={() => persistOrder(collections)}
+        >
+          {savingOrder ? "Enregistrement…" : "Enregistrer tout l'ordre"}
+        </Button>
       </div>
 
       {error && <p className="text-destructive text-sm">{error}</p>}

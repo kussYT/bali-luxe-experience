@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Reveal } from "@/components/lifestyle/Reveal";
-import { fetchPublicPost } from "@/lib/content-context";
-import type { JournalPost } from "@/lib/content-types";
+import { useCmsPost } from "@/lib/use-cms-post";
+import { focalObjectPosition } from "@/lib/image-focal";
 
 export const Route = createFileRoute("/journal/$slug")({
   head: () => ({
@@ -13,17 +13,7 @@ export const Route = createFileRoute("/journal/$slug")({
 
 function JournalArticlePage() {
   const { slug } = Route.useParams();
-  const [article, setArticle] = useState<JournalPost | null | undefined>(undefined);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchPublicPost(slug).then((post) => {
-      if (!cancelled) setArticle(post);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [slug]);
+  const article = useCmsPost(slug);
 
   useEffect(() => {
     if (article?.title) {
@@ -49,7 +39,12 @@ function JournalArticlePage() {
   return (
     <article>
       <header className="relative min-h-[50vh] md:min-h-[60vh] overflow-hidden bg-foreground">
-        <img src={article.image} alt="" className="absolute inset-0 size-full object-cover image-editorial opacity-90" />
+        <img
+          src={article.image}
+          alt=""
+          className="absolute inset-0 size-full object-cover image-editorial opacity-90"
+          style={{ objectPosition: focalObjectPosition(article.imageFocal) }}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 to-transparent" />
         <div className="relative page-wrap section-pad py-24 md:py-32 flex flex-col justify-end min-h-[50vh] md:min-h-[60vh] text-surface">
           <p className="text-eyebrow !text-surface/65">

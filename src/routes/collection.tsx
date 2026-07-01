@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useCatalog } from "@/lib/catalog-context";
 import { productInCollection, productMatchesQuery } from "@/lib/search";
+import { sortProductsForDisplay } from "@/lib/sort-products";
 import { ProductCard } from "@/components/site/ProductCard";
 import { SALE_PAGE_SUBTITLE, SALE_PAGE_TITLE } from "@/data/sale-copy";
 
@@ -44,7 +45,7 @@ function Collection() {
 
   const collectionProducts = useMemo(() => {
     if (!c) return [];
-    return publishedProducts.filter((p) => productInCollection(p, c));
+    return sortProductsForDisplay(publishedProducts.filter((p) => productInCollection(p, c)));
   }, [c, publishedProducts]);
 
   const scopedCategoryFilters = useMemo(() => {
@@ -71,13 +72,15 @@ function Collection() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [c, collectionProducts, collections]);
 
-  let filtered = publishedProducts;
-
-  if (c) filtered = filtered.filter((p) => productInCollection(p, c));
-  if (sub) filtered = filtered.filter((p) => productInCollection(p, sub));
-  if (cat) filtered = filtered.filter((p) => p.category === cat);
-  if (sale === "true") filtered = filtered.filter((p) => p.onSale);
-  if (q) filtered = filtered.filter((p) => productMatchesQuery(p, q));
+  const filtered = useMemo(() => {
+    let list = publishedProducts;
+    if (c) list = list.filter((p) => productInCollection(p, c));
+    if (sub) list = list.filter((p) => productInCollection(p, sub));
+    if (cat) list = list.filter((p) => p.category === cat);
+    if (sale === "true") list = list.filter((p) => p.onSale);
+    if (q) list = list.filter((p) => productMatchesQuery(p, q));
+    return sortProductsForDisplay(list);
+  }, [publishedProducts, c, sub, cat, sale, q]);
 
   const activeCollection = c ? collections.find((col) => col.slug === c) : undefined;
   const inCollectionView = Boolean(c) && sale !== "true" && !q;

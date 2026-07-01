@@ -268,7 +268,7 @@ Served at `/uploads/$` via `src/routes/uploads/$.ts`.
 | Blog articles | Blog | Travel Diaries |
 | Shipping / returns text | Pages | Per-page editor |
 
-**Still via dev / Mario:**
+**Still via dev:**
 
 - New page templates or layout changes
 - DNS / domain cutover

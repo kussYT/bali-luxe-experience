@@ -1,4 +1,4 @@
-import { query, isDatabaseConfigured } from "./pool.mjs";
+import { query, isDatabaseConfigured, withTransaction } from "./pool.mjs";
 
 function mapCollection(row) {
   return {
@@ -66,7 +66,7 @@ export async function updateCollection(slug, patch) {
     throw err;
   }
   const { rows: withCount } = await query(
-    `SELECT c.slug, c.name, c.season, c.description, c.hero_image, c.sort_order, c.updated_at,
+    `SELECT c.slug, c.name, c.season, c.description, c.hero_image, c.sort_order, c.hidden, c.updated_at,
             COUNT(p.id)::int AS product_count
      FROM collections c
      LEFT JOIN products p ON p.collection_id = c.id
@@ -75,4 +75,27 @@ export async function updateCollection(slug, patch) {
     [slug],
   );
   return mapCollection(withCount[0]);
+}
+
+export async function reorderCollections(orders) {
+  if (!isDatabaseConfigured()) {
+    const err = new Error("DATABASE_URL required for collections admin");
+    err.status = 503;
+    throw err;
+  }
+  if (!Array.isArray(orders) || orders.length === 0) {
+    const err = new Error("orders array required");
+    err.status = 400;
+    throw err;
+  }
+  await withTransaction(async (client) => {
+    for (const item of orders) {
+      if (!item?.slug) continue;
+      await client.query(`UPDATE collections SET sort_order = $2, updated_at = now() WHERE slug = $1`, [
+        item.slug,
+        Number(item.sortOrder) || 0,
+      ]);
+    }
+  });
+  return listCollectionsAdmin();
 }

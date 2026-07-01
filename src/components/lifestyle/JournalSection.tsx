@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Reveal } from "@/components/lifestyle/Reveal";
-import { useSiteContent } from "@/lib/content-context";
+import { focalObjectPosition } from "@/lib/image-focal";
 
 export function JournalSection({ showHeader = true }: { showHeader?: boolean }) {
   const { posts, homepage } = useSiteContent();
@@ -35,6 +35,7 @@ export function JournalSection({ showHeader = true }: { showHeader?: boolean }) 
                   alt={article.title}
                   loading="lazy"
                   className="size-full object-cover image-editorial transition-transform duration-[1.6s] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
+                  style={{ objectPosition: focalObjectPosition(article.imageFocal) }}
                 />
               </div>
               <p className="text-eyebrow mt-5">{article.category}</p>

@@ -141,7 +141,10 @@ export function AdminNavigationContentPage() {
                     label="Photo"
                     value={tile.image}
                     onChange={(v) => patchTile(key, index, { image: v })}
-                    uploadsAvailable={uploadsAvailable}
+                    folder={`nav-${key}-${index + 1}`}
+                    focal={tile.imageFocal}
+                    onFocalChange={(imageFocal) => patchTile(key, index, { imageFocal })}
+                    focalAspect={4 / 3}
                   />
                 </div>
               ))}
