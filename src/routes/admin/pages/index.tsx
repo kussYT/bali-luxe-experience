@@ -28,6 +28,7 @@ function AdminPagesListPage() {
         <h2 className="font-display text-4xl mt-2">Pages info</h2>
         <p className="text-sm text-muted-foreground mt-2">
           Shipping, returns, FAQ, terms — une URL par page, contenu par langue (FR · EN · ID · ES).
+          Pour Contact, Care, Sizing et le footer → menu <strong>Content</strong>.
         </p>
       </div>
 

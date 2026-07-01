@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { NewsletterForm } from "@/components/site/NewsletterForm";
 import { CookiePreferencesLink } from "@/components/site/CookieConsent";
 import { SocialIconLinks } from "@/components/site/SocialIconLinks";
+import { useSiteContent } from "@/lib/content-context";
 
 function FooterColumn({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -38,6 +39,8 @@ function FooterLink({
 }
 
 export function Footer() {
+  const { footer } = useSiteContent();
+
   return (
     <footer className="mt-20 md:mt-28 bg-foreground text-surface">
       <div className="page-wrap section-pad section-gap grid md:grid-cols-12 gap-12 md:gap-8 lg:gap-10">
@@ -46,53 +49,53 @@ export function Footer() {
         </div>
 
         <div className="md:col-span-3 lg:col-span-2">
-          <FooterColumn title="Shop">
-            <FooterLink to="/collection">All pieces</FooterLink>
+          <FooterColumn title={footer.shopTitle}>
+            <FooterLink to="/collection">{footer.shopAll}</FooterLink>
             <FooterLink to="/collection" search={{ sale: "true" }}>
-              Sale
+              {footer.shopSale}
             </FooterLink>
             <FooterLink to="/account" search={{ tab: "wishlist" }}>
-              Wishlist
+              {footer.shopWishlist}
             </FooterLink>
           </FooterColumn>
         </div>
 
         <div className="md:col-span-3 lg:col-span-2">
-          <FooterColumn title="Customer care">
-            <FooterLink to="/contact">Contact us</FooterLink>
-            <FooterLink to="/sizing">Size guide</FooterLink>
-            <FooterLink to="/care">Care guide</FooterLink>
-            <FooterLink to="/faq">FAQ</FooterLink>
-            <FooterLink to="/shipping">Shipping</FooterLink>
-            <FooterLink to="/returns">Return policy</FooterLink>
+          <FooterColumn title={footer.careTitle}>
+            <FooterLink to="/contact">{footer.contactUs}</FooterLink>
+            <FooterLink to="/sizing">{footer.sizeGuide}</FooterLink>
+            <FooterLink to="/care">{footer.careGuide}</FooterLink>
+            <FooterLink to="/faq">{footer.faq}</FooterLink>
+            <FooterLink to="/shipping">{footer.shipping}</FooterLink>
+            <FooterLink to="/returns">{footer.returns}</FooterLink>
           </FooterColumn>
         </div>
 
         <div className="md:col-span-3 lg:col-span-2">
-          <FooterColumn title="Explore">
-            <FooterLink to="/about">The brand</FooterLink>
-            <FooterLink to="/travel-diaries">Travel guide</FooterLink>
+          <FooterColumn title={footer.exploreTitle}>
+            <FooterLink to="/about">{footer.theBrand}</FooterLink>
+            <FooterLink to="/travel-diaries">{footer.travelGuide}</FooterLink>
           </FooterColumn>
         </div>
 
         <div className="md:col-span-3 lg:col-span-2">
-          <FooterColumn title="Privacy">
+          <FooterColumn title={footer.privacyTitle}>
             <div>
               <CookiePreferencesLink />
             </div>
-            <FooterLink to="/terms">Terms &amp; conditions</FooterLink>
+            <FooterLink to="/terms">{footer.terms}</FooterLink>
             <FooterLink to="/about" hash="artisans">
-              Artisans &amp; ethics
+              {footer.artisans}
             </FooterLink>
             <FooterLink to="/about" hash="quality">
-              Materials &amp; quality
+              {footer.materials}
             </FooterLink>
           </FooterColumn>
         </div>
       </div>
 
       <div className="page-wrap section-pad py-8 border-t border-surface/10 flex flex-col md:flex-row items-center justify-between gap-6">
-        <p className="text-eyebrow !text-surface/60">© 2026 Bingin Diaries</p>
+        <p className="text-eyebrow !text-surface/60">{footer.copyright}</p>
         <SocialIconLinks iconClassName="size-4" className="[&_a]:!text-surface/80 [&_a:hover]:!text-surface" />
       </div>
     </footer>

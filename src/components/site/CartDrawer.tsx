@@ -3,6 +3,7 @@ import { useCurrency } from "@/lib/currency";
 import { useCatalog } from "@/lib/catalog-context";
 import { getUnitPrice, formatMoney } from "@/lib/pricing";
 import { CheckoutButton } from "@/components/site/CheckoutButton";
+import { PromoCodeField } from "@/components/site/PromoCodeField";
 import { X, Minus } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
@@ -100,6 +101,7 @@ export function CartDrawer() {
                 <span>{formatMoney(total, currency)}</span>
               </div>
               <p className="text-eyebrow text-muted-foreground">Shipping at checkout</p>
+              <PromoCodeField />
               <CheckoutButton className="btn-primary w-full" onStarted={close} />
               <Link to="/collection" onClick={close} className="block text-center text-eyebrow link-underline">
                 Continue shopping

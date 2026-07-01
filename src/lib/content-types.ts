@@ -71,11 +71,31 @@ export type SiteNavigationContent = {
   popularSearches: string[];
 };
 
+/** Right-hand images in desktop mega-menu (À propos, Boutique, etc.). */
+export type MegaMenuFeaturedTile = {
+  label: string;
+  to: string;
+  image: string;
+  /** Fills ?c= on /collection */
+  collectionSlug?: string;
+  hash?: string;
+  /** Fills ?sale=true */
+  sale?: boolean;
+};
+
+export type MegaMenuFeaturedContent = {
+  newCollection: MegaMenuFeaturedTile[];
+  shop: MegaMenuFeaturedTile[];
+  sales: MegaMenuFeaturedTile[];
+  about: MegaMenuFeaturedTile[];
+};
+
 export type HomepageContent = {
   hero: HeroContent;
   photoStrip: PhotoStripContent;
   spotlightProduct: SpotlightProductContent;
   navigation: SiteNavigationContent;
+  megaMenuFeatured?: MegaMenuFeaturedContent;
   editorial: EditorialContent;
   featuredSection: { eyebrow: string; title: string };
   lookbook: {
@@ -179,11 +199,76 @@ export type FindUsContent = {
   countries: StockistCountry[];
 };
 
+export type ContactContent = {
+  eyebrow: string;
+  title: string;
+  metaDescription: string;
+  description: string;
+  email: string;
+  formName: string;
+  formEmail: string;
+  formSubject: string;
+  formMessage: string;
+  formSubmit: string;
+  formSending: string;
+  formSent: string;
+};
+
+export type CareSectionContent = {
+  title: string;
+  tips: string[];
+};
+
+export type CareContent = {
+  eyebrow: string;
+  title: string;
+  metaDescription: string;
+  intro: string;
+  sections: CareSectionContent[];
+  backLink: string;
+};
+
+export type SizingContent = {
+  eyebrow: string;
+  title: string;
+  metaDescription: string;
+  body: string[];
+  image: string;
+  imageAlt: string;
+  backLink: string;
+};
+
+export type FooterContent = {
+  shopTitle: string;
+  shopAll: string;
+  shopSale: string;
+  shopWishlist: string;
+  careTitle: string;
+  contactUs: string;
+  sizeGuide: string;
+  careGuide: string;
+  faq: string;
+  shipping: string;
+  returns: string;
+  exploreTitle: string;
+  theBrand: string;
+  travelGuide: string;
+  privacyTitle: string;
+  terms: string;
+  artisans: string;
+  materials: string;
+  copyright: string;
+};
+
 export type SiteContent = {
   announcement: AnnouncementContent;
   homepage: HomepageContent;
   about: AboutContent;
   findUs: FindUsContent;
+  contact: ContactContent;
+  care: CareContent;
+  sizing: SizingContent;
+  footer: FooterContent;
 };
 
 export type JournalPost = {
@@ -222,6 +307,7 @@ export type AdminCollectionMeta = {
   description: string;
   heroImage: string;
   sortOrder: number;
+  hidden: boolean;
   productCount: number;
   updatedAt?: string;
 };

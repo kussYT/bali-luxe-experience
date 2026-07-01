@@ -48,6 +48,54 @@ export const DEFAULT_HOMEPAGE = {
     aboutUs: "",
     popularSearches: [],
   },
+  megaMenuFeatured: {
+    newCollection: [
+      {
+        label: "Mi Paradisio",
+        to: "/collection",
+        image: "/lifestyle/lookbook-sunburn.jpg",
+        collectionSlug: "mi-paradisio-collection",
+      },
+      {
+        label: "Special Occasions",
+        to: "/collection",
+        image: "/lifestyle/journal-sunset.jpg",
+        collectionSlug: "special-occasions",
+      },
+    ],
+    shop: [
+      {
+        label: "Summer hats",
+        to: "/collection",
+        image: "/lifestyle/lookbook-sunburn.jpg",
+        collectionSlug: "sunburn",
+      },
+      {
+        label: "Best sellers",
+        to: "/collection",
+        image: "/lifestyle/shop-mood.jpg",
+        collectionSlug: "best-sellers",
+      },
+    ],
+    sales: [
+      {
+        label: "All sale",
+        to: "/collection",
+        image: "/lifestyle/lookbook-salt.jpg",
+        sale: true,
+      },
+      {
+        label: "Mi Paradisio",
+        to: "/collection",
+        image: "/lifestyle/shop-mood.jpg",
+        collectionSlug: "mi-paradisio-collection",
+      },
+    ],
+    about: [
+      { label: "Travel Diaries", to: "/travel-diaries", image: "/lifestyle/lookbook-sunburn.jpg" },
+      { label: "The brand", to: "/about", image: "/lifestyle/craft-hands.jpg" },
+    ],
+  },
   photoStrip: {
     layout: "grid",
     tiles: [
@@ -228,6 +276,120 @@ export const DEFAULT_FIND_US = {
   countries: stockists.countries,
 };
 
+export const DEFAULT_CONTACT = {
+  eyebrow: "Get in touch",
+  title: "Write to us.",
+  metaDescription: "Write to the Bingin Diaries team.",
+  description:
+    "For special orders, press, wholesale, or simply to say hello — we read every message.",
+  email: "info@bingindiaries.com",
+  formName: "Name",
+  formEmail: "Email",
+  formSubject: "Subject",
+  formMessage: "Message",
+  formSubmit: "Send message",
+  formSending: "Sending…",
+  formSent: "Message sent — merci",
+};
+
+export const DEFAULT_CARE = {
+  eyebrow: "Entretien",
+  title: "Guide d'entretien",
+  metaDescription:
+    "A well-cared-for hat stays beautiful for a long time. Our pieces are made to last with a few simple habits, you can keep their shape, texture, and style season after season.",
+  intro:
+    "A well-cared-for hat stays beautiful for a long time. Our pieces are made to last with a few simple habits, you can keep their shape, texture, and style season after season.",
+  sections: [
+    {
+      title: "Coton",
+      tips: ["• Dry clean is best", "• Or clean by hand only on the stain", "• Do not machine wash"],
+    },
+    {
+      title: "Wool",
+      tips: [
+        "• Hand wash only",
+        "• Use cold water",
+        "• Do not rub or twist",
+        "• Do not use a dryer",
+        "• Dry flat in open air",
+      ],
+    },
+    {
+      title: "Cashmere",
+      tips: [
+        "• Use a soft brush",
+        "• Brush anti-clockwise",
+        "• Brush from top to bottom",
+        "• Keep away from water",
+      ],
+    },
+    {
+      title: "Beanies",
+      tips: [
+        "• Hand wash only",
+        "• Use cold water",
+        "• Do not use a dryer",
+        "• Dry flat in open air",
+      ],
+    },
+    {
+      title: "Caps",
+      tips: ["• Hand wash", "• Cold water only", "• Do not twist", "• Air dry"],
+    },
+    {
+      title: "Le bucket / radio soleil",
+      tips: [
+        "• Keep away from water",
+        "• Do not wash",
+        "• Clean gently with a dry cloth if needed",
+      ],
+    },
+    {
+      title: "General",
+      tips: [
+        "General tip: Store your hat flat or on a stand to keep its shape. Keep it away from humidity and heat.",
+      ],
+    },
+  ],
+  backLink: "← Retour à la marque",
+};
+
+export const DEFAULT_SIZING = {
+  eyebrow: "Fit",
+  title: "Guide des tailles",
+  metaDescription: "Tailles et ajustements des chapeaux Bingin Diaries.",
+  body: [
+    "Most Bingin Diaries hats are adjustable with an interior ribbon (sizes M & L).",
+    "Refer to the chart below for brim and crown measurements.",
+  ],
+  image:
+    "https://cdn.shopify.com/s/files/1/0437/5992/7449/files/Bingin-Sizing-edit_for_web_1.png?v=1755161480",
+  imageAlt: "Bingin Diaries size guide",
+  backLink: "← Retour à la marque",
+};
+
+export const DEFAULT_FOOTER = {
+  shopTitle: "Shop",
+  shopAll: "All pieces",
+  shopSale: "Sale",
+  shopWishlist: "Wishlist",
+  careTitle: "Customer care",
+  contactUs: "Contact us",
+  sizeGuide: "Size guide",
+  careGuide: "Care guide",
+  faq: "FAQ",
+  shipping: "Shipping",
+  returns: "Return policy",
+  exploreTitle: "Explore",
+  theBrand: "The brand",
+  travelGuide: "Travel guide",
+  privacyTitle: "Privacy",
+  terms: "Terms & conditions",
+  artisans: "Artisans & ethics",
+  materials: "Materials & quality",
+  copyright: "© 2026 Bingin Diaries",
+};
+
 export const DEFAULT_POSTS = [
   {
     slug: "a-day-in-bingin",
@@ -333,17 +495,20 @@ export const DEFAULT_PAGES = [
       "French law applies. Any dispute shall be submitted to the competent courts in France, subject to mandatory consumer rights in your country of residence.",
     ],
   },
-  {
-    slug: "about",
-    title: "Two homes, one diary.",
-    eyebrow: "The atelier",
-    metaDescription: "About Bingin Diaries — hand-woven hats from Bali and France.",
-    body: [
-      "Born from a long, slow ride between Canggu and the South of France.",
-      "Bingin Diaries is a small house of hand-woven hats — designed in France, made in Bali, finished by hand. We work with a few artisans we know by name, in a rhythm that lets each piece breathe.",
-      "We believe in a quieter kind of fashion. One that travels well, that ages well, and that carries the memory of the place it came from.",
-    ],
-  },
+];
+
+/** Slugs editable via Admin → Pages (info pages with per-locale body). */
+export const CMS_PAGE_SLUGS = DEFAULT_PAGES.map((p) => p.slug);
+
+/** Site content keys editable via Admin → Content (structured pages). */
+export const SITE_CONTENT_PAGE_KEYS = [
+  "homepage",
+  "about",
+  "findUs",
+  "contact",
+  "care",
+  "sizing",
+  "footer",
 ];
 
 function deepMerge(base, patch) {
@@ -374,4 +539,20 @@ export function mergeAbout(stored) {
 
 export function mergeFindUs(stored) {
   return deepMerge(DEFAULT_FIND_US, stored || {});
+}
+
+export function mergeContact(stored) {
+  return deepMerge(DEFAULT_CONTACT, stored || {});
+}
+
+export function mergeCare(stored) {
+  return deepMerge(DEFAULT_CARE, stored || {});
+}
+
+export function mergeSizing(stored) {
+  return deepMerge(DEFAULT_SIZING, stored || {});
+}
+
+export function mergeFooter(stored) {
+  return deepMerge(DEFAULT_FOOTER, stored || {});
 }

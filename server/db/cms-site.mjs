@@ -6,6 +6,10 @@ import {
   mergeHomepage,
   mergeAbout,
   mergeFindUs,
+  mergeContact,
+  mergeCare,
+  mergeSizing,
+  mergeFooter,
 } from "../content-defaults.mjs";
 
 export async function getAnnouncement() {
@@ -41,14 +45,48 @@ export async function getFindUsContent() {
   return mergeFindUs(stored);
 }
 
+export async function getContactContent() {
+  const stored = await getSetting("contact", null);
+  return mergeContact(stored);
+}
+
+export async function getCareContent() {
+  const stored = await getSetting("care", null);
+  return mergeCare(stored);
+}
+
+export async function getSizingContent() {
+  const stored = await getSetting("sizing", null);
+  return mergeSizing(stored);
+}
+
+export async function getFooterContent() {
+  const stored = await getSetting("footer", null);
+  return mergeFooter(stored);
+}
+
 export async function getPublicSiteContent() {
-  const [announcement, homepage, about, findUs] = await Promise.all([
+  const [announcement, homepage, about, findUs, contact, care, sizing, footer] = await Promise.all([
     getAnnouncement(),
     getHomepageContent(),
     getAboutContent(),
     getFindUsContent(),
+    getContactContent(),
+    getCareContent(),
+    getSizingContent(),
+    getFooterContent(),
   ]);
-  return { announcement, homepage, about, findUs, defaults: { homepage: DEFAULT_HOMEPAGE } };
+  return {
+    announcement,
+    homepage,
+    about,
+    findUs,
+    contact,
+    care,
+    sizing,
+    footer,
+    defaults: { homepage: DEFAULT_HOMEPAGE },
+  };
 }
 
 export async function getAdminSiteContent() {
@@ -56,16 +94,28 @@ export async function getAdminSiteContent() {
   const storedAnnouncement = (await getSetting("announcement", null)) || {};
   const storedAbout = (await getSetting("about", null)) || {};
   const storedFindUs = (await getSetting("findUs", null)) || {};
+  const storedContact = (await getSetting("contact", null)) || {};
+  const storedCare = (await getSetting("care", null)) || {};
+  const storedSizing = (await getSetting("sizing", null)) || {};
+  const storedFooter = (await getSetting("footer", null)) || {};
   return {
     announcement: mergeAnnouncement(storedAnnouncement),
     homepage: mergeHomepage(storedHomepage),
     about: mergeAbout(storedAbout),
     findUs: mergeFindUs(storedFindUs),
+    contact: mergeContact(storedContact),
+    care: mergeCare(storedCare),
+    sizing: mergeSizing(storedSizing),
+    footer: mergeFooter(storedFooter),
     stored: {
       announcement: storedAnnouncement,
       homepage: storedHomepage,
       about: storedAbout,
       findUs: storedFindUs,
+      contact: storedContact,
+      care: storedCare,
+      sizing: storedSizing,
+      footer: storedFooter,
     },
   };
 }
@@ -82,6 +132,18 @@ export async function patchAdminSiteContent(body) {
   }
   if (body.findUs) {
     await setSetting("findUs", body.findUs);
+  }
+  if (body.contact) {
+    await setSetting("contact", body.contact);
+  }
+  if (body.care) {
+    await setSetting("care", body.care);
+  }
+  if (body.sizing) {
+    await setSetting("sizing", body.sizing);
+  }
+  if (body.footer) {
+    await setSetting("footer", body.footer);
   }
   return getAdminSiteContent();
 }

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { CmsPage, HomepageContent, JournalPost, SiteContent } from "@/lib/content-types";
-import { FALLBACK_ABOUT, FALLBACK_FIND_US } from "@/lib/cms-fallbacks";
+import { FALLBACK_ABOUT, FALLBACK_FIND_US, FALLBACK_CONTACT, FALLBACK_CARE, FALLBACK_SIZING, FALLBACK_FOOTER } from "@/lib/cms-fallbacks";
 import {
   BINGIN_SOUNDS,
   CRAFT_DETAILS,
@@ -115,6 +115,10 @@ const FALLBACK_SITE: SiteContent = {
   },
   about: FALLBACK_ABOUT,
   findUs: FALLBACK_FIND_US,
+  contact: FALLBACK_CONTACT,
+  care: FALLBACK_CARE,
+  sizing: FALLBACK_SIZING,
+  footer: FALLBACK_FOOTER,
 };
 
 const FALLBACK_POSTS: JournalPost[] = JOURNAL_ARTICLES.map((a) => ({ ...a }));
@@ -125,6 +129,10 @@ type ContentContextValue = {
   announcement: SiteContent["announcement"];
   about: SiteContent["about"];
   findUs: SiteContent["findUs"];
+  contact: SiteContent["contact"];
+  care: SiteContent["care"];
+  sizing: SiteContent["sizing"];
+  footer: SiteContent["footer"];
   posts: JournalPost[];
   loading: boolean;
   error: string | null;
@@ -156,6 +164,10 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           homepage: HomepageContent;
           about: SiteContent["about"];
           findUs: SiteContent["findUs"];
+          contact: SiteContent["contact"];
+          care: SiteContent["care"];
+          sizing: SiteContent["sizing"];
+          footer: SiteContent["footer"];
         }>("/api/content/site"),
         fetchJson<{ posts: JournalPost[] }>("/api/content/posts"),
       ]);
@@ -164,6 +176,10 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         homepage: siteRes.homepage,
         about: siteRes.about,
         findUs: siteRes.findUs,
+        contact: siteRes.contact,
+        care: siteRes.care,
+        sizing: siteRes.sizing,
+        footer: siteRes.footer,
       });
       setPosts(postsRes.posts);
       setError(null);
@@ -202,6 +218,10 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       announcement: site.announcement,
       about: site.about,
       findUs: site.findUs,
+      contact: site.contact,
+      care: site.care,
+      sizing: site.sizing,
+      footer: site.footer,
       posts,
       loading,
       error,

@@ -2,8 +2,13 @@ import { Link, useRouterState } from "@tanstack/react-router";
 
 const LINKS = [
   { to: "/admin/content", label: "Homepage", exact: true },
+  { to: "/admin/content/navigation", label: "Menu nav" },
   { to: "/admin/content/about", label: "About" },
+  { to: "/admin/content/contact", label: "Contact" },
+  { to: "/admin/content/care", label: "Care" },
+  { to: "/admin/content/sizing", label: "Sizing" },
   { to: "/admin/content/find-us", label: "Find us" },
+  { to: "/admin/content/footer", label: "Footer" },
 ] as const;
 
 export function ContentSubnav() {

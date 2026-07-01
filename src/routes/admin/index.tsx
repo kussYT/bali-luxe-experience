@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardCharts } from "@/components/admin/DashboardCharts";
 import { OrdersWorldMap } from "@/components/admin/OrdersWorldMap";
 import { CmsStatusCard } from "@/components/admin/CmsStatusCard";
+import { OrdersAnalyticsPanel } from "@/components/admin/OrdersAnalyticsPanel";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Admin dashboard — Bingin Diaries" }] }),
@@ -51,14 +52,12 @@ function AdminDashboard() {
         <h2 className="font-display text-4xl mt-2">Store overview</h2>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Products", value: catalog?.productCount ?? "—" },
           { label: "Published", value: published },
           { label: "On sale", value: onSale },
           { label: "Low stock (≤3)", value: lowStock },
-          { label: "Paris available", value: stockParis ?? "—" },
-          { label: "Bali available", value: stockBali ?? "—" },
         ].map((stat) => (
           <Card key={stat.label}>
             <CardHeader className="pb-2">
@@ -71,6 +70,27 @@ function AdminDashboard() {
         ))}
       </div>
 
+      <div className="grid sm:grid-cols-2 gap-4">
+        <Card className="border-clay/30 bg-clay/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-foreground">Stock Paris</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="font-display text-4xl text-foreground">{stockParis ?? "—"}</p>
+            <p className="text-xs text-muted-foreground mt-1">unités disponibles (entrepôt France)</p>
+          </CardContent>
+        </Card>
+        <Card className="border-accent/30 bg-accent/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-foreground">Stock Bali</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="font-display text-4xl text-foreground">{stockBali ?? "—"}</p>
+            <p className="text-xs text-muted-foreground mt-1">unités disponibles (entrepôt Bali)</p>
+          </CardContent>
+        </Card>
+      </div>
+
       <CmsStatusCard compact />
 
       {analyticsError && (
@@ -78,6 +98,8 @@ function AdminDashboard() {
           Graphiques indisponibles : {analyticsError} (lancez <code className="text-xs">npm run db:migrate</code> si besoin).
         </p>
       )}
+
+      {analytics && <OrdersAnalyticsPanel analytics={analytics} />}
 
       {analytics && <DashboardCharts analytics={analytics} />}
 

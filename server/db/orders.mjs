@@ -3,7 +3,7 @@ import { query, withTransaction, isDatabaseConfigured } from "./pool.mjs";
 import { decrementInventoryForSale } from "./fulfillment.mjs";
 import { getDefaultVariant, preferredWarehouse } from "../warehouse-allocation.mjs";
 
-export const ORDER_CHANNELS = ["website", "wolf_badger", "other"];
+export const ORDER_CHANNELS = ["website", "wolf_badger", "other", "influencer"];
 
 function mapOrderRow(row, items = []) {
   return {
@@ -122,6 +122,7 @@ export async function createPendingOrder({
   currency,
   countryCode,
   customerEmail,
+  promoCode,
 }) {
   if (!isDatabaseConfigured()) {
     const err = new Error("Database not configured");
@@ -134,9 +135,9 @@ export async function createPendingOrder({
 
   return withTransaction(async (client) => {
     await client.query(
-      `INSERT INTO orders (id, status, channel, currency, country_code, fulfillment_warehouse, customer_email)
-       VALUES ($1, 'pending', 'website', $2, $3, $4, $5)`,
-      [orderId, currency, countryCode || null, fulfillmentWarehouse, customerEmail || null],
+      `INSERT INTO orders (id, status, channel, currency, country_code, fulfillment_warehouse, customer_email, promo_code)
+       VALUES ($1, 'pending', 'website', $2, $3, $4, $5, $6)`,
+      [orderId, currency, countryCode || null, fulfillmentWarehouse, customerEmail || null, promoCode || null],
     );
 
     for (const item of items) {
@@ -204,6 +205,7 @@ export async function fulfillOrderPayment({
   amountShipping,
   currency,
   shippingCountryCode,
+  promoCode,
 }) {
   return withTransaction(async (client) => {
     const { rows } = await client.query(`SELECT * FROM orders WHERE id = $1 FOR UPDATE`, [orderId]);
@@ -264,6 +266,7 @@ export async function fulfillOrderPayment({
          currency = COALESCE($9, currency),
          shipping_country_code = COALESCE($10, shipping_country_code),
          fulfillment_warehouse = COALESCE($11, fulfillment_warehouse),
+         promo_code = COALESCE($12, promo_code),
          paid_at = now(),
          updated_at = now()
        WHERE id = $1`,
@@ -279,6 +282,7 @@ export async function fulfillOrderPayment({
         currency,
         shipCountry,
         fulfillmentWarehouse,
+        promoCode || null,
       ],
     );
 

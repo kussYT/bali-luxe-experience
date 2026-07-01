@@ -11,14 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
 export const Route = createFileRoute("/admin/newsletter")({
   head: () => ({ meta: [{ title: "Newsletter — Bingin Diaries Admin" }] }),
   component: AdminNewsletterPage,
@@ -26,7 +18,13 @@ export const Route = createFileRoute("/admin/newsletter")({
 
 function AdminNewsletterPage() {
   const [settings, setSettings] = useState<AdminNewsletterSettings | null>(null);
-  const [stats, setStats] = useState<{ total: number; bySource: Record<string, number> } | null>(null);
+  const [stats, setStats] = useState<{
+    total: number;
+    siteSignups: number;
+    brevoTotal: number | null;
+    brevoListName: string | null;
+    bySource: Record<string, number>;
+  } | null>(null);
   const [subscribers, setSubscribers] = useState<{ email: string; source: string; subscribedAt: string | null }[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -55,7 +53,6 @@ function AdminNewsletterPage() {
     setError(null);
     try {
       const res = await updateAdminNewsletter({
-        provider: settings.provider,
         brevoListId: settings.brevoListId,
         copy: settings.copy,
       });
@@ -88,13 +85,23 @@ function AdminNewsletterPage() {
       </div>
 
       {stats && (
-        <div className="grid sm:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-normal text-muted-foreground">Abonnés</CardTitle>
+              <CardTitle className="text-sm font-normal text-muted-foreground">
+                {stats.brevoTotal != null ? "Abonnés (liste Brevo)" : "Abonnés"}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="font-display text-3xl">{stats.total}</p>
+              {stats.brevoListName && (
+                <p className="text-xs text-muted-foreground mt-1">{stats.brevoListName}</p>
+              )}
+              {stats.brevoTotal != null && stats.siteSignups !== stats.brevoTotal && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  {stats.siteSignups} inscription{stats.siteSignups !== 1 ? "s" : ""} via le site
+                </p>
+              )}
             </CardContent>
           </Card>
           {Object.entries(stats.bySource).map(([source, count]) => (
@@ -114,40 +121,31 @@ function AdminNewsletterPage() {
         <form onSubmit={handleSave} className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="font-display text-xl">Provider</CardTitle>
+              <CardTitle className="font-display text-xl">Brevo</CardTitle>
             </CardHeader>
             <CardContent className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Service</Label>
-                <Select
-                  value={settings.provider}
-                  onValueChange={(v) => setSettings({ ...settings, provider: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="local">Local (fichier JSON)</SelectItem>
-                    <SelectItem value="brevo">Brevo</SelectItem>
-                    <SelectItem value="mailchimp">Mailchimp</SelectItem>
-                    <SelectItem value="klaviyo">Klaviyo</SelectItem>
-                  </SelectContent>
-                </Select>
-                {settings.envProvider && (
-                  <p className="text-xs text-muted-foreground">
-                    Env override : {settings.envProvider} (les clés API restent dans les secrets serveur).
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label>Brevo list ID</Label>
+                <Label>List ID</Label>
                 <Input
                   value={settings.brevoListId}
                   onChange={(e) => setSettings({ ...settings, brevoListId: e.target.value })}
-                  placeholder="123456"
+                  placeholder="3"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Clé API : {settings.hasBrevoKey ? "configurée" : "manquante (BREVO_API_KEY)"}
+                  Liste Brevo qui reçoit les inscriptions du site.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>Clé API</Label>
+                <p className="text-sm pt-2">
+                  {settings.hasBrevoKey ? (
+                    <span className="text-foreground">Configurée (secret serveur)</span>
+                  ) : (
+                    <span className="text-destructive">Manquante — ajoutez BREVO_API_KEY</span>
+                  )}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Emails de campagne et bienvenue : à configurer dans le dashboard Brevo.
                 </p>
               </div>
             </CardContent>
@@ -213,7 +211,12 @@ function AdminNewsletterPage() {
         </CardHeader>
         <CardContent>
           {subscribers.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aucun abonné enregistré localement.</p>
+            <p className="text-sm text-muted-foreground">
+              Aucun abonné enregistré via le site pour l&apos;instant.
+              {stats?.brevoTotal != null && stats.brevoTotal > 0
+                ? ` La liste Brevo compte ${stats.brevoTotal} contact${stats.brevoTotal !== 1 ? "s" : ""}.`
+                : ""}
+            </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

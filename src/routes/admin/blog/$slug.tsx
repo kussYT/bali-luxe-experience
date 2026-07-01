@@ -14,6 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CmsMediaField } from "@/components/admin/CmsMediaField";
+import { UploadsUnavailableBanner } from "@/components/admin/UploadsUnavailableBanner";
+import { useUploadsAvailable } from "@/lib/use-uploads-available";
 
 export const Route = createFileRoute("/admin/blog/$slug")({
   head: () => ({ meta: [{ title: "Edit article — Bingin Diaries Admin" }] }),
@@ -39,6 +42,7 @@ function AdminBlogEditPage() {
   const [bodyText, setBodyText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const { available: uploadsAvailable, loading: uploadsLoading } = useUploadsAvailable();
 
   useEffect(() => {
     if (isNew) {
@@ -85,6 +89,10 @@ function AdminBlogEditPage() {
 
       {error && <p className="text-destructive text-sm">{error}</p>}
 
+      {!uploadsLoading && !uploadsAvailable && (
+        <UploadsUnavailableBanner hint="Utilisez « Uploader un fichier » si R2 est actif, ou collez une URL complète (https://… ou /uploads/…)." />
+      )}
+
       <form onSubmit={handleSave}>
         <Card>
           <CardHeader>
@@ -125,10 +133,16 @@ function AdminBlogEditPage() {
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="image">Image (URL)</Label>
-              <Input id="image" value={post.image} onChange={(e) => setPost({ ...post, image: e.target.value })} />
-            </div>
+            <CmsMediaField
+              label="Image de couverture"
+              value={post.image}
+              onChange={(v) => setPost({ ...post, image: v })}
+              uploadsAvailable={uploadsAvailable}
+            />
+            <p className="text-xs text-muted-foreground -mt-2">
+              Après upload, l&apos;URL apparaît dans le champ (ex. <code className="text-[0.65rem]">/uploads/cms/…</code>
+              ). Copiez-la si besoin ailleurs.
+            </p>
             <div className="space-y-2">
               <Label>Statut</Label>
               <Select value={post.status} onValueChange={(v) => setPost({ ...post, status: v })}>

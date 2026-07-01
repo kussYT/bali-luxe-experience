@@ -5,6 +5,7 @@ import {
 } from "../db/settings-store.mjs";
 import { listSubscribers, exportSubscribersCsv } from "../newsletter-store.mjs";
 import { isDatabaseConfigured } from "../db/pool.mjs";
+import { fetchBrevoListStats } from "../brevo.mjs";
 
 export async function getNewsletterCopyResponse() {
   const copy = await getNewsletterCopy();
@@ -20,18 +21,25 @@ export async function getAdminNewsletterResponse() {
     return acc;
   }, {});
 
+  const brevoList = settings.hasBrevoKey
+    ? await fetchBrevoListStats(settings.brevoListId)
+    : null;
+
+  const siteSignups = subscribers.length;
+  const brevoTotal = brevoList?.totalSubscribers ?? null;
+  const total = brevoTotal ?? siteSignups;
+
   return {
     settings: {
-      provider: settings.provider,
       brevoListId: settings.brevoListId,
       copy: settings.copy,
-      envProvider: settings.envProvider,
       hasBrevoKey: settings.hasBrevoKey,
-      hasMailchimpKey: settings.hasMailchimpKey,
-      hasKlaviyoKey: settings.hasKlaviyoKey,
     },
     stats: {
-      total: subscribers.length,
+      total,
+      siteSignups,
+      brevoTotal,
+      brevoListName: brevoList?.name ?? null,
       bySource,
     },
     subscribers,
@@ -40,17 +48,7 @@ export async function getAdminNewsletterResponse() {
 }
 
 export async function patchAdminNewsletter(body) {
-  const allowedProviders = ["local", "brevo", "mailchimp", "klaviyo"];
   const patch = {};
-
-  if (body.provider != null) {
-    if (!allowedProviders.includes(body.provider)) {
-      const err = new Error("Invalid newsletter provider");
-      err.status = 400;
-      throw err;
-    }
-    patch.provider = body.provider;
-  }
 
   if (body.brevoListId != null) {
     patch.brevoListId = String(body.brevoListId).trim();
@@ -63,13 +61,9 @@ export async function patchAdminNewsletter(body) {
   const settings = await updateNewsletterSettings(patch);
   return {
     settings: {
-      provider: settings.provider,
       brevoListId: settings.brevoListId,
       copy: settings.copy,
-      envProvider: settings.envProvider,
       hasBrevoKey: settings.hasBrevoKey,
-      hasMailchimpKey: settings.hasMailchimpKey,
-      hasKlaviyoKey: settings.hasKlaviyoKey,
     },
   };
 }

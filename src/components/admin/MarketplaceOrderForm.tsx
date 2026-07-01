@@ -39,7 +39,7 @@ const emptyLine = (): LineDraft => ({
 
 export function MarketplaceOrderForm({ onCreated }: MarketplaceOrderFormProps) {
   const [open, setOpen] = useState(false);
-  const [channel, setChannel] = useState<"wolf_badger" | "other">("wolf_badger");
+  const [channel, setChannel] = useState<"wolf_badger" | "influencer" | "other">("wolf_badger");
   const [externalRef, setExternalRef] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [shippingCountryCode, setShippingCountryCode] = useState("GB");
@@ -112,12 +112,22 @@ export function MarketplaceOrderForm({ onCreated }: MarketplaceOrderFormProps) {
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Canal</Label>
-              <Select value={channel} onValueChange={(v) => setChannel(v as "wolf_badger" | "other")}>
+              <Select
+                value={channel}
+                onValueChange={(v) => {
+                  const next = v as "wolf_badger" | "influencer" | "other";
+                  setChannel(next);
+                  if (next === "influencer") {
+                    setLines((prev) => prev.map((line) => ({ ...line, unitPriceEur: "0" })));
+                  }
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="wolf_badger">Wolf &amp; Badger</SelectItem>
+                  <SelectItem value="influencer">Cadeau influenceur (0 €)</SelectItem>
                   <SelectItem value="other">Autre</SelectItem>
                 </SelectContent>
               </Select>

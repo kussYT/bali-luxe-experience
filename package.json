@@ -31,6 +31,7 @@
     "deploy": "npm run build && wrangler deploy",
     "deploy:secrets": "node scripts/print-wrangler-secrets.mjs",
     "test:staging": "node scripts/test-staging-admin.mjs",
+    "test:cms-pages": "node scripts/test-cms-editable-pages.mjs",
     "test:db": "npm run db:validate-s1"
   },
   "dependencies": {

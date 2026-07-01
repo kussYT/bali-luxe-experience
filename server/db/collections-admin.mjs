@@ -8,6 +8,7 @@ function mapCollection(row) {
     description: row.description || "",
     heroImage: row.hero_image || "",
     sortOrder: row.sort_order ?? 0,
+    hidden: Boolean(row.hidden),
     productCount: Number(row.product_count) || 0,
     updatedAt: row.updated_at,
   };
@@ -21,7 +22,7 @@ export async function listCollectionsAdmin() {
   }
   const { rows } = await query(
     `
-    SELECT c.slug, c.name, c.season, c.description, c.hero_image, c.sort_order, c.updated_at,
+    SELECT c.slug, c.name, c.season, c.description, c.hero_image, c.sort_order, c.hidden, c.updated_at,
            COUNT(p.id)::int AS product_count
     FROM collections c
     LEFT JOIN products p ON p.collection_id = c.id
@@ -45,9 +46,10 @@ export async function updateCollection(slug, patch) {
        description = COALESCE($4, description),
        hero_image = COALESCE($5, hero_image),
        sort_order = COALESCE($6, sort_order),
+       hidden = COALESCE($7, hidden),
        updated_at = now()
      WHERE slug = $1
-     RETURNING slug, name, season, description, hero_image, sort_order, updated_at`,
+     RETURNING slug, name, season, description, hero_image, sort_order, hidden, updated_at`,
     [
       slug,
       patch.name ?? null,
@@ -55,6 +57,7 @@ export async function updateCollection(slug, patch) {
       patch.description ?? null,
       patch.heroImage ?? null,
       patch.sortOrder != null ? Number(patch.sortOrder) : null,
+      patch.hidden != null ? Boolean(patch.hidden) : null,
     ],
   );
   if (!rows.length) {

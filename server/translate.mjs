@@ -12,7 +12,7 @@ export function getTranslateStatus() {
     provider: isTranslateConfigured() ? "deepl" : null,
     hint: isTranslateConfigured()
       ? null
-      : "Ajoutez DEEPL_API_KEY dans les secrets (gratuit ~500 000 caractères/mois sur deepl.com/pro-api).",
+      : "Traduction auto optionnelle : sans clé DeepL, remplissez chaque langue à la main (FR · EN · ID · ES). La clé DeepL sert uniquement au bouton « Traduire » — compte gratuit sur deepl.com/pro-api (~500k car./mois), à ajouter dans les secrets serveur par Mario.",
   };
 }
 

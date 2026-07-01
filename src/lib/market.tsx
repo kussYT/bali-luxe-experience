@@ -7,6 +7,19 @@ import {
 import { flagEmoji } from "@/lib/flags";
 import type { Country, Currency } from "@/lib/currency";
 
+export const CURRENCY_DEFAULT_COUNTRY: Record<Currency, string> = {
+  EUR: "FR",
+  USD: "US",
+  IDR: "ID",
+};
+
+/** Keep shipping country when it already uses the target currency; otherwise pick a default. */
+export function countryCodeForCurrency(currency: Currency, currentCode: string): string {
+  const current = getShippingCountry(currentCode);
+  if (current.currency === currency) return current.code;
+  return CURRENCY_DEFAULT_COUNTRY[currency];
+}
+
 export const SHIPPING_STORAGE_KEY = "bingin-shipping-country";
 export const SHIPPING_MANUAL_KEY = "bingin-shipping-manual";
 /** @deprecated use SHIPPING_STORAGE_KEY */

@@ -12,8 +12,7 @@ RESEND_API_KEY=re_...
 EMAIL_FROM=Bingin Diaries <hello@bingindiaries.com>
 EMAIL_OPS=ops@bingindiaries.com
 
-# Newsletter (optional — already supported)
-NEWSLETTER_PROVIDER=brevo
+# Newsletter — Brevo
 BREVO_API_KEY=...
 BREVO_LIST_ID=...
 ```
@@ -23,7 +22,8 @@ BREVO_LIST_ID=...
 | `RESEND_API_KEY` | Resend API key (production) |
 | `EMAIL_FROM` | Sender address (must be verified in Resend) |
 | `EMAIL_OPS` | Inbox for contact form messages |
-| `NEWSLETTER_PROVIDER` | `local` (default) or `brevo` for newsletter signups |
+| `BREVO_API_KEY` | Brevo API key — newsletter signups (secret serveur) |
+| `BREVO_LIST_ID` | Brevo contact list ID (ou saisi dans Admin → Newsletter) |
 
 ## Migration
 

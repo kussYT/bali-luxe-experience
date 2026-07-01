@@ -18,6 +18,8 @@ export async function fetchInventoryGrid() {
       p.status,
       p.origin,
       p.default_warehouse,
+      c.slug AS collection_slug,
+      c.name AS collection_name,
       v.id AS variant_id,
       v.slug AS variant_slug,
       v.title AS variant_title,
@@ -29,6 +31,7 @@ export async function fetchInventoryGrid() {
       COALESCE(ba.reserved, 0) AS bali_reserved
     FROM products p
     JOIN product_variants v ON v.product_id = p.id
+    LEFT JOIN collections c ON c.id = p.collection_id
     LEFT JOIN product_inventory fr ON fr.variant_id = v.id AND fr.warehouse_id = 'france'
     LEFT JOIN product_inventory ba ON ba.variant_id = v.id AND ba.warehouse_id = 'bali'
     ORDER BY p.name ASC, v.position ASC, v.title ASC
@@ -58,6 +61,8 @@ export async function fetchInventoryGrid() {
       productId: r.product_id,
       productSlug: r.product_slug,
       productName: r.product_name,
+      collectionSlug: r.collection_slug || "",
+      collectionName: r.collection_name || "",
       status: r.status,
       origin: r.origin,
       defaultWarehouse: r.default_warehouse,

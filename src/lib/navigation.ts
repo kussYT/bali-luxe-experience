@@ -1,4 +1,5 @@
 import type { Collection, Product } from "@/lib/catalog-types";
+import type { MegaMenuFeaturedContent, MegaMenuFeaturedTile } from "@/lib/content-types";
 
 export const POPULAR_SEARCHES = [
   "bob",
@@ -76,7 +77,7 @@ export const NAV_NEW_COLLECTION_FEATURED: NavFeaturedImage[] = [
 /** Shop mega-menu — structured by season & category. */
 export function buildNavShopColumns(collections: Collection[]): NavColumn[] {
   const collectionLinks = collections
-    .filter((c) => !HIDDEN_NAV_COLLECTION_SLUGS.has(c.slug) && c.slug !== "best-sellers")
+    .filter((c) => !HIDDEN_NAV_COLLECTION_SLUGS.has(c.slug) && c.slug !== "best-sellers" && !c.hidden)
     .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
     .slice(0, 5)
     .map((c) => ({
@@ -231,20 +232,55 @@ export const NAV_ABOUT: NavLink[] = NAV_ABOUT_COLUMNS.flatMap((col) => col.items
 
 export const NAV_NEW_COLLECTION: NavLink[] = buildNavNewCollectionColumns().flatMap((col) => col.items);
 
+const MEGA_FEATURED_DEFAULTS: Record<MegaMenuId, NavFeaturedImage[]> = {
+  "new-collection": NAV_NEW_COLLECTION_FEATURED,
+  shop: NAV_SHOP_FEATURED,
+  sales: NAV_SALES_FEATURED,
+  about: NAV_ABOUT_FEATURED,
+};
+
+export function megaTileToFeatured(tile: MegaMenuFeaturedTile): NavFeaturedImage {
+  const search: Record<string, string> = {};
+  if (tile.collectionSlug) search.c = tile.collectionSlug;
+  if (tile.sale) search.sale = "true";
+  return {
+    label: tile.label,
+    to: tile.to,
+    image: tile.image,
+    hash: tile.hash,
+    search: Object.keys(search).length ? search : undefined,
+  };
+}
+
+function resolveMegaFeatured(
+  id: MegaMenuId,
+  override?: MegaMenuFeaturedContent,
+): NavFeaturedImage[] {
+  const key =
+    id === "new-collection" ? "newCollection" : id === "shop" ? "shop" : id === "sales" ? "sales" : "about";
+  const tiles = override?.[key];
+  if (tiles?.length) {
+    return tiles.filter((t) => t.label?.trim() && t.image?.trim()).map(megaTileToFeatured);
+  }
+  return MEGA_FEATURED_DEFAULTS[id];
+}
+
 export function getMegaMenuContent(
   id: MegaMenuId,
   collections: Collection[],
   products: Product[],
+  megaMenuFeatured?: MegaMenuFeaturedContent,
 ): { columns: NavColumn[]; featured: NavFeaturedImage[] } {
+  const featured = resolveMegaFeatured(id, megaMenuFeatured);
   switch (id) {
     case "new-collection":
-      return { columns: buildNavNewCollectionColumns(), featured: NAV_NEW_COLLECTION_FEATURED };
+      return { columns: buildNavNewCollectionColumns(), featured };
     case "shop":
-      return { columns: buildNavShopColumns(collections), featured: NAV_SHOP_FEATURED };
+      return { columns: buildNavShopColumns(collections), featured };
     case "sales":
-      return { columns: buildNavSalesColumns(products), featured: NAV_SALES_FEATURED };
+      return { columns: buildNavSalesColumns(products), featured };
     case "about":
-      return { columns: NAV_ABOUT_COLUMNS, featured: NAV_ABOUT_FEATURED };
+      return { columns: NAV_ABOUT_COLUMNS, featured };
   }
 }
 

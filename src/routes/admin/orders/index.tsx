@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { fetchAdminOrders, adminOrdersExportUrl, type AdminOrder } from "@/lib/admin-api";
+import { fetchAdminOrders, adminOrdersExportUrl, fetchAdminAnalytics, type AdminOrder, type AdminAnalytics } from "@/lib/admin-api";
 import { orderStatusLabel } from "@/lib/order-status";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChannelBadge } from "@/components/admin/ChannelBadge";
 import { MarketplaceOrderForm } from "@/components/admin/MarketplaceOrderForm";
+import { OrdersAnalyticsPanel } from "@/components/admin/OrdersAnalyticsPanel";
 
 export const Route = createFileRoute("/admin/orders/")({
   head: () => ({ meta: [{ title: "Orders — Bingin Diaries Admin" }] }),
@@ -16,6 +17,7 @@ const CHANNEL_FILTERS = [
   { value: "", label: "Tous" },
   { value: "website", label: "Site web" },
   { value: "wolf_badger", label: "Wolf & Badger" },
+  { value: "influencer", label: "Influenceur" },
   { value: "other", label: "Autre" },
 ] as const;
 
@@ -35,6 +37,7 @@ function warehouseLabel(id: string | null) {
 
 function AdminOrdersPage() {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [analytics, setAnalytics] = useState<AdminAnalytics | null>(null);
   const [channelFilter, setChannelFilter] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -46,6 +49,9 @@ function AdminOrdersPage() {
 
   useEffect(() => {
     loadOrders();
+    fetchAdminAnalytics()
+      .then((res) => setAnalytics(res.analytics))
+      .catch(() => {});
   }, [loadOrders]);
 
   const toProcessCount = orders.filter((o) =>
@@ -73,6 +79,8 @@ function AdminOrdersPage() {
           </Button>
         </div>
       </div>
+
+      {analytics && <OrdersAnalyticsPanel analytics={analytics} compact />}
 
       <div className="flex flex-wrap gap-2">
         {CHANNEL_FILTERS.map((filter) => (

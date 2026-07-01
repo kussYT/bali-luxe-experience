@@ -1,7 +1,14 @@
 import { BRAND_CONTENT } from "@/data/brand-content";
 import { STOCKISTS } from "@/data/stockists";
 import { ATLIST_EMBED_URL, ATLIST_MAP_URL } from "@/data/atlist";
-import type { AboutContent, FindUsContent } from "@/lib/content-types";
+import type {
+  AboutContent,
+  CareContent,
+  ContactContent,
+  FindUsContent,
+  FooterContent,
+  SizingContent,
+} from "@/lib/content-types";
 
 export const DEFAULT_ABOUT_SIDEBAR: AboutContent["sidebarLinks"] = [
   { label: "La marque", to: "/about", hash: "vision", image: "/lifestyle/craft-hands.jpg" },
@@ -46,4 +53,64 @@ export const FALLBACK_FIND_US: FindUsContent = {
       stores: a.stores.map((s) => ({ ...s })),
     })),
   })),
+};
+
+export const FALLBACK_CONTACT: ContactContent = {
+  eyebrow: "Get in touch",
+  title: "Write to us.",
+  metaDescription: "Write to the Bingin Diaries team.",
+  description:
+    "For special orders, press, wholesale, or simply to say hello — we read every message.",
+  email: "info@bingindiaries.com",
+  formName: "Name",
+  formEmail: "Email",
+  formSubject: "Subject",
+  formMessage: "Message",
+  formSubmit: "Send message",
+  formSending: "Sending…",
+  formSent: "Message sent — merci",
+};
+
+export const FALLBACK_CARE: CareContent = {
+  eyebrow: BRAND_CONTENT.care.eyebrow,
+  title: BRAND_CONTENT.care.title,
+  metaDescription: BRAND_CONTENT.care.intro,
+  intro: BRAND_CONTENT.care.intro,
+  sections: BRAND_CONTENT.care.sections.map((s) => ({
+    title: s.title,
+    tips: [...s.tips],
+  })),
+  backLink: "← Retour à la marque",
+};
+
+export const FALLBACK_SIZING: SizingContent = {
+  eyebrow: BRAND_CONTENT.sizing.eyebrow,
+  title: BRAND_CONTENT.sizing.title,
+  metaDescription: "Tailles et ajustements des chapeaux Bingin Diaries.",
+  body: [...BRAND_CONTENT.sizing.body],
+  image: BRAND_CONTENT.sizing.image,
+  imageAlt: "Bingin Diaries size guide",
+  backLink: "← Retour à la marque",
+};
+
+export const FALLBACK_FOOTER: FooterContent = {
+  shopTitle: "Shop",
+  shopAll: "All pieces",
+  shopSale: "Sale",
+  shopWishlist: "Wishlist",
+  careTitle: "Customer care",
+  contactUs: "Contact us",
+  sizeGuide: "Size guide",
+  careGuide: "Care guide",
+  faq: "FAQ",
+  shipping: "Shipping",
+  returns: "Return policy",
+  exploreTitle: "Explore",
+  theBrand: "The brand",
+  travelGuide: "Travel guide",
+  privacyTitle: "Privacy",
+  terms: "Terms & conditions",
+  artisans: "Artisans & ethics",
+  materials: "Materials & quality",
+  copyright: "© 2026 Bingin Diaries",
 };

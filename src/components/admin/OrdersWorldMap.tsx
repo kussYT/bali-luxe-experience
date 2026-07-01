@@ -1,4 +1,4 @@
-import { COUNTRY_CENTROIDS, countryLabel, projectCountry } from "@/lib/country-centroids";
+import { countryLabel, countryMapPosition } from "@/lib/country-centroids";
 import { ADMIN_CHART } from "@/lib/admin-chart-theme";
 
 type CountryOrder = {
@@ -17,8 +17,7 @@ export function OrdersWorldMap({ data }: OrdersWorldMapProps) {
   const maxOrders = Math.max(1, ...data.map((d) => d.orders));
   const points = data
     .map((row) => {
-      const centroid = COUNTRY_CENTROIDS[row.country] || COUNTRY_CENTROIDS.XX;
-      const { x, y } = projectCountry(centroid.lon, centroid.lat, WIDTH, HEIGHT);
+      const { x, y } = countryMapPosition(row.country, WIDTH, HEIGHT);
       const radius = 7 + (row.orders / maxOrders) * 14;
       return { ...row, x, y, radius, name: countryLabel(row.country) };
     })
@@ -34,11 +33,12 @@ export function OrdersWorldMap({ data }: OrdersWorldMapProps) {
           src="/admin/world-map.svg"
           alt=""
           aria-hidden
-          className="absolute inset-0 h-full w-full object-cover pointer-events-none select-none"
+          className="absolute inset-0 h-full w-full object-contain pointer-events-none select-none"
           style={{ opacity: 0.28 }}
         />
         <svg
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+          preserveAspectRatio="xMidYMid meet"
           className="absolute inset-0 h-full w-full"
           role="img"
           aria-label="Carte des commandes par pays"

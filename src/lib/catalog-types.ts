@@ -29,6 +29,7 @@ export type Collection = {
   season: string;
   description?: string;
   sortOrder?: number;
+  hidden?: boolean;
 };
 
 export type Product = {
