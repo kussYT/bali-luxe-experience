@@ -13,6 +13,7 @@ const NAV_KEYS = [
   { to: "/admin/inventory", labelKey: "inventory" },
   { to: "/admin/readiness", labelKey: "readiness" },
   { to: "/admin/orders", labelKey: "orders" },
+  { to: "/admin/analytics/products", labelKey: "productAnalytics" },
   { to: "/admin/promotions", labelKey: "promotions" },
   { to: "/admin/customers", labelKey: "customers" },
   { to: "/admin/finance", labelKey: "finance" },

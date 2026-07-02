@@ -11,6 +11,7 @@ import {
   normalizeCartItem,
   resolveCartLine,
 } from "@/lib/cart-lines";
+import { trackProductEvent } from "@/lib/track-product-analytics";
 
 const CART_STORAGE_KEY = "bingin-cart";
 const WISHLIST_STORAGE_KEY = "bingin-wishlist";
@@ -115,6 +116,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { ...line, qty: Math.max(1, Math.min(line.qty, max)) }];
     });
+    trackProductEvent(slug, "cart");
     setOpen(true);
   };
 
@@ -139,7 +141,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const toggleWish = (slug: string) => {
     setWishlist((prev) => {
-      const next = prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug];
+      const adding = !prev.includes(slug);
+      const next = adding ? [...prev, slug] : prev.filter((s) => s !== slug);
+      if (adding) trackProductEvent(slug, "wishlist");
       if (email) {
         void syncWishlist(next).catch(() => {});
       }

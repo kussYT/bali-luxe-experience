@@ -39,6 +39,7 @@ export type ProductFormValues = {
   status: ProductStatus;
   featured: boolean;
   images: string[];
+  imageFocals: { x: number; y: number }[];
   imageFocal: { x: number; y: number };
   origin: "Bali" | "France";
   collectionSlugs: string[];
@@ -93,6 +94,7 @@ const empty: ProductFormValues = {
   status: "published",
   featured: false,
   images: [],
+  imageFocals: [],
   imageFocal: { x: 50, y: 50 },
   origin: "Bali",
   collectionSlugs: [],
@@ -117,19 +119,30 @@ export function ProductForm({
   onCancel,
   submitLabel = "Save",
 }: ProductFormProps) {
-  const [values, setValues] = useState<ProductFormValues>(() => ({
-    ...empty,
-    ...initial,
-    variants: variantsFromProduct(initial),
-    images: initial?.images?.length ? initial.images : initial?.image ? [initial.image] : [],
-    imageFocal: initial?.imageFocal ?? { x: 50, y: 50 },
-    collectionSlugs: (initial?.collectionSlugs ?? []).filter(
-      (slug) => slug && slug !== (initial?.collectionSlug ?? ""),
-    ),
-    videoUrl: initial?.videoUrl ?? "",
-    seoTitle: initial?.seoTitle ?? "",
-    metaDescription: initial?.metaDescription ?? "",
-  }));
+  const [focalEditIndex, setFocalEditIndex] = useState(0);
+  const [values, setValues] = useState<ProductFormValues>(() => {
+    const images = initial?.images?.length ? initial.images : initial?.image ? [initial.image] : [];
+    const imageFocals =
+      initial?.imageFocals?.length === images.length
+        ? initial.imageFocals.map((f) => ({ x: f.x ?? 50, y: f.y ?? 50 }))
+        : images.map((_, i) =>
+            i === 0 ? { x: initial?.imageFocal?.x ?? 50, y: initial?.imageFocal?.y ?? 50 } : { x: 50, y: 50 },
+          );
+    return {
+      ...empty,
+      ...initial,
+      variants: variantsFromProduct(initial),
+      images,
+      imageFocals,
+      imageFocal: imageFocals[0] ?? { x: 50, y: 50 },
+      collectionSlugs: (initial?.collectionSlugs ?? []).filter(
+        (slug) => slug && slug !== (initial?.collectionSlug ?? ""),
+      ),
+      videoUrl: initial?.videoUrl ?? "",
+      seoTitle: initial?.seoTitle ?? "",
+      metaDescription: initial?.metaDescription ?? "",
+    };
+  });
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -182,12 +195,24 @@ export function ProductForm({
   };
 
   const moveImage = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
     setValues((prev) => {
       const next = [...prev.images];
-      const target = index + direction;
+      const focals = [...prev.imageFocals];
       if (target < 0 || target >= next.length) return prev;
       [next[index], next[target]] = [next[target], next[index]];
-      return { ...prev, images: next };
+      [focals[index], focals[target]] = [focals[target], focals[index]];
+      return {
+        ...prev,
+        images: next,
+        imageFocals: focals,
+        imageFocal: focals[0] ?? prev.imageFocal,
+      };
+    });
+    setFocalEditIndex((i) => {
+      if (i === index) return target;
+      if (i === target) return index;
+      return i;
     });
   };
 
@@ -203,7 +228,12 @@ export function ProductForm({
     setError(null);
     try {
       const { urls } = await uploadProductImages(slug, files, setUploadProgress);
-      set("images", [...values.images, ...urls]);
+      const newFocals = urls.map(() => ({ x: 50, y: 50 }));
+      setValues((prev) => ({
+        ...prev,
+        images: [...prev.images, ...urls],
+        imageFocals: [...prev.imageFocals, ...newFocals],
+      }));
       if (!values.slug) set("slug", slug);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed");
@@ -238,6 +268,8 @@ export function ProductForm({
         variants,
         collectionSlug: values.collectionSlug || slugify(values.collection),
         image: values.images[0] || "",
+        imageFocal: values.imageFocals[0] ?? values.imageFocal,
+        imageFocals: values.imageFocals,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
@@ -535,16 +567,21 @@ export function ProductForm({
         {values.images.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-3">
             {values.images.map((src, index) => (
-              <div key={src} className="relative group aspect-square bg-sand overflow-hidden">
+              <button
+                key={`${src}-${index}`}
+                type="button"
+                onClick={() => setFocalEditIndex(index)}
+                className={`relative group aspect-square bg-sand overflow-hidden border-2 transition-colors ${
+                  focalEditIndex === index ? "border-foreground" : "border-transparent"
+                }`}
+              >
                 <AdminImagePreview
                   src={src}
                   alt=""
-                  className="size-full object-cover"
-                  style={
-                    index === 0
-                      ? { objectPosition: `${values.imageFocal.x}% ${values.imageFocal.y}%` }
-                      : undefined
-                  }
+                  className="size-full object-cover pointer-events-none"
+                  style={{
+                    objectPosition: `${values.imageFocals[index]?.x ?? 50}% ${values.imageFocals[index]?.y ?? 50}%`,
+                  }}
                 />
                 {index === 0 && (
                   <span className="absolute top-2 left-2 bg-ink/80 text-bone text-[0.65rem] uppercase tracking-wider px-2 py-0.5">
@@ -552,44 +589,77 @@ export function ProductForm({
                   </span>
                 )}
                 <div className="absolute inset-x-0 bottom-0 flex bg-ink/80 text-bone text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    type="button"
+                  <span
+                    role="button"
+                    tabIndex={0}
                     className="flex-1 py-1.5 flex items-center justify-center disabled:opacity-40"
-                    onClick={() => moveImage(index, -1)}
-                    disabled={index === 0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      moveImage(index, -1);
+                    }}
+                    onKeyDown={(e) => e.key === "Enter" && moveImage(index, -1)}
                     aria-label="Move image earlier"
                   >
                     <ChevronLeft className="size-4" />
-                  </button>
-                  <button
-                    type="button"
-                    className="flex-1 py-1.5 border-x border-surface/20"
-                    onClick={() => set("images", values.images.filter((i) => i !== src))}
+                  </span>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    className="flex-1 py-1.5 border-x border-surface/20 text-center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setValues((prev) => ({
+                        ...prev,
+                        images: prev.images.filter((_, i) => i !== index),
+                        imageFocals: prev.imageFocals.filter((_, i) => i !== index),
+                        imageFocal: prev.imageFocals[0] ?? prev.imageFocal,
+                      }));
+                      setFocalEditIndex((i) => Math.max(0, Math.min(i, values.images.length - 2)));
+                    }}
                   >
                     Remove
-                  </button>
-                  <button
-                    type="button"
+                  </span>
+                  <span
+                    role="button"
+                    tabIndex={0}
                     className="flex-1 py-1.5 flex items-center justify-center disabled:opacity-40"
-                    onClick={() => moveImage(index, 1)}
-                    disabled={index === values.images.length - 1}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      moveImage(index, 1);
+                    }}
+                    onKeyDown={(e) => e.key === "Enter" && moveImage(index, 1)}
                     aria-label="Move image later"
                   >
                     <ChevronRight className="size-4" />
-                  </button>
+                  </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
-        {values.images[0] && (
+        {values.images[focalEditIndex] && (
           <ImageFocalPicker
-            imageUrl={values.images[0]}
-            focalX={values.imageFocal.x}
-            focalY={values.imageFocal.y}
-            onChange={(focal) => set("imageFocal", focal)}
+            imageUrl={values.images[focalEditIndex]}
+            focalX={values.imageFocals[focalEditIndex]?.x ?? 50}
+            focalY={values.imageFocals[focalEditIndex]?.y ?? 50}
+            onChange={(focal) => {
+              setValues((prev) => {
+                const imageFocals = [...prev.imageFocals];
+                imageFocals[focalEditIndex] = focal;
+                return {
+                  ...prev,
+                  imageFocals,
+                  imageFocal: focalEditIndex === 0 ? focal : prev.imageFocal,
+                };
+              });
+            }}
             aspect={4 / 5}
           />
+        )}
+        {values.images.length > 1 && (
+          <p className="text-xs text-muted-foreground">
+            Cliquez une vignette pour cadrer cette photo (image {focalEditIndex + 1}/{values.images.length}).
+          </p>
         )}
       </div>
 

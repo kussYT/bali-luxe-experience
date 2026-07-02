@@ -88,7 +88,7 @@ export const Route = createRootRoute({
 
       { name: "twitter:card", content: "summary_large_image" },
 
-      { property: "og:image", content: "/logo.png" },
+      { property: "og:image", content: "/logo-mark.png" },
 
     ],
 
@@ -96,7 +96,7 @@ export const Route = createRootRoute({
 
       { rel: "stylesheet", href: appCss },
 
-      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "icon", href: "/logo-mark.png", type: "image/png" },
 
       { rel: "apple-touch-icon", href: "/logo-mark.png" },
 

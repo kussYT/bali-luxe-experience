@@ -262,6 +262,49 @@ export async function fetchAdminAnalytics() {
   return request<{ analytics: AdminAnalytics; source: string }>("/api/admin/analytics");
 }
 
+export type AbandonedRecoverySettings = {
+  enabled: boolean;
+  minAgeHours: number;
+  maxEmailsPerCart: number;
+  minHoursBetweenEmails: number;
+  promoCode: string;
+};
+
+export async function fetchAbandonedRecoverySettings() {
+  return request<{ settings: AbandonedRecoverySettings }>("/api/admin/abandoned-recovery/settings");
+}
+
+export async function updateAbandonedRecoverySettings(patch: Partial<AbandonedRecoverySettings>) {
+  return request<{ settings: AbandonedRecoverySettings }>("/api/admin/abandoned-recovery/settings", {
+    method: "PATCH",
+    body: JSON.stringify(patch),
+  });
+}
+
+export async function runAbandonedRecoveryNow() {
+  return request<{
+    processed: number;
+    sent: number;
+    skipped: number;
+    reason?: string;
+    settings?: AbandonedRecoverySettings;
+  }>("/api/admin/abandoned-recovery/run", { method: "POST" });
+}
+
+export type ProductAnalyticsRow = {
+  slug: string;
+  views: number;
+  cartAdds: number;
+  wishlistAdds: number;
+};
+
+export async function fetchProductAnalytics(days = 30, limit = 50) {
+  return request<{
+    analytics: { days: number; products: ProductAnalyticsRow[] };
+    source: string;
+  }>(`/api/admin/analytics/products?days=${encodeURIComponent(String(days))}&limit=${encodeURIComponent(String(limit))}`);
+}
+
 export async function fetchAdminNewsletter() {
   return request<{
     settings: AdminNewsletterSettings;

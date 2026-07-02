@@ -8,7 +8,8 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { PageMeta } from "@/components/site/PageMeta";
 import { VariantSelector } from "@/components/site/VariantSelector";
 import { getDefaultVariant, getVariant, maxCartQty } from "@/lib/warehouse-allocation";
-import { productObjectPosition } from "@/lib/image-focal";
+import { productObjectPosition, focalObjectPosition } from "@/lib/image-focal";
+import { trackProductEvent, productFocalAt } from "@/lib/track-product-analytics";
 
 export const Route = createFileRoute("/product/$slug")({
   head: ({ params }) => ({
@@ -40,7 +41,12 @@ function ProductPage() {
   useEffect(() => {
     setSelectedVariantId(initialVariantId);
     setQty(1);
+    setActiveImage(0);
   }, [slug, initialVariantId]);
+
+  useEffect(() => {
+    if (product?.slug) trackProductEvent(product.slug, "view");
+  }, [product?.slug]);
 
   if (!product) {
     return (
@@ -70,6 +76,10 @@ function ProductPage() {
   const showVideo = Boolean(product.videoUrl);
   const isVideoActive = showVideo && activeImage === 0;
   const imageIndex = showVideo ? activeImage - 1 : activeImage;
+  const displayImageIndex = Math.max(0, imageIndex);
+  const displayFocal =
+    productFocalAt(product, displayImageIndex) ??
+    (displayImageIndex === 0 ? productObjectPosition(product) : focalObjectPosition());
   const pageTitle = product.seoTitle?.trim() || `${product.name} — Bingin Diaries`;
   const pageDescription = product.metaDescription?.trim() || undefined;
 
@@ -90,14 +100,10 @@ function ProductPage() {
             />
           ) : (
             <img
-              src={gallery[Math.max(0, imageIndex)] ?? gallery[0]}
+              src={gallery[displayImageIndex] ?? gallery[0]}
               alt={product.name}
               className="w-full h-full object-cover aspect-[4/5] md:aspect-auto md:min-h-[calc(100vh-5.25rem)] image-editorial animate-fade-in"
-              style={
-                (showVideo ? imageIndex : activeImage) === 0
-                  ? { objectPosition: productObjectPosition(product) }
-                  : undefined
-              }
+              style={{ objectPosition: displayFocal }}
             />
           )}
           {(gallery.length > 1 || showVideo) && (
@@ -118,7 +124,12 @@ function ProductPage() {
                   onClick={() => setActiveImage(showVideo ? i + 1 : i)}
                   className={`shrink-0 size-14 overflow-hidden rounded-sm border transition-colors duration-300 ${activeImage === (showVideo ? i + 1 : i) ? "border-foreground" : "border-transparent opacity-60 hover:opacity-100"}`}
                 >
-                  <img src={src} alt="" className="size-full object-cover image-editorial" />
+                  <img
+                    src={src}
+                    alt=""
+                    className="size-full object-cover image-editorial"
+                    style={{ objectPosition: productFocalAt(product, i) ?? focalObjectPosition() }}
+                  />
                 </button>
               ))}
             </div>

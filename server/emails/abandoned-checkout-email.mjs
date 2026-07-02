@@ -43,7 +43,7 @@ function itemsHtml(items, currency) {
     .join("");
 }
 
-export async function sendAbandonedCheckoutEmail(order, { resumeUrl }) {
+export async function sendAbandonedCheckoutEmail(order, { resumeUrl, promoCode }) {
   const email = order.customerEmail?.trim();
   if (!email) return { skipped: true, reason: "no customer email" };
 
@@ -55,8 +55,16 @@ export async function sendAbandonedCheckoutEmail(order, { resumeUrl }) {
       : order.items.reduce((s, i) => s + i.unitPrice * i.qty, 0) * 100);
   const total = formatMoneyEmail(totalCents, currency);
 
+  const promoBlock = promoCode?.trim()
+    ? `<p style="margin:20px 0;padding:14px 18px;background:#f5f0e8;border:1px solid #e8e0d4;text-align:center;">
+        <span style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#8a8278;">Offre exclusive</span><br/>
+        <strong style="font-size:18px;letter-spacing:0.08em;">${promoCode.trim()}</strong>
+      </p>`
+    : "";
+
   const body = `
     <p>Vous aviez commencé une commande sur Bingin Diaries — votre sélection vous attend encore.</p>
+    ${promoBlock}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;font-size:14px;">
       ${itemsHtml(order.items, currency)}
     </table>

@@ -49,9 +49,10 @@ export type Product = {
   compareAtEUR?: number;
   priceUSD: number;
   priceIDR: number;
-  image: string;
   images: string[];
-  /** Cover image focal point (0–100), for object-position in grids */
+  /** Per-image focal points (same order as images) */
+  imageFocals?: { x: number; y: number }[];
+  /** Cover focal — kept for grids; mirrors imageFocals[0] */
   imageFocal?: { x: number; y: number };
   videoUrl?: string;
   details: string[];

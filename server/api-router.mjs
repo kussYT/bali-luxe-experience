@@ -37,6 +37,15 @@ import {
 } from "./api/orders.mjs";
 import { getAdminAnalyticsResponse } from "./api/analytics.mjs";
 import {
+  postProductAnalyticsEvent,
+  getAdminProductAnalyticsResponse,
+} from "./api/product-analytics.mjs";
+import {
+  getAbandonedRecoverySettings,
+  saveAbandonedRecoverySettings,
+  processAbandonedRecoveries,
+} from "./db/abandoned-recovery.mjs";
+import {
   getNewsletterCopyResponse,
   getAdminNewsletterResponse,
   patchAdminNewsletter,
@@ -229,6 +238,22 @@ export async function handleApiRequest(request, context = {}) {
       const includeDrafts = url.searchParams.get("all") === "1";
       const catalog = await getCatalogResponse({ includeDrafts });
       return jsonResponse(200, catalog);
+    }
+
+    if (pathname === "/api/analytics/product" && method === "POST") {
+      const result = await postProductAnalyticsEvent(request);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/cron/abandoned-recovery" && method === "POST") {
+      const expected = process.env.CRON_SECRET?.trim();
+      const auth = request.headers.get("Authorization") || "";
+      const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+      if (!expected || token !== expected) {
+        return jsonResponse(401, { error: "Unauthorized" });
+      }
+      const result = await processAbandonedRecoveries();
+      return jsonResponse(200, result);
     }
 
     if (pathname === "/api/newsletter" && method === "POST") {
@@ -425,6 +450,27 @@ export async function handleApiRequest(request, context = {}) {
     if (pathname === "/api/admin/orders/abandoned" && method === "GET") {
       const minAgeHours = Number(url.searchParams.get("minAgeHours")) || 1;
       const result = await getAdminAbandonedCheckoutsResponse({ minAgeHours });
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/abandoned-recovery/settings" && method === "GET") {
+      const settings = await getAbandonedRecoverySettings();
+      return jsonResponse(200, { settings });
+    }
+
+    if (pathname === "/api/admin/abandoned-recovery/settings" && method === "PATCH") {
+      const body = await readJsonBody(request);
+      const settings = await saveAbandonedRecoverySettings(body);
+      return jsonResponse(200, { settings });
+    }
+
+    if (pathname === "/api/admin/abandoned-recovery/run" && method === "POST") {
+      const result = await processAbandonedRecoveries();
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/analytics/products" && method === "GET") {
+      const result = await getAdminProductAnalyticsResponse(request);
       return jsonResponse(200, result);
     }
 
