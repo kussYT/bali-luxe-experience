@@ -20,6 +20,7 @@ import {
   createCheckoutSession,
   handleStripeWebhook,
   getCheckoutSessionStatus,
+  resumeCheckoutSession,
 } from "./checkout.mjs";
 import { getCatalogResponse } from "./api/catalog.mjs";
 import { getAdminInventoryResponse, patchAdminInventory } from "./api/inventory.mjs";
@@ -28,8 +29,11 @@ import {
   getAdminOrderResponse,
   shipAdminOrder,
   patchAdminOrder,
+  resendAdminOrderConfirmation,
   getAdminOrdersCsv,
   postMarketplaceOrder,
+  getAdminAbandonedCheckoutsResponse,
+  sendAbandonedCheckoutRecovery,
 } from "./api/orders.mjs";
 import { getAdminAnalyticsResponse } from "./api/analytics.mjs";
 import {
@@ -58,6 +62,7 @@ import {
   removeAdminPageResponse,
   getAdminCollectionsResponse,
   patchAdminCollectionResponse,
+  reorderAdminCollectionsResponse,
   seedCmsContent,
 } from "./api/content-admin.mjs";
 import { getAdminCmsStatusResponse } from "./api/cms-status.mjs";
@@ -66,9 +71,11 @@ import {
   createAdminProduct,
   updateAdminProduct,
   deleteAdminProduct,
+  reorderAdminProducts,
+  patchAdminProductStatus,
 } from "./api/products-admin.mjs";
 import { isDatabaseConfigured } from "./db/pool.mjs";
-import { saveUploadedImage, getUploadedImage } from "./uploads.mjs";
+import { saveUploadedImage, getUploadedImage, validateUploadFile } from "./uploads.mjs";
 import {
   postAccountRequestLink,
   getAccountVerify,
@@ -83,7 +90,17 @@ import {
   getAdminCustomersExportCsv,
   getAdminCustomersExportBrevoCsv,
 } from "./api/customers-admin.mjs";
-import { postAdminTranslatePage, getAdminTranslateStatusResponse } from "./api/translate-admin.mjs";
+import { postAdminTranslatePage, postAdminTranslatePost, getAdminTranslateStatusResponse } from "./api/translate-admin.mjs";
+import {
+  getAdminPromotionsResponse,
+  postAdminPromotion,
+  patchAdminPromotion,
+  removeAdminPromotion,
+  postValidatePromo,
+} from "./api/promotions-admin.mjs";
+import { getAdminFinanceResponse } from "./api/finance-admin.mjs";
+import { getAdminReadinessResponse } from "./api/readiness-admin.mjs";
+import { getAdminShippingResponse, patchAdminShipping } from "./api/shipping-admin.mjs";
 
 function jsonResponse(status, body, extraHeaders = {}) {
   return Response.json(body, { status, headers: extraHeaders });
@@ -166,19 +183,36 @@ export async function handleApiRequest(request, context = {}) {
       return jsonResponse(200, result);
     }
 
+    if (pathname === "/api/promo/validate" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await postValidatePromo(body);
+      return jsonResponse(200, result);
+    }
+
     if (pathname === "/api/checkout/session" && method === "POST") {
       const body = await readJsonBody(request);
       const result = await createCheckoutSession({
         items: body.items,
         currency: body.currency,
         countryCode: body.countryCode,
+        promoCode: body.promoCode,
+        customerEmail: body.customerEmail,
       });
       return jsonResponse(200, result);
     }
 
     if (pathname === "/api/checkout/session" && method === "GET") {
       const sessionId = url.searchParams.get("session_id");
-      const result = await getCheckoutSessionStatus(sessionId);
+      const orderId = url.searchParams.get("order_id");
+      const result = await getCheckoutSessionStatus(sessionId, orderId);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/checkout/resume" && method === "POST") {
+      const body = await readJsonBody(request);
+      const orderId = typeof body.orderId === "string" ? body.orderId.trim() : "";
+      if (!orderId) return jsonResponse(400, { error: "orderId required" });
+      const result = await resumeCheckoutSession(orderId);
       return jsonResponse(200, result);
     }
 
@@ -221,12 +255,14 @@ export async function handleApiRequest(request, context = {}) {
     }
 
     if (pathname === "/api/content/posts" && method === "GET") {
-      return getPostsListResponse();
+      const locale = url.searchParams.get("locale") || undefined;
+      return getPostsListResponse(locale);
     }
 
     const contentPostMatch = pathname.match(/^\/api\/content\/posts\/([^/]+)$/);
     if (contentPostMatch && method === "GET") {
-      return getPostResponse(decodeURIComponent(contentPostMatch[1]));
+      const locale = url.searchParams.get("locale") || undefined;
+      return getPostResponse(decodeURIComponent(contentPostMatch[1]), locale);
     }
 
     const contentPageMatch = pathname.match(/^\/api\/content\/pages\/([^/]+)$/);
@@ -321,6 +357,49 @@ export async function handleApiRequest(request, context = {}) {
       return jsonResponse(200, analytics);
     }
 
+    if (pathname === "/api/admin/promotions" && method === "GET") {
+      const result = await getAdminPromotionsResponse();
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/promotions" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await postAdminPromotion(body);
+      return jsonResponse(201, result);
+    }
+
+    const promoMatch = pathname.match(/^\/api\/admin\/promotions\/([^/]+)$/);
+    if (promoMatch && method === "PATCH") {
+      const body = await readJsonBody(request);
+      const result = await patchAdminPromotion(promoMatch[1], body);
+      return jsonResponse(200, result);
+    }
+    if (promoMatch && method === "DELETE") {
+      await removeAdminPromotion(promoMatch[1]);
+      return jsonResponse(200, { ok: true });
+    }
+
+    if (pathname === "/api/admin/finance" && method === "GET") {
+      const result = await getAdminFinanceResponse();
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/readiness" && method === "GET") {
+      const result = await getAdminReadinessResponse();
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/shipping" && method === "GET") {
+      const result = await getAdminShippingResponse();
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/shipping" && method === "PATCH") {
+      const body = await readJsonBody(request);
+      const result = await patchAdminShipping(body);
+      return jsonResponse(200, result);
+    }
+
     if (pathname === "/api/admin/newsletter" && method === "GET") {
       const newsletter = await getAdminNewsletterResponse();
       return jsonResponse(200, newsletter);
@@ -341,6 +420,12 @@ export async function handleApiRequest(request, context = {}) {
           "Content-Disposition": 'attachment; filename="bingin-newsletter-subscribers.csv"',
         },
       });
+    }
+
+    if (pathname === "/api/admin/orders/abandoned" && method === "GET") {
+      const minAgeHours = Number(url.searchParams.get("minAgeHours")) || 1;
+      const result = await getAdminAbandonedCheckoutsResponse({ minAgeHours });
+      return jsonResponse(200, result);
     }
 
     if (pathname === "/api/admin/orders" && method === "GET") {
@@ -366,6 +451,20 @@ export async function handleApiRequest(request, context = {}) {
       });
     }
 
+    const orderResendMatch = pathname.match(/^\/api\/admin\/orders\/([^/]+)\/resend-confirmation$/);
+    if (orderResendMatch && method === "POST") {
+      const orderId = decodeURIComponent(orderResendMatch[1]);
+      const result = await resendAdminOrderConfirmation(orderId);
+      return jsonResponse(200, result);
+    }
+
+    const orderRecoveryMatch = pathname.match(/^\/api\/admin\/orders\/([^/]+)\/send-recovery$/);
+    if (orderRecoveryMatch && method === "POST") {
+      const orderId = decodeURIComponent(orderRecoveryMatch[1]);
+      const result = await sendAbandonedCheckoutRecovery(orderId);
+      return jsonResponse(200, result);
+    }
+
     const orderShipMatch = pathname.match(/^\/api\/admin\/orders\/([^/]+)\/ship$/);
     if (orderShipMatch && method === "PATCH") {
       const orderId = decodeURIComponent(orderShipMatch[1]);
@@ -385,6 +484,12 @@ export async function handleApiRequest(request, context = {}) {
       const orderId = decodeURIComponent(orderMatch[1]);
       const body = await readJsonBody(request);
       const result = await patchAdminOrder(orderId, body);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/products/reorder" && method === "PATCH") {
+      const body = await readJsonBody(request);
+      const result = await reorderAdminProducts(body);
       return jsonResponse(200, result);
     }
 
@@ -408,6 +513,14 @@ export async function handleApiRequest(request, context = {}) {
     const productMatch = pathname.match(/^\/api\/admin\/products\/([^/]+)$/);
     if (productMatch) {
       const slug = decodeURIComponent(productMatch[1]);
+
+      if (method === "PATCH") {
+        const body = await readJsonBody(request);
+        if (body.status != null && isDatabaseConfigured()) {
+          const result = await patchAdminProductStatus(slug, body);
+          return jsonResponse(200, result);
+        }
+      }
 
       if (method === "PUT") {
         const body = await readJsonBody(request);
@@ -447,8 +560,13 @@ export async function handleApiRequest(request, context = {}) {
       if (!files?.length) return jsonResponse(400, { error: "No file uploaded" });
       const urls = [];
       for (const file of files) {
-        const urlPath = await saveUploadedImage(slug, file.filename, file.buffer, context.env);
-        urls.push(urlPath);
+        try {
+          validateUploadFile(file.filename, file.buffer);
+          const urlPath = await saveUploadedImage(slug, file.filename, file.buffer, context.env);
+          urls.push(urlPath);
+        } catch (e) {
+          return jsonResponse(e.status || 400, { error: e.message || "Upload failed" });
+        }
       }
       return jsonResponse(200, { urls });
     }
@@ -522,6 +640,12 @@ export async function handleApiRequest(request, context = {}) {
       }
     }
 
+    if (pathname === "/api/admin/collections/reorder" && method === "PATCH") {
+      const body = await readJsonBody(request);
+      const result = await reorderAdminCollectionsResponse(body);
+      return jsonResponse(200, result);
+    }
+
     if (pathname === "/api/admin/collections" && method === "GET") {
       const result = await getAdminCollectionsResponse();
       return jsonResponse(200, result);
@@ -570,6 +694,17 @@ export async function handleApiRequest(request, context = {}) {
     if (pathname === "/api/admin/translate-page" && method === "POST") {
       const body = await readJsonBody(request);
       const result = await postAdminTranslatePage(body);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/translate-post" && method === "GET") {
+      const status = await getAdminTranslateStatusResponse();
+      return jsonResponse(200, status);
+    }
+
+    if (pathname === "/api/admin/translate-post" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await postAdminTranslatePost(body);
       return jsonResponse(200, result);
     }
 

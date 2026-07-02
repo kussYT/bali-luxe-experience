@@ -1,11 +1,17 @@
+import type { UploadProgress } from "@/lib/upload-admin-files";
+import { uploadAdminFiles } from "@/lib/upload-admin-files";
 import type { Catalog, Product } from "@/lib/catalog-types";
 import type {
   AboutContent,
   AnnouncementContent,
+  CareContent,
   CmsPage,
+  ContactContent,
   FindUsContent,
+  FooterContent,
   HomepageContent,
   JournalPost,
+  SizingContent,
   AdminCollectionMeta,
 } from "@/lib/content-types";
 
@@ -70,6 +76,8 @@ export type InventoryRow = {
   productId: string;
   productSlug: string;
   productName: string;
+  collectionSlug?: string;
+  collectionName?: string;
   status: string;
   origin: string;
   defaultWarehouse: string;
@@ -123,6 +131,9 @@ export type AdminOrder = {
   trackingCarrier: string | null;
   trackingUrl: string | null;
   refundAmountCents: number | null;
+  promoCode?: string | null;
+  recoveryEmailSentAt?: string | null;
+  recoveryEmailCount?: number;
   createdAt: string;
   items: {
     id: string;
@@ -144,6 +155,7 @@ export type AdminAnalytics = {
     revenueEurCents: number;
   };
   salesByWeek: { weekStart: string; orders: number; revenueCents: number }[];
+  salesByMonth: { month: string; orders: number; revenueCents: number }[];
   ordersByCountry: { country: string; orders: number; revenueCents: number }[];
   ordersByChannel: { channel: string; orders: number }[];
   stockByWarehouse: { france: number; bali: number };
@@ -160,18 +172,41 @@ export type NewsletterCopy = {
 };
 
 export type AdminNewsletterSettings = {
-  provider: string;
   brevoListId: string;
   copy: NewsletterCopy;
-  envProvider: string | null;
   hasBrevoKey: boolean;
-  hasMailchimpKey: boolean;
-  hasKlaviyoKey: boolean;
 };
 
 export async function fetchAdminOrders(channel?: string) {
   const qs = channel ? `?channel=${encodeURIComponent(channel)}` : "";
   return request<{ orders: AdminOrder[]; count: number; source: string }>(`/api/admin/orders${qs}`);
+}
+
+export type AbandonedCheckout = AdminOrder & {
+  estimatedTotalCents: number | null;
+  recoveryStatus: "not_recovered" | "email_sent";
+  productSummary: string;
+};
+
+export type AbandonedCheckoutsResponse = {
+  checkouts: AbandonedCheckout[];
+  count: number;
+  withEmail: number;
+  recoverySent: number;
+  source: string;
+};
+
+export async function fetchAbandonedCheckouts(minAgeHours = 1) {
+  return request<AbandonedCheckoutsResponse>(
+    `/api/admin/orders/abandoned?minAgeHours=${encodeURIComponent(String(minAgeHours))}`,
+  );
+}
+
+export async function sendAbandonedCheckoutRecovery(orderId: string) {
+  return request<{ ok: boolean; order: AbandonedCheckout; email: string; provider: string }>(
+    `/api/admin/orders/${encodeURIComponent(orderId)}/send-recovery`,
+    { method: "POST" },
+  );
 }
 
 export async function fetchAdminOrder(orderId: string) {
@@ -212,6 +247,13 @@ export async function updateAdminOrder(orderId: string, body: UpdateAdminOrderIn
   );
 }
 
+export async function resendOrderConfirmation(orderId: string) {
+  return request<{ ok: boolean; order: AdminOrder; email: string; provider: string }>(
+    `/api/admin/orders/${encodeURIComponent(orderId)}/resend-confirmation`,
+    { method: "POST" },
+  );
+}
+
 export function adminOrdersExportUrl() {
   return "/api/admin/orders/export.csv";
 }
@@ -223,14 +265,19 @@ export async function fetchAdminAnalytics() {
 export async function fetchAdminNewsletter() {
   return request<{
     settings: AdminNewsletterSettings;
-    stats: { total: number; bySource: Record<string, number> };
+    stats: {
+      total: number;
+      siteSignups: number;
+      brevoTotal: number | null;
+      brevoListName: string | null;
+      bySource: Record<string, number>;
+    };
     subscribers: { email: string; source: string; subscribedAt: string | null }[];
     source: string;
   }>("/api/admin/newsletter");
 }
 
 export async function updateAdminNewsletter(payload: {
-  provider?: string;
   brevoListId?: string;
   copy?: Partial<NewsletterCopy>;
 }) {
@@ -245,7 +292,7 @@ export function adminNewsletterExportUrl() {
 }
 
 export async function createMarketplaceOrder(payload: {
-  channel: "wolf_badger" | "other";
+  channel: "wolf_badger" | "influencer" | "other";
   externalRef?: string;
   customerEmail?: string;
   shippingCountryCode: string;
@@ -271,26 +318,21 @@ export async function updateInventoryQuantity(payload: {
   );
 }
 
-export async function uploadProductImages(slug: string, files: FileList | File[]) {
-  return uploadAdminFiles(slug, files);
+export async function uploadProductImages(
+  slug: string,
+  files: FileList | File[],
+  onProgress?: (progress: UploadProgress) => void,
+) {
+  return uploadAdminFiles(slug, files, onProgress);
 }
 
 /** Upload CMS assets (hero, photo strip, about sidebar…) under /uploads/cms/… */
-export async function uploadCmsMedia(folder: string, files: FileList | File[]) {
-  return uploadAdminFiles(`cms/${folder}`, files);
-}
-
-async function uploadAdminFiles(slug: string, files: FileList | File[]) {
-  const form = new FormData();
-  for (const file of files) form.append("images", file);
-  const res = await fetch(`/api/admin/upload?slug=${encodeURIComponent(slug)}`, {
-    method: "POST",
-    body: form,
-    credentials: "include",
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "Upload failed");
-  return data as { urls: string[] };
+export async function uploadCmsMedia(
+  folder: string,
+  files: FileList | File[],
+  onProgress?: (progress: UploadProgress) => void,
+) {
+  return uploadAdminFiles(`cms/${folder}`, files, onProgress);
 }
 
 export async function fetchAdminSiteContent() {
@@ -299,11 +341,19 @@ export async function fetchAdminSiteContent() {
     homepage: HomepageContent;
     about: AboutContent;
     findUs: FindUsContent;
+    contact: ContactContent;
+    care: CareContent;
+    sizing: SizingContent;
+    footer: FooterContent;
     stored: {
       announcement: Partial<AnnouncementContent>;
       homepage: Partial<HomepageContent>;
       about: Partial<AboutContent>;
       findUs: Partial<FindUsContent>;
+      contact: Partial<ContactContent>;
+      care: Partial<CareContent>;
+      sizing: Partial<SizingContent>;
+      footer: Partial<FooterContent>;
     };
     source: string;
   }>("/api/admin/content/site");
@@ -314,17 +364,29 @@ export async function updateAdminSiteContent(payload: {
   homepage?: Partial<HomepageContent>;
   about?: AboutContent;
   findUs?: FindUsContent;
+  contact?: ContactContent;
+  care?: CareContent;
+  sizing?: SizingContent;
+  footer?: FooterContent;
 }) {
   return request<{
     announcement: AnnouncementContent;
     homepage: HomepageContent;
     about: AboutContent;
     findUs: FindUsContent;
+    contact: ContactContent;
+    care: CareContent;
+    sizing: SizingContent;
+    footer: FooterContent;
     stored: {
       announcement: Partial<AnnouncementContent>;
       homepage: Partial<HomepageContent>;
       about: Partial<AboutContent>;
       findUs: Partial<FindUsContent>;
+      contact: Partial<ContactContent>;
+      care: Partial<CareContent>;
+      sizing: Partial<SizingContent>;
+      footer: Partial<FooterContent>;
     };
     source: string;
   }>("/api/admin/content/site", { method: "PATCH", body: JSON.stringify(payload) });
@@ -347,7 +409,13 @@ export async function fetchAdminPost(slug: string) {
   );
 }
 
-export async function saveAdminPost(post: Partial<JournalPost> & { slug: string; status?: string }) {
+export async function saveAdminPost(
+  post: Partial<JournalPost> & {
+    slug: string;
+    status?: string;
+    locales?: Partial<Record<import("@/lib/i18n/messages").Locale, import("@/lib/content-types").JournalPostLocaleFields>>;
+  },
+) {
   return request<{ post: JournalPost; source: string }>("/api/admin/content/posts", {
     method: "POST",
     body: JSON.stringify(post),
@@ -393,6 +461,30 @@ export async function updateAdminCollection(slug: string, patch: Partial<AdminCo
   return request<{ collection: AdminCollectionMeta; source: string }>(
     `/api/admin/collections/${encodeURIComponent(slug)}`,
     { method: "PATCH", body: JSON.stringify(patch) },
+  );
+}
+
+export async function reorderAdminCollections(orders: { slug: string; sortOrder: number }[]) {
+  return request<{ collections: AdminCollectionMeta[] }>("/api/admin/collections/reorder", {
+    method: "PATCH",
+    body: JSON.stringify({ orders }),
+  });
+}
+
+export async function reorderAdminProducts(orders: { slug: string; sortOrder: number }[]) {
+  return request<{ catalog: Catalog }>("/api/admin/products/reorder", {
+    method: "PATCH",
+    body: JSON.stringify({ orders }),
+  });
+}
+
+export async function patchProductStatus(slug: string, status: "published" | "draft") {
+  return request<{ product: Product; catalog: Catalog }>(
+    `/api/admin/products/${encodeURIComponent(slug)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    },
   );
 }
 
@@ -474,5 +566,137 @@ export async function autoTranslatePage(payload: {
   }>("/api/admin/translate-page", {
     method: "POST",
     body: JSON.stringify(payload),
+  });
+}
+
+export async function autoTranslatePost(payload: {
+  sourceLocale: string;
+  targetLocales: string[];
+  fields: { title: string; excerpt: string; category: string; body: string[] };
+}) {
+  return request<{
+    locales: Record<string, { title: string; excerpt: string; category: string; body: string[] }>;
+    provider: string;
+  }>("/api/admin/translate-post", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export type PromoRules = {
+  scope: "all" | "collections" | "products";
+  collectionSlugs: string[];
+  productSlugs: string[];
+  minSubtotalEur: number | null;
+  startsAt: string | null;
+};
+
+export const DEFAULT_PROMO_RULES: PromoRules = {
+  scope: "all",
+  collectionSlugs: [],
+  productSlugs: [],
+  minSubtotalEur: null,
+  startsAt: null,
+};
+
+export type AdminPromoCode = {
+  id: string;
+  code: string;
+  label: string;
+  discountType: "percent" | "fixed" | "free";
+  discountValue: number;
+  freeShipping: boolean;
+  maxUses: number | null;
+  usedCount: number;
+  influencerName: string;
+  active: boolean;
+  expiresAt: string | null;
+  rules: PromoRules;
+};
+
+export async function fetchAdminPromotions() {
+  return request<{ promos: AdminPromoCode[] }>("/api/admin/promotions");
+}
+
+export async function createAdminPromotion(payload: Partial<AdminPromoCode>) {
+  return request<{ promo: AdminPromoCode }>("/api/admin/promotions", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateAdminPromotion(id: string, payload: Partial<AdminPromoCode>) {
+  return request<{ promo: AdminPromoCode }>(`/api/admin/promotions/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteAdminPromotion(id: string) {
+  return request<{ ok: boolean }>(`/api/admin/promotions/${id}`, { method: "DELETE" });
+}
+
+export type AdminFinance = {
+  summary: {
+    paidOrders: number;
+    revenueEurCents: number;
+    activeOrders: number;
+    refundCount: number;
+  };
+  refunds: {
+    id: string;
+    status: string;
+    channel: string;
+    currency: string;
+    amountTotal: number | null;
+    refundAmountCents: number | null;
+    customerEmail: string | null;
+    promoCode: string | null;
+    paidAt: string | null;
+    updatedAt: string;
+  }[];
+  stripeDashboardUrl: string;
+  stripePayoutsUrl: string;
+};
+
+export async function fetchAdminFinance() {
+  return request<AdminFinance>("/api/admin/finance");
+}
+
+export type ReadinessRow = {
+  slug: string;
+  name: string;
+  status: string;
+  collection: string;
+  stockFrance: number;
+  stockBali: number;
+  hasImage: boolean;
+  variantCount: number;
+  problems: string[];
+};
+
+export async function fetchAdminReadiness() {
+  return request<{
+    summary: { total: number; published: number; ready: number; needsAttention: number };
+    issues: ReadinessRow[];
+    ready: ReadinessRow[];
+  }>("/api/admin/readiness");
+}
+
+export type ShippingZone = {
+  id: string;
+  name: string;
+  countries: string[];
+  rates: { EUR: number; USD: number; IDR: number };
+};
+
+export async function fetchAdminShipping() {
+  return request<{ settings: { zones: ShippingZone[] } }>("/api/admin/shipping");
+}
+
+export async function updateAdminShipping(zones: ShippingZone[]) {
+  return request<{ settings: { zones: ShippingZone[] } }>("/api/admin/shipping", {
+    method: "PATCH",
+    body: JSON.stringify({ zones }),
   });
 }
