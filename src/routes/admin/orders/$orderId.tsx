@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import {
   fetchAdminOrder,
   updateAdminOrder,
+  resendOrderConfirmation,
   type AdminOrder,
 } from "@/lib/admin-api";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_OPTIONS } from "@/lib/order-status";
@@ -47,6 +48,7 @@ function AdminOrderDetailPage() {
   const [notifyCustomer, setNotifyCustomer] = useState(true);
   const [refundAmountCents, setRefundAmountCents] = useState("");
   const [notes, setNotes] = useState("");
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     fetchAdminOrder(orderId)
@@ -124,6 +126,21 @@ function AdminOrderDetailPage() {
     }
   }
 
+  async function handleResendConfirmation() {
+    if (!order) return;
+    setResending(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await resendOrderConfirmation(orderId);
+      setMessage(`Email de confirmation renvoyé à ${res.email}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Échec d'envoi");
+    } finally {
+      setResending(false);
+    }
+  }
+
   if (error && !order) {
     return (
       <div className="space-y-4">
@@ -150,6 +167,9 @@ function AdminOrderDetailPage() {
         <h2 className="font-display text-4xl mt-4">Détail commande</h2>
         <p className="text-xs text-muted-foreground mt-2 font-mono">{order.id}</p>
       </div>
+
+      {message && <p className="text-sm text-muted-foreground">{message}</p>}
+      {error && order && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="grid sm:grid-cols-2 gap-4">
         <Card>
@@ -214,6 +234,31 @@ function AdminOrderDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      {order.customerEmail && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display text-xl">Emails client</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Destinataire : <span className="text-foreground">{order.customerEmail}</span>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              « Marquer comme traitée » envoie l&apos;email d&apos;<strong>expédition</strong>, pas la
+              confirmation de commande.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={resending}
+              onClick={handleResendConfirmation}
+            >
+              {resending ? "Envoi…" : "Renvoyer l'email de confirmation"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {canFulfill && (
         <Card>
@@ -332,9 +377,6 @@ function AdminOrderDetailPage() {
                 Renvoyer l&apos;email d&apos;expédition au client
               </label>
             )}
-
-            {message && <p className="text-sm text-muted-foreground">{message}</p>}
-            {error && <p className="text-sm text-destructive">{error}</p>}
 
             <Button type="submit" variant="outline" disabled={saving}>
               {saving ? "Enregistrement…" : "Enregistrer le statut"}
