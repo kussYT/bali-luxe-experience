@@ -62,6 +62,7 @@ import { Route as AdminContentContactRouteImport } from './routes/admin/content/
 import { Route as AdminContentCareRouteImport } from './routes/admin/content/care'
 import { Route as AdminContentAboutRouteImport } from './routes/admin/content/about'
 import { Route as AdminBlogSlugRouteImport } from './routes/admin/blog/$slug'
+import { Route as AdminAnalyticsProductsRouteImport } from './routes/admin/analytics/products'
 
 const TravelDiariesRoute = TravelDiariesRouteImport.update({
   id: '/travel-diaries',
@@ -328,6 +329,11 @@ const AdminBlogSlugRoute = AdminBlogSlugRouteImport.update({
   path: '/blog/$slug',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAnalyticsProductsRoute = AdminAnalyticsProductsRouteImport.update({
+  id: '/analytics/products',
+  path: '/analytics/products',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -362,6 +368,7 @@ export interface FileRoutesByFullPath {
   '/uploads/$': typeof UploadsSplatRoute
   '/wishlist/$token': typeof WishlistTokenRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/analytics/products': typeof AdminAnalyticsProductsRoute
   '/admin/blog/$slug': typeof AdminBlogSlugRoute
   '/admin/content/about': typeof AdminContentAboutRoute
   '/admin/content/care': typeof AdminContentCareRoute
@@ -416,6 +423,7 @@ export interface FileRoutesByTo {
   '/uploads/$': typeof UploadsSplatRoute
   '/wishlist/$token': typeof WishlistTokenRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/analytics/products': typeof AdminAnalyticsProductsRoute
   '/admin/blog/$slug': typeof AdminBlogSlugRoute
   '/admin/content/about': typeof AdminContentAboutRoute
   '/admin/content/care': typeof AdminContentCareRoute
@@ -472,6 +480,7 @@ export interface FileRoutesById {
   '/uploads/$': typeof UploadsSplatRoute
   '/wishlist/$token': typeof WishlistTokenRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/analytics/products': typeof AdminAnalyticsProductsRoute
   '/admin/blog/$slug': typeof AdminBlogSlugRoute
   '/admin/content/about': typeof AdminContentAboutRoute
   '/admin/content/care': typeof AdminContentCareRoute
@@ -529,6 +538,7 @@ export interface FileRouteTypes {
     | '/uploads/$'
     | '/wishlist/$token'
     | '/admin/'
+    | '/admin/analytics/products'
     | '/admin/blog/$slug'
     | '/admin/content/about'
     | '/admin/content/care'
@@ -583,6 +593,7 @@ export interface FileRouteTypes {
     | '/uploads/$'
     | '/wishlist/$token'
     | '/admin'
+    | '/admin/analytics/products'
     | '/admin/blog/$slug'
     | '/admin/content/about'
     | '/admin/content/care'
@@ -638,6 +649,7 @@ export interface FileRouteTypes {
     | '/uploads/$'
     | '/wishlist/$token'
     | '/admin/'
+    | '/admin/analytics/products'
     | '/admin/blog/$slug'
     | '/admin/content/about'
     | '/admin/content/care'
@@ -1061,6 +1073,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBlogSlugRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/analytics/products': {
+      id: '/admin/analytics/products'
+      path: '/analytics/products'
+      fullPath: '/admin/analytics/products'
+      preLoaderRoute: typeof AdminAnalyticsProductsRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
@@ -1073,6 +1092,7 @@ interface AdminRouteChildren {
   AdminReadinessRoute: typeof AdminReadinessRoute
   AdminShippingRoute: typeof AdminShippingRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminAnalyticsProductsRoute: typeof AdminAnalyticsProductsRoute
   AdminBlogSlugRoute: typeof AdminBlogSlugRoute
   AdminContentAboutRoute: typeof AdminContentAboutRoute
   AdminContentCareRoute: typeof AdminContentCareRoute
@@ -1105,6 +1125,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminReadinessRoute: AdminReadinessRoute,
   AdminShippingRoute: AdminShippingRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminAnalyticsProductsRoute: AdminAnalyticsProductsRoute,
   AdminBlogSlugRoute: AdminBlogSlugRoute,
   AdminContentAboutRoute: AdminContentAboutRoute,
   AdminContentCareRoute: AdminContentCareRoute,
