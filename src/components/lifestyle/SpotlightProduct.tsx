@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useCatalog } from "@/lib/catalog-context";
 import { useSiteContent } from "@/lib/content-context";
 import { useCurrency } from "@/lib/currency";
+import { Reveal } from "@/components/lifestyle/Reveal";
 import { focalObjectPosition } from "@/lib/image-focal";
 
 export function SpotlightProduct() {

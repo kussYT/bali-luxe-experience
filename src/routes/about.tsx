@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSiteContent } from "@/lib/content-context";
 import { focalObjectPosition } from "@/lib/image-focal";
 import { NAV_ABOUT } from "@/lib/navigation";
 

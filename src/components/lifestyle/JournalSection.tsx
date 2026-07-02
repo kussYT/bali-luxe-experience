@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Reveal } from "@/components/lifestyle/Reveal";
+import { useSiteContent } from "@/lib/content-context";
 import { focalObjectPosition } from "@/lib/image-focal";
 
 export function JournalSection({ showHeader = true }: { showHeader?: boolean }) {

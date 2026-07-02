@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { focalObjectPosition } from "@/lib/image-focal";
 import { X } from "lucide-react";
 import type { NavColumn, NavFeaturedImage } from "@/lib/navigation";

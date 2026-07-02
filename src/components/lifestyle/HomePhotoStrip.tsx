@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { focalObjectPosition } from "@/lib/image-focal";
 import { useSiteContent } from "@/lib/content-context";
 import type { HomePhotoTile } from "@/lib/content-types";
