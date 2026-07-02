@@ -5,6 +5,7 @@ import { productInCollection, productMatchesQuery } from "@/lib/search";
 import { sortProductsForDisplay } from "@/lib/sort-products";
 import { ProductCard } from "@/components/site/ProductCard";
 import { SALE_PAGE_SUBTITLE, SALE_PAGE_TITLE } from "@/data/sale-copy";
+import { focalObjectPosition } from "@/lib/image-focal";
 
 const CATEGORY_LABELS: Record<string, string> = {
   accessories: "Accessories",
@@ -98,11 +99,37 @@ function Collection() {
     activeCollection?.description ||
     "Hand-woven, slow-finished, and shipped from our two ateliers in Canggu and Paris.";
 
+  const showCollectionHero = Boolean(inCollectionView && activeCollection?.heroImage);
+
   return (
     <>
-      <section className="page-wrap section-pad pt-20 md:pt-28 pb-12 md:pb-16 border-b border-border">
-        <h1 className="font-display text-3xl sm:text-5xl md:text-7xl lg:text-[5.5rem] leading-[0.94] break-words">{title}</h1>
-        <p className="text-caption mt-6 max-w-lg">{subtitle}</p>
+      {showCollectionHero && (
+        <section className="relative w-full aspect-[16/9] md:aspect-[21/9] max-h-[min(52vh,28rem)] overflow-hidden bg-secondary">
+          <img
+            src={activeCollection!.heroImage}
+            alt=""
+            className="absolute inset-0 size-full object-cover image-editorial"
+            style={{ objectPosition: focalObjectPosition(activeCollection!.heroFocal) }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-foreground/75 via-foreground/25 to-foreground/10" />
+          <div className="relative h-full flex flex-col justify-end page-wrap section-pad pb-10 md:pb-14 text-surface">
+            <h1 className="font-display text-3xl sm:text-5xl md:text-6xl lg:text-7xl leading-[0.94] break-words">
+              {title}
+            </h1>
+            <p className="text-caption mt-4 md:mt-6 max-w-lg !text-surface/85">{subtitle}</p>
+          </div>
+        </section>
+      )}
+
+      <section
+        className={`page-wrap section-pad pb-12 md:pb-16 border-b border-border ${showCollectionHero ? "pt-10 md:pt-12" : "pt-20 md:pt-28"}`}
+      >
+        {!showCollectionHero && (
+          <>
+            <h1 className="font-display text-3xl sm:text-5xl md:text-7xl lg:text-[5.5rem] leading-[0.94] break-words">{title}</h1>
+            <p className="text-caption mt-6 max-w-lg">{subtitle}</p>
+          </>
+        )}
         {sale === "true" && (
           <div
             id="sale-info"

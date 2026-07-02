@@ -28,6 +28,8 @@ export type Collection = {
   name: string;
   season: string;
   description?: string;
+  heroImage?: string;
+  heroFocal?: { x: number; y: number };
   sortOrder?: number;
   hidden?: boolean;
 };
@@ -53,6 +55,8 @@ export type Product = {
   images: string[];
   /** Cover image focal point (0–100), for object-position in grids */
   imageFocal?: { x: number; y: number };
+  /** Per-gallery-image focal points (parallel to images[]) */
+  imageFocals?: { x: number; y: number }[];
   videoUrl?: string;
   details: string[];
   tags: string[];

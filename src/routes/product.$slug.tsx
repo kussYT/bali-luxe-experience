@@ -8,7 +8,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { PageMeta } from "@/components/site/PageMeta";
 import { VariantSelector } from "@/components/site/VariantSelector";
 import { getDefaultVariant, getVariant, maxCartQty } from "@/lib/warehouse-allocation";
-import { productObjectPosition } from "@/lib/image-focal";
+import { productImageObjectPosition } from "@/lib/image-focal";
 
 export const Route = createFileRoute("/product/$slug")({
   head: ({ params }) => ({
@@ -72,6 +72,7 @@ function ProductPage() {
   const imageIndex = showVideo ? activeImage - 1 : activeImage;
   const pageTitle = product.seoTitle?.trim() || `${product.name} — Bingin Diaries`;
   const pageDescription = product.metaDescription?.trim() || undefined;
+  const galleryIndex = showVideo ? Math.max(0, imageIndex) : activeImage;
 
   return (
     <>
@@ -93,11 +94,7 @@ function ProductPage() {
               src={gallery[Math.max(0, imageIndex)] ?? gallery[0]}
               alt={product.name}
               className="w-full h-full object-cover aspect-[4/5] md:aspect-auto md:min-h-[calc(100vh-5.25rem)] image-editorial animate-fade-in"
-              style={
-                (showVideo ? imageIndex : activeImage) === 0
-                  ? { objectPosition: productObjectPosition(product) }
-                  : undefined
-              }
+              style={{ objectPosition: productImageObjectPosition(product, galleryIndex) }}
             />
           )}
           {(gallery.length > 1 || showVideo) && (
@@ -118,7 +115,12 @@ function ProductPage() {
                   onClick={() => setActiveImage(showVideo ? i + 1 : i)}
                   className={`shrink-0 size-14 overflow-hidden rounded-sm border transition-colors duration-300 ${activeImage === (showVideo ? i + 1 : i) ? "border-foreground" : "border-transparent opacity-60 hover:opacity-100"}`}
                 >
-                  <img src={src} alt="" className="size-full object-cover image-editorial" />
+                  <img
+                    src={src}
+                    alt=""
+                    className="size-full object-cover image-editorial"
+                    style={{ objectPosition: productImageObjectPosition(product, i) }}
+                  />
                 </button>
               ))}
             </div>

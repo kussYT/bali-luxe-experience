@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CmsMediaField } from "@/components/admin/CmsMediaField";
+import { DEFAULT_IMAGE_FOCAL } from "@/lib/image-focal";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 export const Route = createFileRoute("/admin/collections/")({
@@ -70,6 +72,7 @@ function AdminCollectionsPage() {
         season: col.season,
         description: col.description,
         heroImage: col.heroImage,
+        heroFocal: col.heroFocal ?? DEFAULT_IMAGE_FOCAL,
         sortOrder: col.sortOrder,
         hidden: col.hidden,
       });
@@ -175,9 +178,18 @@ function AdminCollectionsPage() {
                   onChange={(e) => patch(col.slug, { sortOrder: Number(e.target.value) || 0 })}
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Image hero (URL)</Label>
-                <Input value={col.heroImage} onChange={(e) => patch(col.slug, { heroImage: e.target.value })} />
+              <div className="sm:col-span-2 space-y-2">
+                <CmsMediaField
+                  label="Image hero"
+                  value={col.heroImage}
+                  onChange={(heroImage) => patch(col.slug, { heroImage })}
+                  folder={`collection-${col.slug}`}
+                  accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp"
+                  hint="Bannière en tête de la page collection sur le site."
+                  focal={col.heroFocal ?? DEFAULT_IMAGE_FOCAL}
+                  onFocalChange={(heroFocal) => patch(col.slug, { heroFocal })}
+                  focalAspect={16 / 9}
+                />
               </div>
               <div className="sm:col-span-2 space-y-2">
                 <Label>Description</Label>

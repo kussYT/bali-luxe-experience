@@ -7,6 +7,10 @@ function mapCollection(row) {
     season: row.season || "",
     description: row.description || "",
     heroImage: row.hero_image || "",
+    heroFocal: {
+      x: Number(row.hero_focal_x) || 50,
+      y: Number(row.hero_focal_y) || 50,
+    },
     sortOrder: row.sort_order ?? 0,
     hidden: Boolean(row.hidden),
     productCount: Number(row.product_count) || 0,
@@ -22,7 +26,8 @@ export async function listCollectionsAdmin() {
   }
   const { rows } = await query(
     `
-    SELECT c.slug, c.name, c.season, c.description, c.hero_image, c.sort_order, c.hidden, c.updated_at,
+    SELECT c.slug, c.name, c.season, c.description, c.hero_image, c.hero_focal_x, c.hero_focal_y,
+           c.sort_order, c.hidden, c.updated_at,
            COUNT(p.id)::int AS product_count
     FROM collections c
     LEFT JOIN products p ON p.collection_id = c.id
@@ -45,17 +50,21 @@ export async function updateCollection(slug, patch) {
        season = COALESCE($3, season),
        description = COALESCE($4, description),
        hero_image = COALESCE($5, hero_image),
-       sort_order = COALESCE($6, sort_order),
-       hidden = COALESCE($7, hidden),
+       hero_focal_x = COALESCE($6, hero_focal_x),
+       hero_focal_y = COALESCE($7, hero_focal_y),
+       sort_order = COALESCE($8, sort_order),
+       hidden = COALESCE($9, hidden),
        updated_at = now()
      WHERE slug = $1
-     RETURNING slug, name, season, description, hero_image, sort_order, hidden, updated_at`,
+     RETURNING slug, name, season, description, hero_image, hero_focal_x, hero_focal_y, sort_order, hidden, updated_at`,
     [
       slug,
       patch.name ?? null,
       patch.season ?? null,
       patch.description ?? null,
       patch.heroImage ?? null,
+      patch.heroFocal?.x != null ? Number(patch.heroFocal.x) : null,
+      patch.heroFocal?.y != null ? Number(patch.heroFocal.y) : null,
       patch.sortOrder != null ? Number(patch.sortOrder) : null,
       patch.hidden != null ? Boolean(patch.hidden) : null,
     ],
@@ -66,7 +75,8 @@ export async function updateCollection(slug, patch) {
     throw err;
   }
   const { rows: withCount } = await query(
-    `SELECT c.slug, c.name, c.season, c.description, c.hero_image, c.sort_order, c.hidden, c.updated_at,
+    `SELECT c.slug, c.name, c.season, c.description, c.hero_image, c.hero_focal_x, c.hero_focal_y,
+            c.sort_order, c.hidden, c.updated_at,
             COUNT(p.id)::int AS product_count
      FROM collections c
      LEFT JOIN products p ON p.collection_id = c.id

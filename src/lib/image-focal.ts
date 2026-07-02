@@ -13,3 +13,11 @@ export function focalObjectPosition(focal?: Partial<ImageFocal> | null) {
 export function productObjectPosition(product: Pick<Product, "imageFocal">) {
   return focalObjectPosition(product.imageFocal);
 }
+
+export function productImageObjectPosition(
+  product: Pick<Product, "imageFocal" | "imageFocals">,
+  index: number,
+) {
+  const focal = product.imageFocals?.[index] ?? (index === 0 ? product.imageFocal : undefined);
+  return focalObjectPosition(focal);
+}

@@ -10,6 +10,20 @@ function slugify(value) {
     .replace(/^-+|-+$/g, "");
 }
 
+function parseImageFocals(body, images) {
+  if (Array.isArray(body.imageFocals) && body.imageFocals.length) {
+    return images.map((_, i) => ({
+      x: Number(body.imageFocals[i]?.x) || 50,
+      y: Number(body.imageFocals[i]?.y) || 50,
+    }));
+  }
+  const cover = {
+    x: Number(body.imageFocal?.x ?? body.imageFocalX) || 50,
+    y: Number(body.imageFocal?.y ?? body.imageFocalY) || 50,
+  };
+  return images.map((_, i) => (i === 0 ? cover : { x: 50, y: 50 }));
+}
+
 export function normalizeAdminProductBody(body) {
   const priceEUR = Number(body.priceEUR) || 0;
   const compareRaw =
@@ -47,10 +61,8 @@ export function normalizeAdminProductBody(body) {
     videoUrl: typeof body.videoUrl === "string" ? body.videoUrl.trim() : "",
     seoTitle: typeof body.seoTitle === "string" ? body.seoTitle.trim() : "",
     metaDescription: typeof body.metaDescription === "string" ? body.metaDescription.trim() : "",
-    imageFocal: {
-      x: Number(body.imageFocal?.x ?? body.imageFocalX) || 50,
-      y: Number(body.imageFocal?.y ?? body.imageFocalY) || 50,
-    },
+    imageFocal: parseImageFocals(body, images)[0] ?? { x: 50, y: 50 },
+    imageFocals: parseImageFocals(body, images),
     sortOrder: body.sortOrder != null ? Number(body.sortOrder) : undefined,
     variants: parseAdminVariants(body),
   };
@@ -97,14 +109,15 @@ async function replaceExtraCollections(client, productId, primaryCollectionId, e
   }
 }
 
-async function replaceImages(client, productId, images, imageFocal) {
+async function replaceImages(client, productId, images, imageFocals) {
   await client.query(`DELETE FROM product_images WHERE product_id = $1`, [productId]);
-  const focalX = Number(imageFocal?.x) || 50;
-  const focalY = Number(imageFocal?.y) || 50;
   for (let i = 0; i < images.length; i++) {
+    const focal = imageFocals?.[i] ?? { x: 50, y: 50 };
+    const focalX = Number(focal.x) || 50;
+    const focalY = Number(focal.y) || 50;
     await client.query(
       `INSERT INTO product_images (product_id, url, position, focal_x, focal_y) VALUES ($1, $2, $3, $4, $5)`,
-      [productId, images[i], i, i === 0 ? focalX : 50, i === 0 ? focalY : 50],
+      [productId, images[i], i, focalX, focalY],
     );
   }
 }
@@ -285,7 +298,7 @@ export async function createProductInDb(rawBody) {
     );
 
     const productId = rows[0].id;
-    await replaceImages(client, productId, p.images, p.imageFocal);
+    await replaceImages(client, productId, p.images, p.imageFocals);
     await replaceExtraCollections(client, productId, collectionId, p.collectionSlugs);
     for (let i = 0; i < p.variants.length; i++) {
       await createVariantWithInventory(client, productId, p, p.variants[i], i, i === 0);
@@ -381,7 +394,7 @@ export async function updateProductInDb(currentSlug, rawBody) {
       ],
     );
 
-    await replaceImages(client, productId, p.images, p.imageFocal);
+    await replaceImages(client, productId, p.images, p.imageFocals);
     await replaceExtraCollections(client, productId, collectionId, p.collectionSlugs);
     await syncProductVariants(client, productId, p);
 

@@ -28,7 +28,8 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
   const statusFilter = includeDrafts ? "" : "WHERE p.status = 'published'";
 
   const { rows: collectionRows } = await query(
-    `SELECT slug, name, season, description, sort_order, COALESCE(hidden, false) AS hidden
+    `SELECT slug, name, season, description, hero_image, hero_focal_x, hero_focal_y,
+            sort_order, COALESCE(hidden, false) AS hidden
      FROM collections
      ORDER BY sort_order ASC, name ASC`,
   );
@@ -78,6 +79,11 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
         name: c.name,
         season: c.season || "",
         description: c.description || "",
+        heroImage: c.hero_image || undefined,
+        heroFocal:
+          c.hero_image ?
+            { x: Number(c.hero_focal_x) || 50, y: Number(c.hero_focal_y) || 50 }
+          : undefined,
         sortOrder: c.sort_order ?? 0,
         hidden: Boolean(c.hidden),
       })),
@@ -136,16 +142,17 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
   }
 
   const imagesByProduct = new Map();
-  const focalByProduct = new Map();
+  const focalsByProduct = new Map();
   for (const img of imageRows) {
-    if (!imagesByProduct.has(img.product_id)) imagesByProduct.set(img.product_id, []);
-    imagesByProduct.get(img.product_id).push(img.url);
-    if (img.position === 0) {
-      focalByProduct.set(img.product_id, {
-        x: Number(img.focal_x) || 50,
-        y: Number(img.focal_y) || 50,
-      });
+    if (!imagesByProduct.has(img.product_id)) {
+      imagesByProduct.set(img.product_id, []);
+      focalsByProduct.set(img.product_id, []);
     }
+    imagesByProduct.get(img.product_id).push(img.url);
+    focalsByProduct.get(img.product_id).push({
+      x: Number(img.focal_x) || 50,
+      y: Number(img.focal_y) || 50,
+    });
   }
 
   const extraCollectionsByProduct = new Map();
@@ -188,7 +195,8 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
 
   const products = productRows.map((p) => {
     const images = imagesByProduct.get(p.id) || [];
-    const focal = focalByProduct.get(p.id) || { x: 50, y: 50 };
+    const imageFocals = focalsByProduct.get(p.id) || [];
+    const focal = imageFocals[0] || { x: 50, y: 50 };
     const variants = variantsByProduct.get(p.id) || [];
     const stockFrance = variants.reduce((s, v) => s + v.inventory.france, 0);
     const stockBali = variants.reduce((s, v) => s + v.inventory.bali, 0);
@@ -217,6 +225,7 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
       image: images[0] || "/shopify-import/placeholder.jpg",
       images,
       imageFocal: focal,
+      imageFocals: imageFocals.length ? imageFocals : undefined,
       videoUrl: p.video_url || undefined,
       seoTitle: p.seo_title?.trim() || undefined,
       metaDescription: p.meta_description?.trim() || undefined,
@@ -245,6 +254,11 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
       name: c.name,
       season: c.season || "",
       description: c.description || "",
+      heroImage: c.hero_image || undefined,
+      heroFocal:
+        c.hero_image ?
+          { x: Number(c.hero_focal_x) || 50, y: Number(c.hero_focal_y) || 50 }
+        : undefined,
       sortOrder: c.sort_order ?? 0,
       hidden: Boolean(c.hidden),
     })),

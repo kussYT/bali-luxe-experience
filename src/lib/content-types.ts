@@ -327,6 +327,7 @@ export type AdminCollectionMeta = {
   season: string;
   description: string;
   heroImage: string;
+  heroFocal?: import("@/lib/image-focal").ImageFocal;
   sortOrder: number;
   hidden: boolean;
   productCount: number;
