@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { focalObjectPosition } from "@/lib/image-focal";
 import { useSiteContent } from "@/lib/content-context";
 import type { HomePhotoTile } from "@/lib/content-types";
 
@@ -15,7 +16,8 @@ function TileLink({ tile }: { tile: HomePhotoTile }) {
         src={tile.image}
         alt={tile.label}
         loading="lazy"
-        className="absolute inset-0 size-full object-cover object-center transition-transform duration-[1.8s] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
+        className="absolute inset-0 size-full object-cover transition-transform duration-[1.8s] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
+        style={{ objectPosition: focalObjectPosition(tile.imageFocal) }}
       />
       <div className="absolute inset-0 bg-foreground/5 group-hover:bg-foreground/15 transition-colors duration-500" />
       <p className="absolute top-3 left-3 sm:top-5 sm:left-5 md:top-6 md:left-6 text-surface text-[0.5625rem] sm:text-[0.6875rem] font-medium tracking-[0.18em] sm:tracking-[0.22em] uppercase leading-snug drop-shadow-[0_1px_8px_rgba(0,0,0,0.35)]">
@@ -39,9 +41,9 @@ function TileLink({ tile }: { tile: HomePhotoTile }) {
   );}
 
 export function HomePhotoStrip() {
-  const { homepage } = useSiteContent();
+  const { homepage, loading } = useSiteContent();
   const strip = homepage.photoStrip;
-  if (!strip?.tiles?.length) return null;
+  if (loading || !strip?.tiles?.length) return null;
 
   if (strip.layout === "landscape" && strip.tiles[0]) {
     const tile = strip.tiles[0];
@@ -53,6 +55,7 @@ export function HomePhotoStrip() {
               src={tile.image}
               alt={tile.label}
               className="size-full object-cover image-editorial transition-transform duration-[2s] group-hover:scale-[1.02]"
+              style={{ objectPosition: focalObjectPosition(tile.imageFocal) }}
               loading="lazy"
             />
           </a>
@@ -66,6 +69,7 @@ export function HomePhotoStrip() {
               src={tile.image}
               alt={tile.label}
               className="size-full object-cover image-editorial transition-transform duration-[2s] group-hover:scale-[1.02]"
+              style={{ objectPosition: focalObjectPosition(tile.imageFocal) }}
               loading="lazy"
             />
           </Link>

@@ -1,6 +1,12 @@
 import { appendFile, mkdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getProjectRoot } from "./runtime-root.mjs";
+import {
+  appendNewsletterSubscriber,
+  hasNewsletterSubscriber,
+  listNewsletterSubscribers,
+} from "./db/newsletter-subscribers.mjs";
+import { isDatabaseConfigured } from "./db/pool.mjs";
 
 function getDataDir() {
   const root = getProjectRoot();
@@ -19,6 +25,13 @@ export function isValidEmail(email) {
 }
 
 export async function appendSubscriber({ email, source }) {
+  const normalized = email.trim().toLowerCase();
+
+  if (isDatabaseConfigured()) {
+    await appendNewsletterSubscriber({ email: normalized, source });
+    return { email: normalized };
+  }
+
   const dataDir = getDataDir();
   const subscribersFile = getSubscribersFile();
   if (!dataDir || !subscribersFile) {
@@ -27,7 +40,6 @@ export async function appendSubscriber({ email, source }) {
     throw err;
   }
   await mkdir(dataDir, { recursive: true });
-  const normalized = email.trim().toLowerCase();
   const line = JSON.stringify({
     email: normalized,
     source: source || "website",
@@ -38,6 +50,10 @@ export async function appendSubscriber({ email, source }) {
 }
 
 export async function hasSubscriber(email) {
+  if (isDatabaseConfigured()) {
+    return hasNewsletterSubscriber(email);
+  }
+
   const subscribersFile = getSubscribersFile();
   if (!subscribersFile) return false;
   try {
@@ -57,6 +73,10 @@ export async function hasSubscriber(email) {
 }
 
 export async function listSubscribers({ limit = 500 } = {}) {
+  if (isDatabaseConfigured()) {
+    return listNewsletterSubscribers({ limit });
+  }
+
   const subscribersFile = getSubscribersFile();
   if (!subscribersFile) return [];
   try {

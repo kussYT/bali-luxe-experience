@@ -19,3 +19,8 @@ export function resolvePageLocaleBlock(locales, locale) {
   }
   return null;
 }
+
+/** Same fallback chain as pages — post blocks use title, excerpt, category, body. */
+export function resolvePostLocaleBlock(locales, locale) {
+  return resolvePageLocaleBlock(locales, locale);
+}

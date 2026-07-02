@@ -2,12 +2,22 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   fetchAdminInventory,
+  patchProductStatus,
   updateInventoryQuantity,
   type AdminInventoryResponse,
   type InventoryRow,
 } from "@/lib/admin-api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Route = createFileRoute("/admin/inventory")({
@@ -19,7 +29,9 @@ function AdminInventoryPage() {
   const [data, setData] = useState<AdminInventoryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
+  const [collectionFilter, setCollectionFilter] = useState("");
   const [saving, setSaving] = useState<string | null>(null);
+  const [statusSaving, setStatusSaving] = useState<string | null>(null);
   const [draft, setDraft] = useState<Record<string, { france: string; bali: string }>>({});
 
   const load = useCallback(async () => {
@@ -41,18 +53,32 @@ function AdminInventoryPage() {
     load();
   }, [load]);
 
+  const collections = useMemo(() => {
+    if (!data) return [];
+    const map = new Map<string, string>();
+    for (const row of data.items) {
+      if (row.collectionSlug) map.set(row.collectionSlug, row.collectionName || row.collectionSlug);
+    }
+    return [...map.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  }, [data]);
+
   const rows = useMemo(() => {
     if (!data) return [];
+    let list = data.items;
+    if (collectionFilter) {
+      list = list.filter((r) => r.collectionSlug === collectionFilter);
+    }
     const q = filter.trim().toLowerCase();
-    if (!q) return data.items;
-    return data.items.filter(
+    if (!q) return list;
+    return list.filter(
       (r) =>
         r.productName.toLowerCase().includes(q) ||
         r.productSlug.toLowerCase().includes(q) ||
         r.variantTitle.toLowerCase().includes(q) ||
+        (r.collectionName?.toLowerCase().includes(q) ?? false) ||
         (r.sku?.toLowerCase().includes(q) ?? false),
     );
-  }, [data, filter]);
+  }, [data, filter, collectionFilter]);
 
   const saveCell = async (row: InventoryRow, warehouseId: "france" | "bali") => {
     const key = row.variantId;
@@ -77,14 +103,29 @@ function AdminInventoryPage() {
     }
   };
 
+  const toggleProductStatus = async (slug: string, visible: boolean) => {
+    setStatusSaving(slug);
+    setError(null);
+    try {
+      await patchProductStatus(slug, visible ? "published" : "draft");
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Impossible de changer le statut");
+    } finally {
+      setStatusSaving(null);
+    }
+  };
+
+  const seenProductSlugs = new Set<string>();
+
   return (
     <div className="space-y-8">
       <div>
         <p className="text-eyebrow text-muted-foreground">Sprint S2</p>
         <h2 className="font-display text-4xl mt-2">France / Bali inventory</h2>
         <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
-          Edit quantities per variant and warehouse. Each change is recorded in{" "}
-          <code className="text-xs">inventory_movements</code>.
+          Quantités Paris / Bali par variante. Basculez <strong>Visible / Brouillon</strong> pour masquer un article
+          de la boutique sans le supprimer.
         </p>
       </div>
 
@@ -120,14 +161,33 @@ function AdminInventoryPage() {
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-        <Input
-          placeholder="Search product, slug, variant, SKU…"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="max-w-md"
-        />
-        <Button variant="outline" onClick={load} disabled={!!saving}>
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-end flex-wrap">
+        <div className="space-y-2">
+          <Label className="text-xs text-muted-foreground">Collection</Label>
+          <Select value={collectionFilter || "all"} onValueChange={(v) => setCollectionFilter(v === "all" ? "" : v)}>
+            <SelectTrigger className="w-[min(100%,16rem)]">
+              <SelectValue placeholder="Toutes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les collections</SelectItem>
+              {collections.map(([slug, name]) => (
+                <SelectItem key={slug} value={slug}>
+                  {name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2 flex-1 min-w-[12rem]">
+          <Label className="text-xs text-muted-foreground">Recherche</Label>
+          <Input
+            placeholder="Produit, slug, variante, SKU…"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="max-w-md"
+          />
+        </div>
+        <Button variant="outline" onClick={load} disabled={!!saving} className="sm:mb-0.5">
           Refresh
         </Button>
       </div>
@@ -149,7 +209,10 @@ function AdminInventoryPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
+              {rows.map((row) => {
+                const showStatus = !seenProductSlugs.has(row.productSlug);
+                if (showStatus) seenProductSlugs.add(row.productSlug);
+                return (
                 <tr key={row.variantId} className="border-t border-border">
                   <td className="p-3">
                     <p className="font-medium">{row.productName}</p>
@@ -199,9 +262,23 @@ function AdminInventoryPage() {
                       <p className="text-xs text-muted-foreground mt-1">reserved {row.baliReserved}</p>
                     )}
                   </td>
-                  <td className="p-3 text-muted-foreground capitalize">{row.status}</td>
+                  <td className="p-3">
+                    {showStatus ? (
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={row.status === "published"}
+                          disabled={statusSaving === row.productSlug}
+                          onCheckedChange={(v) => toggleProductStatus(row.productSlug, v)}
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          {row.status === "published" ? "Visible" : "Brouillon"}
+                        </span>
+                      </div>
+                    ) : null}
+                  </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

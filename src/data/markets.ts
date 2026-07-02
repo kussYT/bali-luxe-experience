@@ -74,10 +74,10 @@ export const MARKETS: Market[] = [
     region: "Europe",
     countryCode: "GB",
     shipToCode: "GB",
-    currency: "EUR",
+    currency: "USD",
     locale: "en",
     flag: "🇬🇧",
-    shippingNote: "Prices in EUR · local duties may apply",
+    shippingNote: "Prices in USD · local duties may apply",
   },
 ];
 

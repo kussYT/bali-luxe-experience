@@ -3,7 +3,7 @@ import { query, withTransaction, isDatabaseConfigured } from "./pool.mjs";
 import { decrementInventoryForSale } from "./fulfillment.mjs";
 import { getDefaultVariant, preferredWarehouse } from "../warehouse-allocation.mjs";
 
-export const ORDER_CHANNELS = ["website", "wolf_badger", "other"];
+export const ORDER_CHANNELS = ["website", "wolf_badger", "other", "influencer"];
 
 function mapOrderRow(row, items = []) {
   return {
@@ -22,8 +22,17 @@ function mapOrderRow(row, items = []) {
     amountSubtotal: row.amount_subtotal ?? null,
     amountShipping: row.amount_shipping ?? null,
     amountTotal: row.amount_total ?? null,
+    promoCode: row.promo_code || null,
+    recoveryEmailSentAt: row.recovery_email_sent_at
+      ? new Date(row.recovery_email_sent_at).toISOString()
+      : null,
+    recoveryEmailCount: row.recovery_email_count ?? 0,
     paidAt: row.paid_at ? new Date(row.paid_at).toISOString() : null,
     shippedAt: row.shipped_at ? new Date(row.shipped_at).toISOString() : null,
+    trackingNumber: row.tracking_number || null,
+    trackingCarrier: row.tracking_carrier || null,
+    trackingUrl: row.tracking_url || null,
+    refundAmountCents: row.refund_amount_cents ?? null,
     createdAt: new Date(row.created_at).toISOString(),
     items,
   };
@@ -118,6 +127,10 @@ export async function createPendingOrder({
   currency,
   countryCode,
   customerEmail,
+  promoCode,
+  amountSubtotal,
+  amountShipping,
+  amountTotal,
 }) {
   if (!isDatabaseConfigured()) {
     const err = new Error("Database not configured");
@@ -130,9 +143,22 @@ export async function createPendingOrder({
 
   return withTransaction(async (client) => {
     await client.query(
-      `INSERT INTO orders (id, status, channel, currency, country_code, fulfillment_warehouse, customer_email)
-       VALUES ($1, 'pending', 'website', $2, $3, $4, $5)`,
-      [orderId, currency, countryCode || null, fulfillmentWarehouse, customerEmail || null],
+      `INSERT INTO orders (
+         id, status, channel, currency, country_code, fulfillment_warehouse,
+         customer_email, promo_code, amount_subtotal, amount_shipping, amount_total
+       )
+       VALUES ($1, 'pending', 'website', $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        orderId,
+        currency,
+        countryCode || null,
+        fulfillmentWarehouse,
+        customerEmail || null,
+        promoCode || null,
+        amountSubtotal ?? null,
+        amountShipping ?? null,
+        amountTotal ?? null,
+      ],
     );
 
     for (const item of items) {
@@ -200,6 +226,7 @@ export async function fulfillOrderPayment({
   amountShipping,
   currency,
   shippingCountryCode,
+  promoCode,
 }) {
   return withTransaction(async (client) => {
     const { rows } = await client.query(`SELECT * FROM orders WHERE id = $1 FOR UPDATE`, [orderId]);
@@ -260,6 +287,7 @@ export async function fulfillOrderPayment({
          currency = COALESCE($9, currency),
          shipping_country_code = COALESCE($10, shipping_country_code),
          fulfillment_warehouse = COALESCE($11, fulfillment_warehouse),
+         promo_code = COALESCE($12, promo_code),
          paid_at = now(),
          updated_at = now()
        WHERE id = $1`,
@@ -275,6 +303,7 @@ export async function fulfillOrderPayment({
         currency,
         shipCountry,
         fulfillmentWarehouse,
+        promoCode || null,
       ],
     );
 
@@ -304,6 +333,49 @@ export async function listOrdersAdmin({ channel } = {}) {
   const ids = rows.map((r) => r.id);
   const itemsMap = await loadItemsForOrders(ids);
   return rows.map((r) => mapOrderRow(r, itemsMap.get(r.id) || []));
+}
+
+/** Pending website checkouts older than minAgeHours (default 1h). */
+export async function listAbandonedCheckouts({ minAgeHours = 1, limit = 200 } = {}) {
+  const hours = Math.max(1, Number(minAgeHours) || 1);
+  const { rows } = await query(
+    `SELECT * FROM orders
+     WHERE status = 'pending'
+       AND channel = 'website'
+       AND created_at < now() - ($1::text || ' hours')::interval
+     ORDER BY created_at DESC
+     LIMIT $2`,
+    [String(hours), limit],
+  );
+  const ids = rows.map((r) => r.id);
+  const itemsMap = await loadItemsForOrders(ids);
+  return rows.map((r) => mapOrderRow(r, itemsMap.get(r.id) || []));
+}
+
+export async function markRecoveryEmailSent(orderId) {
+  const { rows } = await query(
+    `UPDATE orders
+     SET recovery_email_sent_at = now(),
+         recovery_email_count = recovery_email_count + 1,
+         updated_at = now()
+     WHERE id = $1
+     RETURNING id`,
+    [orderId],
+  );
+  if (rows.length === 0) {
+    const err = new Error("Order not found");
+    err.status = 404;
+    throw err;
+  }
+  return findOrderById(orderId);
+}
+
+export function estimateOrderTotalCents(order) {
+  if (order.amountTotal != null) return order.amountTotal;
+  const sub = (order.items || []).reduce((sum, item) => sum + item.unitPrice * item.qty, 0);
+  if (!sub) return null;
+  if (order.currency === "IDR") return sub;
+  return sub * 100;
 }
 
 export async function createMarketplaceOrder({
@@ -409,29 +481,102 @@ export async function createMarketplaceOrder({
   });
 }
 
-export async function markOrderShipped(orderId) {
+export async function markOrderShipped(orderId, { trackingNumber, trackingCarrier, trackingUrl } = {}) {
+  return updateOrderStatus(orderId, {
+    status: "shipped",
+    trackingNumber,
+    trackingCarrier,
+    trackingUrl,
+  });
+}
+
+const VALID_STATUSES = new Set([
+  "pending",
+  "paid",
+  "processing",
+  "on_hold",
+  "shipped",
+  "cancelled",
+  "refunded",
+  "partially_refunded",
+]);
+
+/** Admin status update with optional tracking / refund amount. */
+export async function updateOrderStatus(
+  orderId,
+  { status, trackingNumber, trackingCarrier, trackingUrl, refundAmountCents, notes },
+) {
   if (!isDatabaseConfigured()) {
     const err = new Error("Database not configured");
     err.status = 503;
     throw err;
   }
 
+  if (!VALID_STATUSES.has(status)) {
+    const err = new Error(`Invalid status: ${status}`);
+    err.status = 400;
+    throw err;
+  }
+
+  const existing = await findOrderById(orderId);
+  if (!existing) {
+    const err = new Error("Order not found");
+    err.status = 404;
+    throw err;
+  }
+
+  if (existing.status === "pending" && status === "shipped") {
+    const err = new Error("Cannot ship an unpaid order");
+    err.status = 409;
+    throw err;
+  }
+
+  const sets = ["status = $2::order_status", "updated_at = now()"];
+  const params = [orderId, status];
+  let idx = 3;
+
+  if (status === "shipped") {
+    sets.push(`shipped_at = COALESCE(shipped_at, now())`);
+  }
+
+  if (trackingNumber !== undefined) {
+    sets.push(`tracking_number = $${idx}`);
+    params.push(trackingNumber?.trim() || null);
+    idx += 1;
+  }
+
+  if (trackingCarrier !== undefined) {
+    sets.push(`tracking_carrier = $${idx}`);
+    params.push(trackingCarrier?.trim() || null);
+    idx += 1;
+  }
+
+  if (trackingUrl !== undefined) {
+    sets.push(`tracking_url = $${idx}`);
+    params.push(trackingUrl?.trim() || null);
+    idx += 1;
+  }
+
+  if (refundAmountCents !== undefined) {
+    sets.push(`refund_amount_cents = $${idx}`);
+    params.push(refundAmountCents);
+    idx += 1;
+  }
+
+  if (notes !== undefined) {
+    sets.push(`notes = $${idx}`);
+    params.push(notes?.trim() || null);
+    idx += 1;
+  }
+
   const { rows } = await query(
-    `UPDATE orders SET status = 'shipped', shipped_at = now(), updated_at = now()
-     WHERE id = $1 AND status IN ('paid', 'shipped')
-     RETURNING id`,
-    [orderId],
+    `UPDATE orders SET ${sets.join(", ")} WHERE id = $1 RETURNING id`,
+    params,
   );
 
   if (rows.length === 0) {
-    const existing = await findOrderById(orderId);
-    if (!existing) {
-      const err = new Error("Order not found");
-      err.status = 404;
-      throw err;
-    }
-    const err = new Error("Only paid orders can be marked as shipped");
-    err.status = 409;
+    const err = new Error("Order not found");
+    err.status = 404;
     throw err;
   }
 
@@ -454,6 +599,8 @@ export async function exportOrdersCsv() {
     "created_at",
     "paid_at",
     "shipped_at",
+    "tracking_number",
+    "tracking_carrier",
     "customer_email",
     "currency",
     "amount_total",
@@ -482,6 +629,8 @@ export async function exportOrdersCsv() {
         order.createdAt,
         order.paidAt || "",
         order.shippedAt || "",
+        order.trackingNumber || "",
+        order.trackingCarrier || "",
         order.customerEmail || "",
         order.currency,
         order.amountTotal ?? "",

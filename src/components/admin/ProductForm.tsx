@@ -13,6 +13,9 @@ import {
 } from "@/components/ui/select";
 import { uploadProductImages } from "@/lib/admin-api";
 import { CmsMediaGuide } from "@/components/admin/CmsMediaGuide";
+import { ImageFocalPicker } from "@/components/admin/ImageFocalPicker";
+import { AdminImagePreview } from "@/components/admin/AdminImagePreview";
+import type { UploadProgress } from "@/lib/upload-admin-files";
 import { UPLOADS_UNAVAILABLE_MESSAGE, useUploadsAvailable } from "@/lib/use-uploads-available";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 
@@ -36,9 +39,12 @@ export type ProductFormValues = {
   status: ProductStatus;
   featured: boolean;
   images: string[];
+  imageFocal: { x: number; y: number };
   origin: "Bali" | "France";
   collectionSlugs: string[];
   videoUrl: string;
+  seoTitle: string;
+  metaDescription: string;
 };
 
 type ProductFormProps = {
@@ -87,9 +93,12 @@ const empty: ProductFormValues = {
   status: "published",
   featured: false,
   images: [],
+  imageFocal: { x: 50, y: 50 },
   origin: "Bali",
   collectionSlugs: [],
   videoUrl: "",
+  seoTitle: "",
+  metaDescription: "",
 };
 
 function slugify(value: string) {
@@ -113,12 +122,16 @@ export function ProductForm({
     ...initial,
     variants: variantsFromProduct(initial),
     images: initial?.images?.length ? initial.images : initial?.image ? [initial.image] : [],
+    imageFocal: initial?.imageFocal ?? { x: 50, y: 50 },
     collectionSlugs: (initial?.collectionSlugs ?? []).filter(
       (slug) => slug && slug !== (initial?.collectionSlug ?? ""),
     ),
     videoUrl: initial?.videoUrl ?? "",
+    seoTitle: initial?.seoTitle ?? "",
+    metaDescription: initial?.metaDescription ?? "",
   }));
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const { available: uploadsAvailable, loading: uploadsLoading } = useUploadsAvailable();
@@ -186,15 +199,17 @@ export function ProductForm({
       return;
     }
     setUploading(true);
+    setUploadProgress(null);
     setError(null);
     try {
-      const { urls } = await uploadProductImages(slug, files);
+      const { urls } = await uploadProductImages(slug, files, setUploadProgress);
       set("images", [...values.images, ...urls]);
       if (!values.slug) set("slug", slug);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed");
     } finally {
       setUploading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -260,6 +275,34 @@ export function ProductForm({
       <div className="space-y-2">
         <Label htmlFor="story">Description</Label>
         <Textarea id="story" rows={5} value={values.story} onChange={(e) => set("story", e.target.value)} />
+      </div>
+
+      <div className="space-y-4 border border-border p-5">
+        <div>
+          <Label className="text-base">SEO (Google)</Label>
+          <p className="text-xs text-muted-foreground mt-1">
+            Titre et description affichés dans les résultats de recherche. Laissez vide pour utiliser le nom du produit.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="seo-title">Meta titre</Label>
+          <Input
+            id="seo-title"
+            value={values.seoTitle}
+            onChange={(e) => set("seoTitle", e.target.value)}
+            placeholder={values.name ? `${values.name} — Bingin Diaries` : "Nom du produit — Bingin Diaries"}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="seo-desc">Meta description</Label>
+          <Textarea
+            id="seo-desc"
+            rows={3}
+            value={values.metaDescription}
+            onChange={(e) => set("metaDescription", e.target.value)}
+            placeholder="Courte description pour Google (150–160 caractères idéal)"
+          />
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-5">
@@ -464,18 +507,45 @@ export function ProductForm({
       <div className="space-y-3 border border-border p-5">
         <Label>Images</Label>
         {!uploadsLoading && uploadsAvailable && (
-          <Input type="file" accept="image/*" multiple onChange={(e) => handleFiles(e.target.files)} disabled={uploading} />
+          <Input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp"
+            multiple
+            onChange={(e) => handleFiles(e.target.files)}
+            disabled={uploading}
+          />
         )}
         {!uploadsLoading && !uploadsAvailable && (
           <p className="text-sm text-amber-700 dark:text-amber-400">{UPLOADS_UNAVAILABLE_MESSAGE}</p>
         )}
-        {uploading && <p className="text-sm text-muted-foreground">Uploading…</p>}
+        {uploading && (
+          <p className="text-sm text-muted-foreground">
+            {uploadProgress?.phase === "preparing"
+              ? "Préparation des images (redimensionnement)…"
+              : uploadProgress
+                ? `Envoi ${uploadProgress.current}/${uploadProgress.total}${uploadProgress.fileName ? ` — ${uploadProgress.fileName}` : ""}`
+                : "Envoi en cours…"}
+          </p>
+        )}
+        <p className="text-xs text-muted-foreground">
+          JPEG ou PNG recommandé. Les photos iPhone (HEIC) sont converties automatiquement si possible ; sinon
+          utilisez « Plus compatible » dans les réglages Appareil photo.
+        </p>
         <CmsMediaGuide compact />
         {values.images.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-3">
             {values.images.map((src, index) => (
               <div key={src} className="relative group aspect-square bg-sand overflow-hidden">
-                <img src={src} alt="" className="size-full object-cover" />
+                <AdminImagePreview
+                  src={src}
+                  alt=""
+                  className="size-full object-cover"
+                  style={
+                    index === 0
+                      ? { objectPosition: `${values.imageFocal.x}% ${values.imageFocal.y}%` }
+                      : undefined
+                  }
+                />
                 {index === 0 && (
                   <span className="absolute top-2 left-2 bg-ink/80 text-bone text-[0.65rem] uppercase tracking-wider px-2 py-0.5">
                     Cover
@@ -511,6 +581,15 @@ export function ProductForm({
               </div>
             ))}
           </div>
+        )}
+        {values.images[0] && (
+          <ImageFocalPicker
+            imageUrl={values.images[0]}
+            focalX={values.imageFocal.x}
+            focalY={values.imageFocal.y}
+            onChange={(focal) => set("imageFocal", focal)}
+            aspect={4 / 5}
+          />
         )}
       </div>
 

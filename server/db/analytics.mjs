@@ -7,7 +7,7 @@ export async function getDashboardAnalytics() {
     throw err;
   }
 
-  const [summaryRes, weeklyRes, countryRes, channelRes, stockRes] = await Promise.all([
+  const [summaryRes, weeklyRes, monthlyRes, countryRes, channelRes, stockRes] = await Promise.all([
     query(`
       SELECT
         COUNT(*)::int AS total_orders,
@@ -25,6 +25,17 @@ export async function getDashboardAnalytics() {
       FROM orders
       WHERE status IN ('paid', 'shipped')
         AND COALESCE(paid_at, created_at) >= now() - interval '12 weeks'
+      GROUP BY 1
+      ORDER BY 1 ASC
+    `),
+    query(`
+      SELECT
+        to_char(date_trunc('month', COALESCE(paid_at, created_at)), 'YYYY-MM') AS month,
+        COUNT(*)::int AS orders,
+        COALESCE(SUM(amount_total), 0)::bigint AS revenue_cents
+      FROM orders
+      WHERE status IN ('paid', 'shipped')
+        AND COALESCE(paid_at, created_at) >= now() - interval '24 months'
       GROUP BY 1
       ORDER BY 1 ASC
     `),
@@ -65,6 +76,11 @@ export async function getDashboardAnalytics() {
     },
     salesByWeek: weeklyRes.rows.map((r) => ({
       weekStart: r.week_start,
+      orders: r.orders,
+      revenueCents: Number(r.revenue_cents),
+    })),
+    salesByMonth: monthlyRes.rows.map((r) => ({
+      month: r.month,
       orders: r.orders,
       revenueCents: Number(r.revenue_cents),
     })),

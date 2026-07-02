@@ -171,7 +171,11 @@ async function main() {
     "/admin/orders",
     "/admin/content",
     "/admin/content/about",
+    "/admin/content/contact",
+    "/admin/content/care",
+    "/admin/content/sizing",
     "/admin/content/find-us",
+    "/admin/content/footer",
     "/admin/blog",
     "/admin/pages",
     "/admin/collections",
@@ -259,6 +263,14 @@ async function main() {
   const publicSite = await api("/api/content/site");
   if (publicSite.json?.announcement?.text === MARKER) pass("Public CMS reflects patch");
   else fail("Public CMS reflects patch", `got "${publicSite.json?.announcement?.text?.slice(0, 40)}"`);
+
+  for (const key of ["contact", "care", "sizing", "footer"]) {
+    if (publicSite.json?.[key]?.title || publicSite.json?.[key]?.shopTitle) {
+      pass(`Public site content: ${key}`);
+    } else {
+      fail(`Public site content: ${key}`, "missing");
+    }
+  }
 
   const reverted = await api("/api/admin/content/site", {
     method: "PATCH",

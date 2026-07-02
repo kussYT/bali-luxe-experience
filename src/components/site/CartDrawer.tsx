@@ -3,6 +3,7 @@ import { useCurrency } from "@/lib/currency";
 import { useCatalog } from "@/lib/catalog-context";
 import { getUnitPrice, formatMoney } from "@/lib/pricing";
 import { CheckoutButton } from "@/components/site/CheckoutButton";
+import { PromoCodeField } from "@/components/site/PromoCodeField";
 import { X, Minus } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
@@ -37,7 +38,7 @@ export function CartDrawer() {
           <>
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-3">
               <p className="font-display text-2xl">Your bag is empty</p>
-              <Link to="/collection" onClick={close} className="mt-2 inline-block bg-ink text-bone px-8 py-3 text-eyebrow">
+              <Link to="/collection" onClick={close} className="mt-2 inline-block btn-primary">
                 Continue shopping
               </Link>
             </div>
@@ -100,10 +101,8 @@ export function CartDrawer() {
                 <span>{formatMoney(total, currency)}</span>
               </div>
               <p className="text-eyebrow text-muted-foreground">Shipping at checkout</p>
-              <CheckoutButton
-                className="w-full bg-foreground text-surface py-4 text-eyebrow hover:opacity-90 transition-opacity"
-                onStarted={close}
-              />
+              <PromoCodeField />
+              <CheckoutButton className="btn-primary w-full" onStarted={close} />
               <Link to="/collection" onClick={close} className="block text-center text-eyebrow link-underline">
                 Continue shopping
               </Link>

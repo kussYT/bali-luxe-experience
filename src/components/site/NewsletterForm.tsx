@@ -77,11 +77,11 @@ export function NewsletterForm({ source = "website", variant = "footer" }: Newsl
 
   return (
     <div>
-      <p className="text-eyebrow !text-surface/50">{copy.eyebrow}</p>
+      <p className="text-eyebrow !text-surface/65">{copy.eyebrow}</p>
       <h2 className="font-display text-4xl md:text-5xl mt-4 mb-8 leading-[1.05] max-w-md">
         {copy.title}
       </h2>
-      <p className="text-sm text-surface/60 font-light mb-6 max-w-md">{copy.description}</p>
+      <p className="text-sm text-surface/75 font-light mb-6 max-w-md">{copy.description}</p>
       <NewsletterFields
         email={email}
         setEmail={setEmail}
@@ -117,7 +117,7 @@ function NewsletterFields({
   dark?: boolean;
 }) {
   const border = dark ? "border-surface/25" : "border-border";
-  const text = dark ? "text-surface placeholder:text-surface/40" : "text-foreground placeholder:text-muted-foreground";
+  const text = dark ? "text-surface placeholder:text-surface/55" : "text-foreground placeholder:text-muted-foreground";
   const btn = dark ? "!text-accent-soft" : "";
 
   return (

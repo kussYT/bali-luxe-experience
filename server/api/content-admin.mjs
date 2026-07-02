@@ -13,9 +13,9 @@ import {
   seedPages,
   getPageBySlug,
 } from "../db/pages.mjs";
-import { listCollectionsAdmin, updateCollection } from "../db/collections-admin.mjs";
+import { listCollectionsAdmin, updateCollection, reorderCollections } from "../db/collections-admin.mjs";
 import { getSetting, setSetting } from "../db/settings-store.mjs";
-import { DEFAULT_HOMEPAGE, DEFAULT_ANNOUNCEMENT, DEFAULT_ABOUT, DEFAULT_FIND_US } from "../content-defaults.mjs";
+import { DEFAULT_HOMEPAGE, DEFAULT_ANNOUNCEMENT, DEFAULT_ABOUT, DEFAULT_FIND_US, DEFAULT_CONTACT, DEFAULT_CARE, DEFAULT_SIZING, DEFAULT_FOOTER } from "../content-defaults.mjs";
 
 export async function getAdminContentResponse() {
   const data = await getAdminSiteContent();
@@ -33,7 +33,7 @@ export async function getAdminPostsResponse() {
 }
 
 export async function getAdminPostResponse(slug) {
-  const post = await getPostBySlug(slug, { includeDraft: true });
+  const post = await getPostBySlug(slug, { includeDraft: true, includeLocales: true });
   if (!post) {
     const err = new Error("Post not found");
     err.status = 404;
@@ -87,6 +87,12 @@ export async function patchAdminCollectionResponse(slug, body) {
   return { collection, source: "postgres" };
 }
 
+export async function reorderAdminCollectionsResponse(body) {
+  const orders = Array.isArray(body.orders) ? body.orders : [];
+  const collections = await reorderCollections(orders);
+  return { collections, source: "postgres" };
+}
+
 export async function seedCmsContent() {
   const [posts, pages] = await Promise.all([seedPosts(), seedPages()]);
   const hasHomepage = await getSetting("homepage", null);
@@ -97,5 +103,13 @@ export async function seedCmsContent() {
   if (!hasAbout) await setSetting("about", DEFAULT_ABOUT);
   const hasFindUs = await getSetting("findUs", null);
   if (!hasFindUs) await setSetting("findUs", DEFAULT_FIND_US);
+  const hasContact = await getSetting("contact", null);
+  if (!hasContact) await setSetting("contact", DEFAULT_CONTACT);
+  const hasCare = await getSetting("care", null);
+  if (!hasCare) await setSetting("care", DEFAULT_CARE);
+  const hasSizing = await getSetting("sizing", null);
+  if (!hasSizing) await setSetting("sizing", DEFAULT_SIZING);
+  const hasFooter = await getSetting("footer", null);
+  if (!hasFooter) await setSetting("footer", DEFAULT_FOOTER);
   return { posts, pages, source: "postgres" };
 }

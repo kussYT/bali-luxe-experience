@@ -3,19 +3,22 @@ import { useCatalog } from "@/lib/catalog-context";
 import { useSiteContent } from "@/lib/content-context";
 import { useCurrency } from "@/lib/currency";
 import { Reveal } from "@/components/lifestyle/Reveal";
+import { focalObjectPosition } from "@/lib/image-focal";
 
 export function SpotlightProduct() {
-  const { homepage } = useSiteContent();
-  const { publishedProducts } = useCatalog();
+  const { homepage, loading: contentLoading } = useSiteContent();
+  const { publishedProducts, loading: catalogLoading } = useCatalog();
   const { format } = useCurrency();
   const spotlight = homepage.spotlightProduct;
 
+  if (contentLoading || catalogLoading) return null;
   if (!spotlight?.enabled || !spotlight.productSlug) return null;
 
   const product = publishedProducts.find((p) => p.slug === spotlight.productSlug);
   if (!product) return null;
 
   const image = spotlight.image || product.image;
+  const imageFocal = spotlight.image ? spotlight.imageFocal : product.imageFocal;
 
   return (
     <section className="page-wrap section-pad py-14 md:py-20 bg-white border-y border-border">
@@ -30,11 +33,12 @@ export function SpotlightProduct() {
               src={image}
               alt={product.name}
               className="size-full object-cover image-editorial transition-transform duration-[1.4s] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
+              style={{ objectPosition: focalObjectPosition(imageFocal) }}
               loading="lazy"
             />
           </Link>
           <div className="max-w-md">
-            <p className="text-eyebrow text-foreground/50">{spotlight.eyebrow}</p>
+            <p className="text-eyebrow">{spotlight.eyebrow}</p>
             <h2 className="font-display text-3xl md:text-5xl mt-3 leading-[0.95]">
               {spotlight.title || product.name}
             </h2>

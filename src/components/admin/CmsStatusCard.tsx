@@ -45,7 +45,13 @@ export function CmsStatusCard({ compact = false }: { compact?: boolean }) {
     <Card>
       <CardHeader className={compact ? "pb-2" : undefined}>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle className="text-lg">État CMS</CardTitle>
+          <CardTitle className="text-lg">État du site (CMS)</CardTitle>
+          {!compact && (
+            <p className="text-sm text-muted-foreground font-normal mt-1">
+              Santé technique : base de données, uploads, Instagram. Ce n&apos;est pas le contenu éditorial — pour modifier
+              textes et images, allez dans Content.
+            </p>
+          )}
           {!compact && (
             <Link to="/admin/content" className="text-eyebrow link-underline !text-muted-foreground">
               Éditer le contenu

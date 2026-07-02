@@ -1,3 +1,5 @@
+import type { ImageFocal } from "@/lib/image-focal";
+
 export type AnnouncementContent = {
   enabled: boolean;
   text: string;
@@ -9,6 +11,7 @@ export type HeroContent = {
   title: string;
   subtitle: string;
   poster: string;
+  posterFocal?: ImageFocal;
   videoSrc: string;
   ctaPrimary: string;
   ctaPrimaryHref: string;
@@ -21,6 +24,7 @@ export type EditorialContent = {
   line: string;
   body: string;
   image: string;
+  imageFocal?: ImageFocal;
   linkLabel: string;
   linkHref: string;
 };
@@ -29,6 +33,7 @@ export type LookbookChapter = {
   title: string;
   caption: string;
   image: string;
+  imageFocal?: ImageFocal;
   align: "left" | "right";
 };
 
@@ -44,6 +49,7 @@ export type MoodHotspot = {
 export type HomePhotoTile = {
   label: string;
   image: string;
+  imageFocal?: ImageFocal;
   href: string;
   search?: Record<string, string>;
 };
@@ -60,6 +66,7 @@ export type SpotlightProductContent = {
   title: string;
   description: string;
   image: string;
+  imageFocal?: ImageFocal;
   ctaLabel: string;
 };
 
@@ -71,11 +78,32 @@ export type SiteNavigationContent = {
   popularSearches: string[];
 };
 
+/** Right-hand images in desktop mega-menu (À propos, Boutique, etc.). */
+export type MegaMenuFeaturedTile = {
+  label: string;
+  to: string;
+  image: string;
+  imageFocal?: ImageFocal;
+  /** Fills ?c= on /collection */
+  collectionSlug?: string;
+  hash?: string;
+  /** Fills ?sale=true */
+  sale?: boolean;
+};
+
+export type MegaMenuFeaturedContent = {
+  newCollection: MegaMenuFeaturedTile[];
+  shop: MegaMenuFeaturedTile[];
+  sales: MegaMenuFeaturedTile[];
+  about: MegaMenuFeaturedTile[];
+};
+
 export type HomepageContent = {
   hero: HeroContent;
   photoStrip: PhotoStripContent;
   spotlightProduct: SpotlightProductContent;
   navigation: SiteNavigationContent;
+  megaMenuFeatured?: MegaMenuFeaturedContent;
   editorial: EditorialContent;
   featuredSection: { eyebrow: string; title: string };
   lookbook: {
@@ -86,13 +114,14 @@ export type HomepageContent = {
   };
   shopTheMood: {
     image: string;
+    imageFocal?: ImageFocal;
     alt: string;
     hotspots: MoodHotspot[];
   };
   craft: {
     eyebrow: string;
     title: string;
-    items: { title: string; text: string; image: string }[];
+    items: { title: string; text: string; image: string; imageFocal?: ImageFocal }[];
   };
   quote: { text: string; attribution: string };
   journalSection: { eyebrow: string; title: string };
@@ -111,6 +140,11 @@ export type HomepageContent = {
     eyebrow: string;
     title: string;
     description: string;
+  };
+  /** Google search result title + description for homepage */
+  seo: {
+    title: string;
+    metaDescription: string;
   };
 };
 
@@ -132,6 +166,7 @@ export type AboutSidebarLink = {
   to: string;
   hash?: string;
   image: string;
+  imageFocal?: ImageFocal;
 };
 
 export type AboutContent = {
@@ -174,11 +209,84 @@ export type FindUsContent = {
   countries: StockistCountry[];
 };
 
+export type ContactContent = {
+  eyebrow: string;
+  title: string;
+  metaDescription: string;
+  description: string;
+  email: string;
+  formName: string;
+  formEmail: string;
+  formSubject: string;
+  formMessage: string;
+  formSubmit: string;
+  formSending: string;
+  formSent: string;
+};
+
+export type CareSectionContent = {
+  title: string;
+  tips: string[];
+};
+
+export type CareContent = {
+  eyebrow: string;
+  title: string;
+  metaDescription: string;
+  intro: string;
+  sections: CareSectionContent[];
+  backLink: string;
+};
+
+export type SizingContent = {
+  eyebrow: string;
+  title: string;
+  metaDescription: string;
+  body: string[];
+  image: string;
+  imageFocal?: ImageFocal;
+  imageAlt: string;
+  backLink: string;
+};
+
+export type FooterContent = {
+  shopTitle: string;
+  shopAll: string;
+  shopSale: string;
+  shopWishlist: string;
+  careTitle: string;
+  contactUs: string;
+  sizeGuide: string;
+  careGuide: string;
+  faq: string;
+  shipping: string;
+  returns: string;
+  exploreTitle: string;
+  theBrand: string;
+  travelGuide: string;
+  privacyTitle: string;
+  terms: string;
+  artisans: string;
+  materials: string;
+  copyright: string;
+};
+
 export type SiteContent = {
   announcement: AnnouncementContent;
   homepage: HomepageContent;
   about: AboutContent;
   findUs: FindUsContent;
+  contact: ContactContent;
+  care: CareContent;
+  sizing: SizingContent;
+  footer: FooterContent;
+};
+
+export type JournalPostLocaleFields = {
+  title: string;
+  excerpt: string;
+  category: string;
+  body: string[];
 };
 
 export type JournalPost = {
@@ -186,10 +294,13 @@ export type JournalPost = {
   title: string;
   excerpt: string;
   image: string;
+  imageFocal?: ImageFocal;
   category: string;
   readMinutes: number;
   body: string[];
   status?: string;
+  /** All translations — present in admin API responses */
+  locales?: Partial<Record<import("@/lib/i18n/messages").Locale, JournalPostLocaleFields>>;
 };
 
 export type CmsPageLocaleFields = {
@@ -217,6 +328,7 @@ export type AdminCollectionMeta = {
   description: string;
   heroImage: string;
   sortOrder: number;
+  hidden: boolean;
   productCount: number;
   updatedAt?: string;
 };

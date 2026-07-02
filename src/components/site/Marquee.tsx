@@ -1,8 +1,8 @@
 import { useSiteContent } from "@/lib/content-context";
 
 export function Marquee() {
-  const { announcement } = useSiteContent();
-  if (!announcement.enabled) return null;
+  const { announcement, loading } = useSiteContent();
+  if (loading || !announcement.enabled || !announcement.text) return null;
 
   const textEl = (
     <span className="px-10 shrink-0 text-[0.625rem] font-medium tracking-[0.28em] uppercase text-foreground/85">

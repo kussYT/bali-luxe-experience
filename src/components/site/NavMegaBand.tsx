@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { focalObjectPosition } from "@/lib/image-focal";
 import type { NavColumn, NavFeaturedImage } from "@/lib/navigation";
 
 type NavMegaBandProps = {
@@ -30,7 +31,7 @@ export function NavMegaBand({ columns, featured = [], onNavigate, className = ""
           >
             {columns.map((column) => (
               <div key={column.title}>
-                <p className="text-eyebrow text-foreground/45 mb-4 md:mb-5">{column.title}</p>
+                <p className="text-eyebrow mb-4 md:mb-5">{column.title}</p>
                 <ul className="space-y-2.5 md:space-y-3">
                   {column.items.map((item) => (
                     <li key={item.label}>
@@ -66,6 +67,7 @@ export function NavMegaBand({ columns, featured = [], onNavigate, className = ""
                       src={item.image}
                       alt=""
                       className="size-full object-cover transition-transform duration-[1.4s] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
+                      style={{ objectPosition: focalObjectPosition(item.imageFocal) }}
                       loading="lazy"
                     />
                   </div>

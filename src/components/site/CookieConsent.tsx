@@ -165,7 +165,7 @@ export function CookiePreferencesLink() {
     <button
       type="button"
       onClick={() => setPreferencesOpen(true)}
-      className="text-eyebrow !text-surface/70 link-underline hover:!text-surface"
+      className="text-eyebrow !text-surface/80 link-underline hover:!text-surface"
     >
       Cookie preferences
     </button>

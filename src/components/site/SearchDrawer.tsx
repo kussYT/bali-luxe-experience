@@ -157,7 +157,7 @@ export function SearchDrawer({ open, onClose }: SearchDrawerProps) {
           <button
             type="button"
             onClick={() => submit(query)}
-            className="w-full bg-ink text-bone py-3.5 text-eyebrow hover:bg-clay transition-colors"
+            className="btn-primary w-full hover:bg-clay"
           >
             {t("search.submit")}
           </button>

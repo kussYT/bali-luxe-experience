@@ -8,34 +8,32 @@ export type ShippingCountry = {
   currencyLabel: string;
 };
 
-function eur(name: string, code: string): ShippingCountry {
-  return { code, name, currency: "EUR", currencyLabel: "EUR €" };
+function entry(name: string, code: string, currency: Currency): ShippingCountry {
+  const currencyLabel =
+    currency === "EUR" ? "EUR €" : currency === "USD" ? "USD $" : "IDR Rp";
+  return { code, name, currency, currencyLabel };
 }
 
-function usd(name: string, code: string): ShippingCountry {
-  return { code, name, currency: "USD", currencyLabel: "USD $" };
-}
+const eur = (name: string, code: string) => entry(name, code, "EUR");
+const usd = (name: string, code: string) => entry(name, code, "USD");
+const idr = (name: string, code: string) => entry(name, code, "IDR");
 
-function idr(name: string, code: string): ShippingCountry {
-  return { code, name, currency: "IDR", currencyLabel: "IDR Rp" };
-}
-
-/** Shipping destinations — aligned with bingindiaries.com currency selector */
+/**
+ * Shipping destinations — currency is EUR, USD, or IDR (checkout supports these three).
+ * EUR: eurozone + linked territories. USD: rest of world. IDR: Indonesia.
+ */
 export const SHIPPING_COUNTRIES: ShippingCountry[] = [
+  // —— Eurozone & €-linked territories ——
   eur("France", "FR"),
   eur("Germany", "DE"),
   eur("Austria", "AT"),
   eur("Belgium", "BE"),
-  eur("Bulgaria", "BG"),
   eur("Croatia", "HR"),
   eur("Cyprus", "CY"),
-  eur("Czechia", "CZ"),
-  eur("Denmark", "DK"),
-  eur("Spain", "ES"),
   eur("Estonia", "EE"),
+  eur("Spain", "ES"),
   eur("Finland", "FI"),
   eur("Greece", "GR"),
-  eur("Hungary", "HU"),
   eur("Ireland", "IE"),
   eur("Italy", "IT"),
   eur("Latvia", "LV"),
@@ -44,13 +42,12 @@ export const SHIPPING_COUNTRIES: ShippingCountry[] = [
   eur("Malta", "MT"),
   eur("Monaco", "MC"),
   eur("Netherlands", "NL"),
-  eur("Poland", "PL"),
   eur("Portugal", "PT"),
-  eur("Romania", "RO"),
   eur("Slovakia", "SK"),
   eur("Slovenia", "SI"),
-  eur("Sweden", "SE"),
   eur("Andorra", "AD"),
+  eur("Kosovo", "XK"),
+  eur("Vatican City", "VA"),
   eur("French Guiana", "GF"),
   eur("Guadeloupe", "GP"),
   eur("Martinique", "MQ"),
@@ -61,30 +58,57 @@ export const SHIPPING_COUNTRIES: ShippingCountry[] = [
   eur("Saint Pierre and Miquelon", "PM"),
   eur("French Southern Territories", "TF"),
   eur("Åland Islands", "AX"),
-  eur("Argentina", "AR"),
-  eur("Armenia", "AM"),
-  eur("Belarus", "BY"),
-  eur("Brazil", "BR"),
-  eur("Chile", "CL"),
-  eur("Colombia", "CO"),
-  eur("Georgia", "GE"),
-  eur("Haiti", "HT"),
-  eur("Jersey", "JE"),
-  eur("Kosovo", "XK"),
-  eur("Malaysia", "MY"),
-  eur("Mexico", "MX"),
-  eur("Morocco", "MA"),
   eur("New Caledonia", "NC"),
-  eur("Norway", "NO"),
-  eur("Serbia", "RS"),
-  eur("Suriname", "SR"),
-  eur("Turkey", "TR"),
-  eur("Ukraine", "UA"),
-  eur("United Kingdom", "GB"),
-  eur("Vatican City", "VA"),
   eur("Wallis and Futuna", "WF"),
+
+  // —— EU & Europe (local currency → USD display at checkout) ——
+  usd("Bulgaria", "BG"),
+  usd("Czechia", "CZ"),
+  usd("Denmark", "DK"),
+  usd("Hungary", "HU"),
+  usd("Poland", "PL"),
+  usd("Romania", "RO"),
+  usd("Sweden", "SE"),
+  usd("Norway", "NO"),
+  usd("United Kingdom", "GB"),
+  usd("Switzerland", "CH"),
+  usd("Jersey", "JE"),
+  usd("Belarus", "BY"),
+  usd("Ukraine", "UA"),
+  usd("Serbia", "RS"),
+  usd("Turkey", "TR"),
+  usd("Armenia", "AM"),
+  usd("Georgia", "GE"),
+
+  // —— Americas ——
   usd("United States", "US"),
   usd("Canada", "CA"),
+  usd("Mexico", "MX"),
+  usd("Brazil", "BR"),
+  usd("Argentina", "AR"),
+  usd("Chile", "CL"),
+  usd("Colombia", "CO"),
+  usd("Peru", "PE"),
+  usd("Uruguay", "UY"),
+  usd("Paraguay", "PY"),
+  usd("Venezuela", "VE"),
+  usd("Ecuador", "EC"),
+  usd("Costa Rica", "CR"),
+  usd("Panama", "PA"),
+  usd("Guatemala", "GT"),
+  usd("Honduras", "HN"),
+  usd("El Salvador", "SV"),
+  usd("Nicaragua", "NI"),
+  usd("Dominican Republic", "DO"),
+  usd("Jamaica", "JM"),
+  usd("Haiti", "HT"),
+  usd("Bahamas", "BS"),
+  usd("Barbados", "BB"),
+  usd("Bermuda", "BM"),
+  usd("Cayman Islands", "KY"),
+  usd("Suriname", "SR"),
+
+  // —— Asia-Pacific & Middle East ——
   usd("Australia", "AU"),
   usd("New Zealand", "NZ"),
   usd("Singapore", "SG"),
@@ -93,27 +117,13 @@ export const SHIPPING_COUNTRIES: ShippingCountry[] = [
   usd("South Korea", "KR"),
   usd("Taiwan", "TW"),
   usd("Thailand", "TH"),
+  usd("Vietnam", "VN"),
+  usd("Malaysia", "MY"),
   usd("United Arab Emirates", "AE"),
   usd("Qatar", "QA"),
-  usd("Switzerland", "CH"),
-  usd("Bahamas", "BS"),
-  usd("Barbados", "BB"),
-  usd("Bermuda", "BM"),
-  usd("Cayman Islands", "KY"),
-  usd("Costa Rica", "CR"),
-  usd("Dominican Republic", "DO"),
-  usd("Ecuador", "EC"),
-  usd("El Salvador", "SV"),
-  usd("Guatemala", "GT"),
-  usd("Honduras", "HN"),
-  usd("Jamaica", "JM"),
-  usd("Nicaragua", "NI"),
-  usd("Panama", "PA"),
-  usd("Paraguay", "PY"),
-  usd("Peru", "PE"),
-  usd("Uruguay", "UY"),
-  usd("Venezuela", "VE"),
-  usd("Vietnam", "VN"),
+  usd("Morocco", "MA"),
+
+  // —— Indonesia ——
   idr("Indonesia", "ID"),
 ];
 

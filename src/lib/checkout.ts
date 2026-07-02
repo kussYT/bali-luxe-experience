@@ -9,12 +9,19 @@ export async function startCheckout(
   items: CartItem[],
   currency: Currency,
   countryCode: string,
+  options?: { promoCode?: string; customerEmail?: string },
 ): Promise<CheckoutResult> {
   try {
     const res = await fetch("/api/checkout/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items, currency, countryCode }),
+      body: JSON.stringify({
+        items,
+        currency,
+        countryCode,
+        promoCode: options?.promoCode,
+        customerEmail: options?.customerEmail,
+      }),
     });
     const data = (await res.json()) as { url?: string; error?: string };
     if (!res.ok || !data.url) {
@@ -44,9 +51,15 @@ export type CheckoutStatus = {
   };
 };
 
-export async function fetchCheckoutStatus(sessionId: string): Promise<CheckoutStatus | null> {
+export async function fetchCheckoutStatus(
+  sessionId?: string,
+  orderId?: string,
+): Promise<CheckoutStatus | null> {
   try {
-    const res = await fetch(`/api/checkout/session?session_id=${encodeURIComponent(sessionId)}`);
+    const params = new URLSearchParams();
+    if (sessionId) params.set("session_id", sessionId);
+    if (orderId) params.set("order_id", orderId);
+    const res = await fetch(`/api/checkout/session?${params.toString()}`);
     if (!res.ok) return null;
     return (await res.json()) as CheckoutStatus;
   } catch {

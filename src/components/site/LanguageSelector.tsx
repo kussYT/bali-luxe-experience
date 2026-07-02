@@ -7,6 +7,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 
 type LanguageSelectorProps = {
@@ -26,9 +27,11 @@ export function LanguageSelector({ variant = "header" }: LanguageSelectorProps) 
   return (
     <Select value={locale} onValueChange={(v) => setLocale(v as Locale)}>
       <SelectTrigger className={triggerClass} aria-label={ariaLabel} title={ariaLabel}>
-        <CountryFlag code={LOCALE_FLAG_COUNTRY[locale]} />
+        <SelectValue aria-label={ariaLabel}>
+          <CountryFlag code={LOCALE_FLAG_COUNTRY[locale]} className="!w-[1.35rem] !h-[0.9rem]" />
+        </SelectValue>
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent align="end">
         {LOCALES.map((item) => (
           <SelectItem key={item.code} value={item.code} textValue={item.label}>
             <span className="flex items-center gap-2">

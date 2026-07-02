@@ -11,13 +11,13 @@ export async function getSiteContentResponse() {
   return Response.json(content, { headers: CACHE_HEADERS });
 }
 
-export async function getPostsListResponse() {
-  const posts = await listPublishedPosts();
+export async function getPostsListResponse(locale) {
+  const posts = await listPublishedPosts(locale);
   return Response.json({ posts }, { headers: CACHE_HEADERS });
 }
 
-export async function getPostResponse(slug) {
-  const post = await getPostBySlug(slug);
+export async function getPostResponse(slug, locale) {
+  const post = await getPostBySlug(slug, { locale });
   if (!post) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }

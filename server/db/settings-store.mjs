@@ -9,7 +9,6 @@ function getSettingsFile() {
 }
 
 export const DEFAULT_NEWSLETTER_SETTINGS = {
-  provider: "local",
   brevoListId: "",
   copy: {
     eyebrow: "Newsletter",
@@ -81,29 +80,22 @@ export async function getNewsletterSettings() {
     copy: { ...DEFAULT_NEWSLETTER_SETTINGS.copy, ...(stored.copy || {}) },
   };
 
-  const envProvider = process.env.NEWSLETTER_PROVIDER?.trim();
   const envListId = process.env.BREVO_LIST_ID?.trim();
 
   return {
     ...merged,
-    provider: merged.provider || envProvider || "local",
     brevoListId: merged.brevoListId || envListId || "",
-    envProvider: envProvider || null,
     hasBrevoKey: Boolean(process.env.BREVO_API_KEY),
-    hasMailchimpKey: Boolean(process.env.MAILCHIMP_API_KEY),
-    hasKlaviyoKey: Boolean(process.env.KLAVIYO_API_KEY),
   };
 }
 
 export async function updateNewsletterSettings(patch) {
   const current = await getNewsletterSettings();
   const next = {
-    provider: patch.provider ?? current.provider,
     brevoListId: patch.brevoListId ?? current.brevoListId,
     copy: { ...current.copy, ...(patch.copy || {}) },
   };
   await setSetting("newsletter", {
-    provider: next.provider,
     brevoListId: next.brevoListId,
     copy: next.copy,
   });

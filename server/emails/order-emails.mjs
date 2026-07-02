@@ -70,10 +70,27 @@ export async function sendOrderShippedEmail(order) {
   const email = order.customerEmail?.trim();
   if (!email) return { skipped: true, reason: "no customer email" };
 
+  const tracking = order.trackingNumber?.trim();
+  const carrier = order.trackingCarrier?.trim();
+  const trackingUrl = order.trackingUrl?.trim();
+
+  let trackingBlock = "";
+  if (tracking) {
+    const carrierLabel = carrier ? `${carrier} — ` : "";
+    const link = trackingUrl
+      ? `<a href="${trackingUrl}" style="color:#1a1a1a;">${carrierLabel}${tracking}</a>`
+      : `${carrierLabel}${tracking}`;
+    trackingBlock = `
+      <p style="margin-top:20px;padding:16px;background:#f5f0e8;border:1px solid #e8e0d4;font-size:14px;">
+        <strong>Numéro de suivi :</strong><br>${link}
+      </p>`;
+  }
+
   const body = `
-    <p>Your order is on its way.</p>
-    <p style="font-size:12px;color:#8a8278;">Order <span style="font-family:monospace;">${order.id.slice(0, 8)}…</span></p>
-    <ul style="padding-left:18px;font-size:14px;">
+    <p>Bonne nouvelle — votre commande est en cours d'acheminement.</p>
+    <p style="font-size:12px;color:#8a8278;">Commande <span style="font-family:monospace;">${order.id.slice(0, 8)}…</span></p>
+    ${trackingBlock}
+    <ul style="padding-left:18px;font-size:14px;margin-top:20px;">
       ${order.items.map((i) => {
         const label = i.variantTitle && i.variantTitle !== "Default"
           ? `${i.name} — ${i.variantTitle}`
@@ -81,12 +98,12 @@ export async function sendOrderShippedEmail(order) {
         return `<li>${label} × ${i.qty}</li>`;
       }).join("")}
     </ul>
-    <p style="font-size:13px;color:#8a8278;margin-top:24px;">Thank you for supporting slow fashion between Bali and France.</p>
+    <p style="font-size:13px;color:#8a8278;margin-top:24px;">Merci de soutenir Bingin Diaries.</p>
   `;
 
   return sendEmail({
     to: email,
-    subject: `Your order has shipped — Bingin Diaries`,
-    html: layout({ title: "Your order has shipped", body }),
+    subject: `Votre commande est en route — Bingin Diaries`,
+    html: layout({ title: "Commande expédiée", body }),
   });
 }

@@ -9,6 +9,7 @@ import {
 } from "@/lib/admin-api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { Product } from "@/lib/catalog-types";
 
 export const Route = createFileRoute("/admin/customers/")({
@@ -31,6 +32,7 @@ function AdminCustomersPage() {
   );
   const [productsBySlug, setProductsBySlug] = useState<Record<string, Product>>({});
   const [wishlistOnly, setWishlistOnly] = useState(false);
+  const [emailQuery, setEmailQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const loadCustomers = useCallback(() => {
@@ -60,6 +62,12 @@ function AdminCustomersPage() {
     () => (slug: string) => productsBySlug[slug]?.name || slug,
     [productsBySlug],
   );
+
+  const filteredCustomers = useMemo(() => {
+    const q = emailQuery.trim().toLowerCase();
+    if (!q) return customers;
+    return customers.filter((c) => c.email.toLowerCase().includes(q));
+  }, [customers, emailQuery]);
 
   if (!stats && !error) {
     return <p className="text-muted-foreground">Chargement…</p>;
@@ -110,13 +118,19 @@ function AdminCustomersPage() {
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-3">
         <Button variant={wishlistOnly ? "outline" : "default"} size="sm" onClick={() => setWishlistOnly(false)}>
           Tous les comptes
         </Button>
         <Button variant={wishlistOnly ? "default" : "outline"} size="sm" onClick={() => setWishlistOnly(true)}>
           Wishlist non vide
         </Button>
+        <Input
+          className="max-w-xs"
+          placeholder="Filtrer par e-mail…"
+          value={emailQuery}
+          onChange={(e) => setEmailQuery(e.target.value)}
+        />
       </div>
 
       <Card>
@@ -132,8 +146,8 @@ function AdminCustomersPage() {
               </tr>
             </thead>
             <tbody>
-              {customers.length ? (
-                customers.map((customer) => (
+              {filteredCustomers.length ? (
+                filteredCustomers.map((customer) => (
                   <tr key={customer.id} className="border-b border-border align-top">
                     <td className="p-3 whitespace-nowrap">{customer.email}</td>
                     <td className="p-3">

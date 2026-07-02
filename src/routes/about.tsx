@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSiteContent } from "@/lib/content-context";
+import { focalObjectPosition } from "@/lib/image-focal";
 import { NAV_ABOUT } from "@/lib/navigation";
 
 export const Route = createFileRoute("/about")({
@@ -24,7 +25,7 @@ function About() {
       <section className="page-wrap section-pad pt-24 pb-16 md:pb-20">
         <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,420px)] gap-12 lg:gap-20 items-start">
           <div className="max-w-3xl">
-            <p className="text-eyebrow text-foreground/50">{about.eyebrow}</p>
+            <p className="text-eyebrow">{about.eyebrow}</p>
             <h1 className="font-display text-5xl md:text-7xl lg:text-8xl mt-4 leading-[0.92] tracking-tight">
               {about.title}
             </h1>
@@ -57,7 +58,7 @@ function About() {
             </nav>
 
             <div className="lg:hidden mt-10">
-              <p className="text-eyebrow text-foreground/45 mb-5">Explore</p>
+              <p className="text-eyebrow mb-5">Explore</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {about.sidebarLinks.map((item) => (
                   <Link
@@ -70,6 +71,7 @@ function About() {
                       src={item.image}
                       alt=""
                       className="absolute inset-0 size-full object-cover"
+                      style={{ objectPosition: focalObjectPosition(item.imageFocal) }}
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-foreground/25" />
@@ -84,7 +86,7 @@ function About() {
             <div className="mt-16 space-y-16 md:space-y-20">
               {about.sections.map((section) => (
                 <article key={section.id} id={section.id} className="scroll-mt-28">
-                  <p className="text-eyebrow text-foreground/45">{section.eyebrow}</p>
+                  <p className="text-eyebrow">{section.eyebrow}</p>
                   <h2 className="font-display text-3xl md:text-4xl mt-3 leading-tight">{section.title}</h2>
                   <p className="mt-5 text-foreground/70 leading-relaxed text-base md:text-lg max-w-2xl">
                     {section.body}
@@ -105,7 +107,7 @@ function About() {
           </div>
 
           <aside className="hidden lg:block sticky top-28">
-            <p className="text-eyebrow text-foreground/45 mb-6">Explore</p>
+            <p className="text-eyebrow mb-6">Explore</p>
             <div className="grid grid-cols-2 gap-3">
               {about.sidebarLinks.map((item) => (
                 <Link
@@ -118,6 +120,7 @@ function About() {
                     src={item.image}
                     alt=""
                     className="absolute inset-0 size-full object-cover transition-transform duration-[1.6s] group-hover:scale-105"
+                    style={{ objectPosition: focalObjectPosition(item.imageFocal) }}
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-foreground/20 group-hover:bg-foreground/35 transition-colors" />

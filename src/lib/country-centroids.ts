@@ -1,4 +1,4 @@
-/** ISO 3166-1 alpha-2 centroids for order heatmap (approximate). */
+/** ISO 3166-1 alpha-2 — lat/lon for fallback projection. */
 export const COUNTRY_CENTROIDS: Record<string, { lat: number; lon: number; name: string }> = {
   FR: { lat: 46.2, lon: 2.2, name: "France" },
   GB: { lat: 55.4, lon: -3.4, name: "United Kingdom" },
@@ -46,11 +46,60 @@ export const COUNTRY_CENTROIDS: Record<string, { lat: number; lon: number; name:
   XX: { lat: 0, lon: 0, name: "Unknown" },
 };
 
-export function projectCountry(lon: number, lat: number, width: number, height: number) {
-  return {
-    x: ((lon + 180) / 360) * width,
-    y: ((90 - lat) / 180) * height,
-  };
+/** Pin positions tuned to public/admin/world-map.svg (950×620). */
+const MAP_PIN_POSITIONS: Partial<Record<string, { x: number; y: number }>> = {
+  FR: { x: 462, y: 192 },
+  BE: { x: 468, y: 178 },
+  NL: { x: 472, y: 172 },
+  DE: { x: 488, y: 172 },
+  CH: { x: 482, y: 186 },
+  AT: { x: 498, y: 182 },
+  LU: { x: 472, y: 178 },
+  MC: { x: 478, y: 198 },
+  GB: { x: 448, y: 158 },
+  IE: { x: 434, y: 168 },
+  ES: { x: 452, y: 212 },
+  PT: { x: 436, y: 218 },
+  IT: { x: 492, y: 198 },
+  DK: { x: 482, y: 158 },
+  SE: { x: 498, y: 128 },
+  NO: { x: 478, y: 108 },
+  FI: { x: 512, y: 128 },
+  PL: { x: 502, y: 168 },
+  GR: { x: 512, y: 218 },
+  ID: { x: 738, y: 368 },
+  AU: { x: 812, y: 468 },
+  US: { x: 248, y: 198 },
+  CA: { x: 228, y: 128 },
+  JP: { x: 828, y: 208 },
+};
+
+const MAP_WIDTH = 950;
+const MAP_HEIGHT = 620;
+
+/**
+ * Project lat/lon onto the admin world map SVG.
+ * Y uses a calibrated scale — the SVG is not a pure equirectangular grid.
+ */
+export function projectCountry(lon: number, lat: number, width = MAP_WIDTH, height = MAP_HEIGHT) {
+  const sx = width / MAP_WIDTH;
+  const sy = height / MAP_HEIGHT;
+  const x = ((lon + 180) / 360) * MAP_WIDTH * sx;
+  const latNorm = (90 - lat) / 180;
+  const yRatio = 0.016 + latNorm * 1.195;
+  const y = Math.min(MAP_HEIGHT - 8, Math.max(8, yRatio * MAP_HEIGHT)) * sy;
+  return { x, y };
+}
+
+export function countryMapPosition(code: string, width = MAP_WIDTH, height = MAP_HEIGHT) {
+  const pin = MAP_PIN_POSITIONS[code];
+  if (pin) {
+    const sx = width / MAP_WIDTH;
+    const sy = height / MAP_HEIGHT;
+    return { x: pin.x * sx, y: pin.y * sy };
+  }
+  const centroid = COUNTRY_CENTROIDS[code] || COUNTRY_CENTROIDS.XX;
+  return projectCountry(centroid.lon, centroid.lat, width, height);
 }
 
 export function countryLabel(code: string) {

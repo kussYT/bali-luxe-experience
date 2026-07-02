@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { fetchAdminPage, saveAdminPage, autoTranslatePage } from "@/lib/admin-api";
+import { fetchAdminPage, saveAdminPage, autoTranslatePage, fetchTranslateStatus } from "@/lib/admin-api";
 import type { CmsPage, CmsPageLocaleFields } from "@/lib/content-types";
 import { CMS_LOCALES, emptyPageLocaleFields } from "@/lib/i18n/cms-locales";
 import type { Locale } from "@/lib/i18n/messages";
@@ -34,11 +34,19 @@ function AdminPageEditPage() {
   const { slug } = Route.useParams();
   const [page, setPage] = useState<(CmsPage & { status: string }) | null>(null);
   const [activeLocale, setActiveLocale] = useState<Locale>("fr");
+  const [sourceLocale, setSourceLocale] = useState<Locale>("en");
+  const [translateAvailable, setTranslateAvailable] = useState<boolean | null>(null);
   const [bodyTextByLocale, setBodyTextByLocale] = useState<Partial<Record<Locale, string>>>({});
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [translateNote, setTranslateNote] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchTranslateStatus()
+      .then((s) => setTranslateAvailable(s.available))
+      .catch(() => setTranslateAvailable(false));
+  }, []);
 
   useEffect(() => {
     fetchAdminPage(slug)
@@ -78,10 +86,10 @@ function AdminPageEditPage() {
 
   async function handleAutoTranslate() {
     if (!page) return;
-    const source = activeLocale;
+    const source = sourceLocale;
     const title = localeFields(page, source).title.trim();
     if (!title) {
-      setError("Ajoutez un titre dans la langue active avant de traduire.");
+      setError(`Ajoutez un titre en ${CMS_LOCALES.find((l) => l.code === source)?.adminLabel} avant de traduire.`);
       return;
     }
     const bodyRaw = bodyTextByLocale[source] ?? "";
@@ -120,7 +128,7 @@ function AdminPageEditPage() {
       }
       setBodyTextByLocale(bodies);
       setTranslateNote(
-        `Traduction auto (${res.provider}) vers ${targetLocales.join(", ").toUpperCase()} — relisez et ajustez si besoin.`,
+        `Traduction DeepL : ${CMS_LOCALES.find((l) => l.code === source)?.adminLabel} → ${targetLocales.map((c) => c.toUpperCase()).join(", ")} — relisez avant publication.`,
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Traduction impossible");
@@ -201,18 +209,30 @@ function AdminPageEditPage() {
             </Button>
           );
         })}
-        <Button
-          type="button"
-          size="sm"
-          variant="secondary"
-          className="ml-auto"
-          disabled={translating}
-          onClick={handleAutoTranslate}
-        >
-          {translating
-            ? "Traduction…"
-            : `Traduire depuis ${CMS_LOCALES.find((l) => l.code === activeLocale)?.adminLabel}`}
-        </Button>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted-foreground">Source :</span>
+          <Select value={sourceLocale} onValueChange={(v) => setSourceLocale(v as Locale)}>
+            <SelectTrigger className="h-8 w-[10rem] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CMS_LOCALES.map(({ code, adminLabel }) => (
+                <SelectItem key={code} value={code}>
+                  {adminLabel}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            disabled={translating || translateAvailable === false}
+            onClick={handleAutoTranslate}
+          >
+            {translating ? "Traduction…" : "Traduire vers les autres langues"}
+          </Button>
+        </div>
       </div>
 
       <form onSubmit={handleSave}>

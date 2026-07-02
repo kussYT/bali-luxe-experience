@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { CmsPage, HomepageContent, JournalPost, SiteContent } from "@/lib/content-types";
-import { FALLBACK_ABOUT, FALLBACK_FIND_US } from "@/lib/cms-fallbacks";
+import { useLocale } from "@/lib/i18n/locale-context";
+import { FALLBACK_ABOUT, FALLBACK_FIND_US, FALLBACK_CONTACT, FALLBACK_CARE, FALLBACK_SIZING, FALLBACK_FOOTER } from "@/lib/cms-fallbacks";
 import {
   BINGIN_SOUNDS,
   CRAFT_DETAILS,
@@ -12,6 +13,70 @@ import {
   LOOKBOOK_CHAPTERS,
   SHOP_THE_MOOD,
 } from "@/data/lifestyle-content";
+
+const PENDING_SITE: SiteContent = {
+  announcement: { enabled: false, text: "", link: "" },
+  homepage: {
+    hero: {
+      eyebrow: "",
+      title: "",
+      subtitle: "",
+      poster: "",
+      videoSrc: "",
+      ctaPrimary: "",
+      ctaPrimaryHref: "/collection",
+      ctaSecondary: "",
+      ctaSecondaryHref: "/travel-diaries",
+    },
+    editorial: {
+      sub: "",
+      line: "",
+      body: "",
+      image: "",
+      linkLabel: "",
+      linkHref: "/about",
+    },
+    featuredSection: { eyebrow: "", title: "" },
+    spotlightProduct: {
+      enabled: false,
+      productSlug: "",
+      eyebrow: "",
+      title: "",
+      description: "",
+      image: "",
+      ctaLabel: "",
+    },
+    navigation: {
+      newCollection: "",
+      shop: "",
+      sales: "",
+      aboutUs: "",
+      popularSearches: [],
+    },
+    photoStrip: { layout: "grid", tiles: [] },
+    lookbook: { eyebrow: "", title: "", linkLabel: "", chapters: [] },
+    shopTheMood: { image: "", alt: "", hotspots: [] },
+    craft: { eyebrow: "", title: "", items: [] },
+    quote: { text: "", attribution: "" },
+    journalSection: { eyebrow: "", title: "" },
+    binginSounds: {
+      title: "",
+      playlistName: "",
+      description: "",
+      spotifyUrl: "",
+      spotifyPlaylistId: "",
+    },
+    ambientSound: { audioSrc: "" },
+    travelDiariesPage: { eyebrow: "", title: "", description: "" },
+    seo: { title: "Bingin Diaries", metaDescription: "" },
+  },
+  about: FALLBACK_ABOUT,
+  findUs: FALLBACK_FIND_US,
+  contact: FALLBACK_CONTACT,
+  care: FALLBACK_CARE,
+  sizing: FALLBACK_SIZING,
+  footer: FALLBACK_FOOTER,
+};
 
 const FALLBACK_SITE: SiteContent = {
   announcement: {
@@ -107,9 +172,18 @@ const FALLBACK_SITE: SiteContent = {
       title: "Slow notes from Bali & beyond",
       description: "Plages, cafés, moodboards et looks — une dimension lifestyle pour voyager avec la maison.",
     },
+    seo: {
+      title: "Bingin Diaries — Hand-woven hats from Bali & France",
+      metaDescription:
+        "A boutique house of sun-soaked hats, hand-woven between Canggu and Paris.",
+    },
   },
   about: FALLBACK_ABOUT,
   findUs: FALLBACK_FIND_US,
+  contact: FALLBACK_CONTACT,
+  care: FALLBACK_CARE,
+  sizing: FALLBACK_SIZING,
+  footer: FALLBACK_FOOTER,
 };
 
 const FALLBACK_POSTS: JournalPost[] = JOURNAL_ARTICLES.map((a) => ({ ...a }));
@@ -120,11 +194,16 @@ type ContentContextValue = {
   announcement: SiteContent["announcement"];
   about: SiteContent["about"];
   findUs: SiteContent["findUs"];
+  contact: SiteContent["contact"];
+  care: SiteContent["care"];
+  sizing: SiteContent["sizing"];
+  footer: SiteContent["footer"];
   posts: JournalPost[];
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
   fetchPage: (slug: string, locale?: string) => Promise<CmsPage | null>;
+  fetchPost: (slug: string, locale?: string) => Promise<JournalPost | null>;
 };
 
 const ContentContext = createContext<ContentContextValue | null>(null);
@@ -136,31 +215,43 @@ async function fetchJson<T>(url: string): Promise<T> {
 }
 
 export function ContentProvider({ children }: { children: ReactNode }) {
-  const [site, setSite] = useState<SiteContent>(FALLBACK_SITE);
-  const [posts, setPosts] = useState<JournalPost[]>(FALLBACK_POSTS);
+  const { locale } = useLocale();
+  const [site, setSite] = useState<SiteContent>(PENDING_SITE);
+  const [posts, setPosts] = useState<JournalPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const pageCacheRef = useRef<Record<string, CmsPage>>({});
+  const postCacheRef = useRef<Record<string, JournalPost>>({});
 
   const refresh = useCallback(async () => {
     try {
       setLoading(true);
+      const postsQs = `?locale=${encodeURIComponent(locale)}`;
       const [siteRes, postsRes] = await Promise.all([
         fetchJson<{
           announcement: SiteContent["announcement"];
           homepage: HomepageContent;
           about: SiteContent["about"];
           findUs: SiteContent["findUs"];
+          contact: SiteContent["contact"];
+          care: SiteContent["care"];
+          sizing: SiteContent["sizing"];
+          footer: SiteContent["footer"];
         }>("/api/content/site"),
-        fetchJson<{ posts: JournalPost[] }>("/api/content/posts"),
+        fetchJson<{ posts: JournalPost[] }>(`/api/content/posts${postsQs}`),
       ]);
       setSite({
         announcement: siteRes.announcement,
         homepage: siteRes.homepage,
         about: siteRes.about,
         findUs: siteRes.findUs,
+        contact: siteRes.contact,
+        care: siteRes.care,
+        sizing: siteRes.sizing,
+        footer: siteRes.footer,
       });
       setPosts(postsRes.posts);
+      postCacheRef.current = {};
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load content");
@@ -169,17 +260,17 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     refresh();
   }, [refresh]);
 
-  const fetchPage = useCallback(async (slug: string, locale = "en") => {
-    const cacheKey = `${slug}:${locale}`;
+  const fetchPage = useCallback(async (slug: string, pageLocale = locale) => {
+    const cacheKey = `${slug}:${pageLocale}`;
     if (pageCacheRef.current[cacheKey]) return pageCacheRef.current[cacheKey];
     try {
-      const qs = locale ? `?locale=${encodeURIComponent(locale)}` : "";
+      const qs = pageLocale ? `?locale=${encodeURIComponent(pageLocale)}` : "";
       const res = await fetchJson<{ page: CmsPage }>(
         `/api/content/pages/${encodeURIComponent(slug)}${qs}`,
       );
@@ -188,7 +279,22 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     } catch {
       return null;
     }
-  }, []);
+  }, [locale]);
+
+  const fetchPost = useCallback(async (slug: string, postLocale = locale) => {
+    const cacheKey = `${slug}:${postLocale}`;
+    if (postCacheRef.current[cacheKey]) return postCacheRef.current[cacheKey];
+    try {
+      const qs = postLocale ? `?locale=${encodeURIComponent(postLocale)}` : "";
+      const res = await fetchJson<{ post: JournalPost }>(
+        `/api/content/posts/${encodeURIComponent(slug)}${qs}`,
+      );
+      postCacheRef.current[cacheKey] = res.post;
+      return res.post;
+    } catch {
+      return FALLBACK_POSTS.find((p) => p.slug === slug) ?? null;
+    }
+  }, [locale]);
 
   const value = useMemo(
     () => ({
@@ -197,13 +303,18 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       announcement: site.announcement,
       about: site.about,
       findUs: site.findUs,
+      contact: site.contact,
+      care: site.care,
+      sizing: site.sizing,
+      footer: site.footer,
       posts,
       loading,
       error,
       refresh,
       fetchPage,
+      fetchPost,
     }),
-    [site, posts, loading, error, refresh, fetchPage],
+    [site, posts, loading, error, refresh, fetchPage, fetchPost],
   );
 
   return <ContentContext.Provider value={value}>{children}</ContentContext.Provider>;
@@ -215,9 +326,12 @@ export function useSiteContent() {
   return ctx;
 }
 
-export async function fetchPublicPost(slug: string): Promise<JournalPost | null> {
+export async function fetchPublicPost(slug: string, locale = "en"): Promise<JournalPost | null> {
   try {
-    const res = await fetchJson<{ post: JournalPost }>(`/api/content/posts/${encodeURIComponent(slug)}`);
+    const qs = locale ? `?locale=${encodeURIComponent(locale)}` : "";
+    const res = await fetchJson<{ post: JournalPost }>(
+      `/api/content/posts/${encodeURIComponent(slug)}${qs}`,
+    );
     return res.post;
   } catch {
     return FALLBACK_POSTS.find((p) => p.slug === slug) ?? null;

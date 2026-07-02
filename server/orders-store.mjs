@@ -115,6 +115,7 @@ export async function markOrderPaid(orderId, paymentMeta) {
       amountShipping: paymentMeta.amountShipping,
       currency: paymentMeta.currency,
       shippingCountryCode: paymentMeta.shippingCountryCode,
+      promoCode: paymentMeta.promoCode,
     });
   }
 

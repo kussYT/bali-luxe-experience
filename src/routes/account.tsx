@@ -131,7 +131,7 @@ function Account() {
                 required
                 className="w-full bg-transparent border-b border-border py-3 outline-none focus:border-ink"
               />
-              <button className="bg-ink text-bone px-8 py-3.5 text-eyebrow w-full disabled:opacity-50" disabled={submitting}>
+              <button className="btn-primary w-full disabled:opacity-50" disabled={submitting}>
                 {submitting ? "…" : t("account.sendLink")}
               </button>
               {devLink && (
