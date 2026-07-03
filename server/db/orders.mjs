@@ -212,6 +212,86 @@ export async function findOrderBySessionId(stripeSessionId) {
   return mapOrderRow(rows[0], itemsMap.get(rows[0].id) || []);
 }
 
+const CHECKOUT_BLOCKED_NOTE = "[checkout_blocked]";
+
+/**
+ * Payment received but checkout validation failed — hold for manual review, no stock movement.
+ */
+export async function holdOrderAfterPaymentBlocked(
+  orderId,
+  {
+    reason,
+    shippingCountryCode,
+    stripeSessionId,
+    stripePaymentIntentId,
+    stripeEventId,
+    customerEmail,
+    amountTotal,
+    amountSubtotal,
+    amountShipping,
+    currency,
+  },
+) {
+  if (!isDatabaseConfigured()) {
+    const err = new Error("Database not configured");
+    err.status = 503;
+    throw err;
+  }
+
+  return withTransaction(async (client) => {
+    const { rows } = await client.query(`SELECT * FROM orders WHERE id = $1 FOR UPDATE`, [orderId]);
+    if (rows.length === 0) {
+      const err = new Error(`Order not found: ${orderId}`);
+      err.status = 404;
+      throw err;
+    }
+
+    const order = rows[0];
+    if (order.status === "paid" || order.status === "on_hold") {
+      const itemsMap = await loadItemsForOrders([orderId], client);
+      return mapOrderRow(order, itemsMap.get(orderId) || []);
+    }
+
+    const note = `${CHECKOUT_BLOCKED_NOTE} ${reason}`.trim();
+    const mergedNotes = order.notes ? `${order.notes}\n${note}` : note;
+
+    await client.query(
+      `UPDATE orders SET
+         status = 'on_hold',
+         stripe_session_id = COALESCE($2, stripe_session_id),
+         stripe_payment_intent_id = COALESCE($3, stripe_payment_intent_id),
+         stripe_event_id = COALESCE($4, stripe_event_id),
+         customer_email = COALESCE($5, customer_email),
+         amount_total = COALESCE($6, amount_total),
+         amount_subtotal = COALESCE($7, amount_subtotal),
+         amount_shipping = COALESCE($8, amount_shipping),
+         currency = COALESCE($9, currency),
+         shipping_country_code = COALESCE($10, shipping_country_code),
+         notes = $11,
+         paid_at = now(),
+         updated_at = now()
+       WHERE id = $1`,
+      [
+        orderId,
+        stripeSessionId,
+        stripePaymentIntentId,
+        stripeEventId,
+        customerEmail,
+        amountTotal,
+        amountSubtotal,
+        amountShipping,
+        currency,
+        shippingCountryCode,
+        mergedNotes,
+      ],
+    );
+
+    const { rows: updated } = await client.query(`SELECT * FROM orders WHERE id = $1`, [orderId]);
+    const itemsMap = await loadItemsForOrders([orderId], client);
+    return mapOrderRow(updated[0], itemsMap.get(orderId) || []);
+  });
+}
+
 /**
  * Mark order paid + decrement inventory (idempotent).
  */

@@ -1,7 +1,6 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
 import { getSetting, setSetting } from "./settings-store.mjs";
+import DEFAULT_FULFILLMENT from "../../data/fulfillment-zones.default.json" with { type: "json" };
+import CATALOG from "../../data/country-shipping-catalog.json" with { type: "json" };
 
 const DEFAULT_SHIPPING_ZONES = [
   {
@@ -17,17 +16,7 @@ const DEFAULT_SHIPPING_ZONES = [
     rates: { EUR: 15, USD: 18, IDR: 200_000 },
   },
 ];
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const DEFAULT_FULFILLMENT = JSON.parse(
-  readFileSync(join(__dirname, "../../data/fulfillment-zones.default.json"), "utf8"),
-);
-
 /** @typedef {'france' | 'bali'} WarehouseId */
-
-const CATALOG = JSON.parse(
-  readFileSync(join(__dirname, "../../data/country-shipping-catalog.json"), "utf8"),
-);
 
 const BALI_DEFAULT = new Set(CATALOG.baliWarehouseDefaults || []);
 const EUROPE_CODES = new Set(

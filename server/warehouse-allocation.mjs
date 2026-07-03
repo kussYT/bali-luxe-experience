@@ -1,13 +1,7 @@
 /** @typedef {'france' | 'bali'} WarehouseId */
 
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
 import { getFulfillmentZones, normalizeFulfillmentZones } from "./db/fulfillment-settings.mjs";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const defaultPath = join(__dirname, "../data/fulfillment-zones.default.json");
-const DEFAULT_RAW = JSON.parse(readFileSync(defaultPath, "utf8"));
+import DEFAULT_RAW from "../data/fulfillment-zones.default.json" with { type: "json" };
 
 function defaultZones() {
   return normalizeFulfillmentZones(DEFAULT_RAW);

@@ -1,12 +1,5 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
 import { getSetting, setSetting } from "./settings-store.mjs";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const defaultPath = join(__dirname, "../../data/fulfillment-zones.default.json");
-
-const DEFAULT_RAW = JSON.parse(readFileSync(defaultPath, "utf8"));
+import DEFAULT_RAW from "../../data/fulfillment-zones.default.json" with { type: "json" };
 
 export function normalizeFulfillmentZones(raw) {
   const france = Array.isArray(raw?.franceWarehouseCountries)

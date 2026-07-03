@@ -6,6 +6,7 @@ import {
   findOrderBySessionId,
   findOrderById,
   markOrderPaid,
+  holdOrderAfterPaymentBlocked,
 } from "./orders-store.mjs";
 import { isDatabaseConfigured } from "./db/pool.mjs";
 import { buildOrderItemFromCartLine } from "./db/orders.mjs";
@@ -111,12 +112,97 @@ export async function validateCartItems(catalog, lineItems, countryCode) {
   return resolved;
 }
 
+function normalizeCheckoutCountry(raw, fallback = "FR") {
+  const code = (raw || fallback).trim().toUpperCase();
+  if (!SHIPPING_COUNTRY_CODES.includes(code)) {
+    const err = new Error(`Unsupported shipping country: ${code}`);
+    err.status = 400;
+    throw err;
+  }
+  return code;
+}
+
+function stripeSessionMetadata({ orderId, promoCode, countryCode }) {
+  return {
+    orderId,
+    promoCode: promoCode || "",
+    countryCode: normalizeCheckoutCountry(countryCode),
+  };
+}
+
 function shippingCountryFromStripeSession(session) {
   return (
     session.shipping_details?.address?.country ||
     session.customer_details?.address?.country ||
     null
   )?.toUpperCase() || null;
+}
+
+function stripeShippingAddressCollection(countryCode) {
+  return { allowed_countries: [normalizeCheckoutCountry(countryCode)] };
+}
+
+async function validatePaidCheckout(order, stripeSession) {
+  const shippingCountry = shippingCountryFromStripeSession(stripeSession);
+  const expectedCountry = normalizeCheckoutCountry(
+    stripeSession.metadata?.countryCode || order.countryCode,
+  );
+
+  if (!shippingCountry) {
+    return { ok: false, reason: "Adresse de livraison manquante sur le paiement Stripe" };
+  }
+
+  if (shippingCountry !== expectedCountry) {
+    return {
+      ok: false,
+      reason: `Pays de livraison (${shippingCountry}) différent du pays sélectionné (${expectedCountry})`,
+    };
+  }
+
+  const catalog = await readCatalog();
+  const cartLines = (order.items || []).map((item) => ({
+    slug: item.slug,
+    variantId: item.variantId || undefined,
+    qty: item.qty,
+  }));
+
+  try {
+    const resolved = await validateCartItems(catalog, cartLines, shippingCountry);
+    for (const item of order.items || []) {
+      const line = resolved.find(
+        (r) => r.product.slug === item.slug && (r.variant?.id || null) === (item.variantId || null),
+      );
+      if (!line) {
+        return { ok: false, reason: `Article introuvable pour validation: ${item.slug}` };
+      }
+      if (line.fulfillmentWarehouse !== item.warehouseId) {
+        return {
+          ok: false,
+          reason: `Entrepôt invalide pour ${item.slug} (attendu ${line.fulfillmentWarehouse}, commande ${item.warehouseId})`,
+        };
+      }
+    }
+    return { ok: true, shippingCountry, resolved };
+  } catch (e) {
+    return { ok: false, reason: e.message || "Validation panier échouée" };
+  }
+}
+
+function paymentMetaFromStripeSession(stripeSession, stripeEventId = null) {
+  return {
+    stripeSessionId: stripeSession.id,
+    stripePaymentIntentId:
+      typeof stripeSession.payment_intent === "string"
+        ? stripeSession.payment_intent
+        : stripeSession.payment_intent?.id,
+    stripeEventId,
+    customerEmail: stripeSession.customer_details?.email || stripeSession.customer_email,
+    amountTotal: stripeSession.amount_total,
+    amountSubtotal: stripeSession.amount_subtotal,
+    amountShipping: stripeSession.total_details?.amount_shipping ?? null,
+    currency: stripeSession.currency?.toUpperCase(),
+    shippingCountryCode: shippingCountryFromStripeSession(stripeSession),
+  };
 }
 
 function buildOrderItems(resolved, currency) {
@@ -177,11 +263,12 @@ export async function createCheckoutSession({
     throw err;
   }
 
+  const checkoutCountry = normalizeCheckoutCountry(countryCode);
   const catalog = await readCatalog();
-  const resolved = await validateCartItems(catalog, items, countryCode);
+  const resolved = await validateCartItems(catalog, items, checkoutCountry);
   const siteUrl = getSiteUrl();
 
-  const shippingAmount = await shippingAmountForCountry(countryCode, currency);
+  const shippingAmount = await shippingAmountForCountry(checkoutCountry, currency);
   const shippingSmallest = toStripeAmount(shippingAmount, currency);
 
   let promo = null;
@@ -215,7 +302,7 @@ export async function createCheckoutSession({
   const order = await createPendingOrder({
     items: orderItems,
     currency,
-    countryCode: countryCode || null,
+    countryCode: checkoutCountry,
     customerEmail: customerEmail || null,
     promoCode: promo?.code || null,
     amountSubtotal: amounts.subtotalSmallest - amounts.productDiscount,
@@ -233,7 +320,7 @@ export async function createCheckoutSession({
       orderId: order.id,
       promo,
       customerEmail: customerEmail.trim(),
-      countryCode,
+      countryCode: checkoutCountry,
       currency,
       amounts,
     });
@@ -281,12 +368,10 @@ export async function createCheckoutSession({
     mode: "payment",
     line_items,
     client_reference_id: order.id,
-    metadata: { orderId: order.id, promoCode: promo?.code || "" },
+    metadata: stripeSessionMetadata({ orderId: order.id, promoCode: promo?.code, countryCode: checkoutCountry }),
     success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${siteUrl}/checkout/cancel`,
-    shipping_address_collection: {
-      allowed_countries: SHIPPING_COUNTRY_CODES,
-    },
+    shipping_address_collection: stripeShippingAddressCollection(checkoutCountry),
     shipping_options: [
       {
         shipping_rate_data: {
@@ -325,6 +410,7 @@ async function createStripeSessionForPendingOrder({
   countryCode,
   customerEmail,
 }) {
+  const checkoutCountry = normalizeCheckoutCountry(countryCode);
   const siteUrl = getSiteUrl();
   const stripe = getStripe();
   const shippingSmallest = amounts.shippingSmallest;
@@ -361,12 +447,10 @@ async function createStripeSessionForPendingOrder({
     mode: "payment",
     line_items,
     client_reference_id: order.id,
-    metadata: { orderId: order.id, promoCode: promo?.code || "" },
+    metadata: stripeSessionMetadata({ orderId: order.id, promoCode: promo?.code, countryCode: checkoutCountry }),
     success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${siteUrl}/checkout/cancel`,
-    shipping_address_collection: {
-      allowed_countries: SHIPPING_COUNTRY_CODES,
-    },
+    shipping_address_collection: stripeShippingAddressCollection(checkoutCountry),
     shipping_options: [
       {
         shipping_rate_data: {
@@ -424,16 +508,16 @@ export async function resumeCheckoutSession(orderId) {
   }
 
   const currency = order.currency || "EUR";
-  const countryCode = order.countryCode || order.shippingCountryCode || "FR";
+  const checkoutCountry = normalizeCheckoutCountry(order.countryCode || order.shippingCountryCode);
   const catalog = await readCatalog();
   const cartLines = order.items.map((item) => ({
     slug: item.slug,
     variantId: item.variantId || undefined,
     qty: item.qty,
   }));
-  const resolved = await validateCartItems(catalog, cartLines, countryCode);
+  const resolved = await validateCartItems(catalog, cartLines, checkoutCountry);
 
-  const shippingAmount = await shippingAmountForCountry(countryCode, currency);
+  const shippingAmount = await shippingAmountForCountry(checkoutCountry, currency);
   const shippingSmallest = toStripeAmount(shippingAmount, currency);
 
   let promo = null;
@@ -470,7 +554,7 @@ export async function resumeCheckoutSession(orderId) {
     amounts,
     promo,
     currency,
-    countryCode,
+    countryCode: checkoutCountry,
     customerEmail: order.customerEmail,
   });
 
@@ -484,23 +568,22 @@ export async function fulfillPaidSession(stripeSession, stripeEventId = null) {
   const existing = await findOrderById(orderId);
   if (!existing) throw new Error(`Order not found: ${orderId}`);
   if (existing.status === "paid") return existing;
+  if (existing.status === "on_hold") return existing;
 
-  const shippingCountryCode = shippingCountryFromStripeSession(stripeSession);
   const promoCode = stripeSession.metadata?.promoCode?.trim() || null;
+  const paymentMeta = paymentMetaFromStripeSession(stripeSession, stripeEventId);
+  const validation = await validatePaidCheckout(existing, stripeSession);
+
+  if (!validation.ok) {
+    console.error("[checkout] payment blocked:", validation.reason, orderId);
+    return holdOrderAfterPaymentBlocked(orderId, {
+      reason: validation.reason,
+      ...paymentMeta,
+    });
+  }
 
   const paid = await markOrderPaid(orderId, {
-    stripeSessionId: stripeSession.id,
-    stripePaymentIntentId:
-      typeof stripeSession.payment_intent === "string"
-        ? stripeSession.payment_intent
-        : stripeSession.payment_intent?.id,
-    stripeEventId,
-    customerEmail: stripeSession.customer_details?.email || stripeSession.customer_email,
-    amountTotal: stripeSession.amount_total,
-    amountSubtotal: stripeSession.amount_subtotal,
-    amountShipping: stripeSession.total_details?.amount_shipping ?? null,
-    currency: stripeSession.currency?.toUpperCase(),
-    shippingCountryCode,
+    ...paymentMeta,
     promoCode: promoCode || undefined,
   });
 

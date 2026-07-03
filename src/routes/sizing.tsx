@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { PageMeta } from "@/components/site/PageMeta";
 import { useSiteContent } from "@/lib/content-context";
 import { focalObjectPosition } from "@/lib/image-focal";
 
