@@ -390,6 +390,15 @@ export const DEFAULT_FOOTER = {
   copyright: "© 2026 Bingin Diaries",
 };
 
+export const DEFAULT_PRODUCT_MESSAGES = {
+  regionalUnavailable:
+    "Cette pièce n'est pas disponible pour une livraison en {country}. Le stock pour votre zone est expédié depuis notre atelier {warehouse}. Changez le pays de livraison dans le menu pour voir les pièces proposées dans votre zone.",
+  soldOut: "Rupture de stock",
+  unavailableInRegion: "Indisponible dans votre région",
+  addToBag: "Ajouter au panier",
+  inStock: "{count} en stock{variant} — expédié depuis {warehouse}",
+};
+
 export const DEFAULT_POSTS = [
   {
     slug: "a-day-in-bingin",
@@ -509,6 +518,7 @@ export const SITE_CONTENT_PAGE_KEYS = [
   "care",
   "sizing",
   "footer",
+  "productMessages",
 ];
 
 function deepMerge(base, patch) {
@@ -555,4 +565,8 @@ export function mergeSizing(stored) {
 
 export function mergeFooter(stored) {
   return deepMerge(DEFAULT_FOOTER, stored || {});
+}
+
+export function mergeProductMessages(stored) {
+  return deepMerge(DEFAULT_PRODUCT_MESSAGES, stored || {});
 }

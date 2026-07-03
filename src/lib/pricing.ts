@@ -1,5 +1,7 @@
 import type { Product } from "@/lib/catalog-types";
 import type { Currency } from "@/lib/currency";
+import type { Locale } from "@/lib/i18n/messages";
+import { formatMoneyAmount } from "@/lib/format-money";
 
 export function getUnitPriceEur(product: Product) {
   if (product.onSale && product.compareAtEUR != null) return product.compareAtEUR;
@@ -13,7 +15,6 @@ export function getUnitPrice(product: Product, currency: Currency) {
   return product.priceIDR || Math.round(eur * 17_000);
 }
 
-export function formatMoney(amount: number, currency: Currency) {
-  const symbol = currency === "EUR" ? "€" : currency === "USD" ? "$" : "Rp ";
-  return `${symbol}${amount.toLocaleString("en-US")}`;
+export function formatMoney(amount: number, currency: Currency, locale: Locale = "fr") {
+  return formatMoneyAmount(amount, currency, locale);
 }

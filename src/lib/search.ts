@@ -14,14 +14,31 @@ export function productMatchesQuery(product: Product, q: string, collections: Co
     .map((slug) => collections.find((c) => c.slug === slug)?.name || slug)
     .join(" ");
 
+  const variantText = (product.variants ?? [])
+    .flatMap((v) => [v.title, v.option1, v.option2, v.option3, v.sku])
+    .filter(Boolean)
+    .join(" ");
+
+  const localeText = product.locales
+    ? Object.values(product.locales)
+        .flatMap((block) => [block?.name, block?.story])
+        .filter(Boolean)
+        .join(" ")
+    : "";
+
   const haystack = [
     product.name,
     product.story,
+    product.slug,
     product.collection,
+    product.collectionSlug,
+    ...(product.collectionSlugs ?? []),
     product.subcategory,
     product.category,
     product.productType,
     collectionNames,
+    variantText,
+    localeText,
     ...product.details,
     ...product.tags,
   ]

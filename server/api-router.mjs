@@ -72,6 +72,8 @@ import {
   getAdminCollectionsResponse,
   patchAdminCollectionResponse,
   reorderAdminCollectionsResponse,
+  getAdminCollectionProductsResponse,
+  patchAdminCollectionProductsResponse,
   seedCmsContent,
 } from "./api/content-admin.mjs";
 import { getAdminCmsStatusResponse } from "./api/cms-status.mjs";
@@ -99,7 +101,7 @@ import {
   getAdminCustomersExportCsv,
   getAdminCustomersExportBrevoCsv,
 } from "./api/customers-admin.mjs";
-import { postAdminTranslatePage, postAdminTranslatePost, getAdminTranslateStatusResponse } from "./api/translate-admin.mjs";
+import { postAdminTranslatePage, postAdminTranslatePost, postAdminTranslateProduct, getAdminTranslateStatusResponse } from "./api/translate-admin.mjs";
 import {
   getAdminPromotionsResponse,
   postAdminPromotion,
@@ -246,7 +248,9 @@ export async function handleApiRequest(request, context = {}) {
 
     if (pathname === "/api/catalog" && method === "GET") {
       const includeDrafts = url.searchParams.get("all") === "1";
-      const catalog = await getCatalogResponse({ includeDrafts });
+      const includeLocales = url.searchParams.get("includeLocales") === "1";
+      const locale = url.searchParams.get("locale") || undefined;
+      const catalog = await getCatalogResponse({ includeDrafts, locale, includeLocales });
       return jsonResponse(200, catalog);
     }
 
@@ -382,7 +386,7 @@ export async function handleApiRequest(request, context = {}) {
     requireAdmin(request);
 
     if (pathname === "/api/admin/catalog" && method === "GET") {
-      const catalog = await getCatalogResponse({ includeDrafts: true });
+      const catalog = await getCatalogResponse({ includeDrafts: true, includeLocales: true });
       return jsonResponse(200, catalog);
     }
 
@@ -747,6 +751,19 @@ export async function handleApiRequest(request, context = {}) {
       return jsonResponse(200, result);
     }
 
+    const adminCollectionProductsMatch = pathname.match(/^\/api\/admin\/collections\/([^/]+)\/products$/);
+    if (adminCollectionProductsMatch && method === "GET") {
+      const slug = decodeURIComponent(adminCollectionProductsMatch[1]);
+      const result = await getAdminCollectionProductsResponse(slug);
+      return jsonResponse(200, result);
+    }
+    if (adminCollectionProductsMatch && method === "PATCH") {
+      const slug = decodeURIComponent(adminCollectionProductsMatch[1]);
+      const body = await readJsonBody(request);
+      const result = await patchAdminCollectionProductsResponse(slug, body);
+      return jsonResponse(200, result);
+    }
+
     if (pathname === "/api/admin/customers" && method === "GET") {
       const result = await getAdminCustomersResponse(request);
       return jsonResponse(200, result);
@@ -793,6 +810,17 @@ export async function handleApiRequest(request, context = {}) {
     if (pathname === "/api/admin/translate-post" && method === "POST") {
       const body = await readJsonBody(request);
       const result = await postAdminTranslatePost(body);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/translate-product" && method === "GET") {
+      const status = await getAdminTranslateStatusResponse();
+      return jsonResponse(200, status);
+    }
+
+    if (pathname === "/api/admin/translate-product" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await postAdminTranslateProduct(body);
       return jsonResponse(200, result);
     }
 

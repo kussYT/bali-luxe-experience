@@ -139,3 +139,38 @@ export async function translatePostLocales({ sourceLocale, targetLocales, fields
 
   return { locales: out, provider: "deepl" };
 }
+
+export async function translateProductLocales({ sourceLocale, targetLocales, fields }) {
+  const source = sourceLocale?.trim().toLowerCase();
+  const targets = (targetLocales || []).filter((t) => t && t !== source);
+  if (!source || !SITE_LOCALE_CODES.includes(source)) {
+    const err = new Error("Invalid source locale");
+    err.status = 400;
+    throw err;
+  }
+  if (!fields?.name?.trim()) {
+    const err = new Error("Source name is required");
+    err.status = 400;
+    throw err;
+  }
+  if (!isTranslateConfigured()) {
+    const err = new Error("Traduction indisponible : configurez DEEPL_API_KEY.");
+    err.status = 503;
+    throw err;
+  }
+
+  const out = {};
+  for (const target of targets) {
+    if (!SITE_LOCALE_CODES.includes(target)) continue;
+    out[target] = {
+      name: await translateText(fields.name, source, target),
+      story: fields.story?.trim() ? await translateText(fields.story, source, target) : "",
+      seoTitle: fields.seoTitle?.trim() ? await translateText(fields.seoTitle, source, target) : "",
+      metaDescription: fields.metaDescription?.trim()
+        ? await translateText(fields.metaDescription, source, target)
+        : "",
+    };
+  }
+
+  return { locales: out, provider: "deepl" };
+}

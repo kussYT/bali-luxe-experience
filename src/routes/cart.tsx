@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCart, cartLineKey } from "@/lib/cart";
 import { useCurrency } from "@/lib/currency";
+import { useLocale } from "@/lib/i18n/locale-context";
 import { getUnitPrice, formatMoney } from "@/lib/pricing";
 import { useFulfillment } from "@/lib/fulfillment-context";
 import { maxCartQty } from "@/lib/warehouse-allocation";
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/cart")({
 function CartPage() {
   const { resolved, remove, updateQty } = useCart();
   const { country, shipping } = useCurrency();
+  const { locale } = useLocale();
   const { zones } = useFulfillment();
   const currency = country.currency;
 
@@ -88,7 +90,7 @@ function CartPage() {
                           <Plus className="size-3" />
                         </button>
                       </div>
-                      <p className="text-sm">{formatMoney(getUnitPrice(product, currency) * qty, currency)}</p>
+                      <p className="text-sm">{formatMoney(getUnitPrice(product, currency) * qty, currency, locale)}</p>
                     </div>
                   </div>
                 </li>
@@ -101,7 +103,7 @@ function CartPage() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>{formatMoney(total, currency)}</span>
+                <span>{formatMoney(total, currency, locale)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>Shipping</span>
@@ -110,7 +112,7 @@ function CartPage() {
             </div>
             <div className="border-t border-border pt-4 flex justify-between font-display text-xl">
               <span>Subtotal</span>
-              <span>{formatMoney(total, currency)}</span>
+              <span>{formatMoney(total, currency, locale)}</span>
             </div>
             <CheckoutButton className="btn-primary w-full" />
             <p className="text-caption text-center">Secure payment by Stripe</p>

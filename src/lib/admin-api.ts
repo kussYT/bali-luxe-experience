@@ -12,6 +12,7 @@ import type {
   FooterContent,
   HomepageContent,
   JournalPost,
+  ProductMessagesContent,
   SizingContent,
   AdminCollectionMeta,
 } from "@/lib/content-types";
@@ -30,8 +31,9 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
   return data as T;
 }
 
-export async function fetchPublicCatalog() {
-  return request<Catalog>("/api/catalog");
+export async function fetchPublicCatalog(locale?: string) {
+  const qs = locale ? `?locale=${encodeURIComponent(locale)}` : "";
+  return request<Catalog>(`/api/catalog${qs}`);
 }
 
 export async function fetchAdminCatalog() {
@@ -389,6 +391,7 @@ export async function fetchAdminSiteContent() {
     care: CareContent;
     sizing: SizingContent;
     footer: FooterContent;
+    productMessages: ProductMessagesContent;
     stored: {
       announcement: Partial<AnnouncementContent>;
       homepage: Partial<HomepageContent>;
@@ -398,6 +401,7 @@ export async function fetchAdminSiteContent() {
       care: Partial<CareContent>;
       sizing: Partial<SizingContent>;
       footer: Partial<FooterContent>;
+      productMessages: Partial<ProductMessagesContent>;
     };
     source: string;
   }>("/api/admin/content/site");
@@ -412,6 +416,7 @@ export async function updateAdminSiteContent(payload: {
   care?: CareContent;
   sizing?: SizingContent;
   footer?: FooterContent;
+  productMessages?: ProductMessagesContent;
 }) {
   return request<{
     announcement: AnnouncementContent;
@@ -422,6 +427,7 @@ export async function updateAdminSiteContent(payload: {
     care: CareContent;
     sizing: SizingContent;
     footer: FooterContent;
+    productMessages: ProductMessagesContent;
     stored: {
       announcement: Partial<AnnouncementContent>;
       homepage: Partial<HomepageContent>;
@@ -431,6 +437,7 @@ export async function updateAdminSiteContent(payload: {
       care: Partial<CareContent>;
       sizing: Partial<SizingContent>;
       footer: Partial<FooterContent>;
+      productMessages: Partial<ProductMessagesContent>;
     };
     source: string;
   }>("/api/admin/content/site", { method: "PATCH", body: JSON.stringify(payload) });
@@ -625,6 +632,36 @@ export async function autoTranslatePost(payload: {
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+export async function autoTranslateProduct(payload: {
+  sourceLocale: string;
+  targetLocales: string[];
+  fields: { name: string; story: string; seoTitle: string; metaDescription: string };
+}) {
+  return request<{
+    locales: Record<string, { name: string; story: string; seoTitle: string; metaDescription: string }>;
+    provider: string;
+  }>("/api/admin/translate-product", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function fetchCollectionProducts(slug: string) {
+  return request<{ products: { slug: string; name: string; isPrimary: boolean }[] }>(
+    `/api/admin/collections/${encodeURIComponent(slug)}/products`,
+  );
+}
+
+export async function patchCollectionProducts(
+  slug: string,
+  payload: { add?: string[]; remove?: string[] },
+) {
+  return request<{ products: { slug: string; name: string; isPrimary: boolean }[] }>(
+    `/api/admin/collections/${encodeURIComponent(slug)}/products`,
+    { method: "PATCH", body: JSON.stringify(payload) },
+  );
 }
 
 export type PromoRules = {

@@ -59,6 +59,19 @@ export function normalizeAdminProductBody(body) {
       : undefined,
     sortOrder: body.sortOrder != null ? Number(body.sortOrder) : undefined,
     variants: parseAdminVariants(body),
+    locales: normalizeProductLocales(body),
+  };
+}
+
+function normalizeProductLocales(body) {
+  if (body.locales && typeof body.locales === "object") return body.locales;
+  return {
+    en: {
+      name: body.name || "Untitled",
+      story: body.story || "",
+      seoTitle: typeof body.seoTitle === "string" ? body.seoTitle.trim() : "",
+      metaDescription: typeof body.metaDescription === "string" ? body.metaDescription.trim() : "",
+    },
   };
 }
 
@@ -268,8 +281,8 @@ export async function createProductInDb(rawBody) {
       `INSERT INTO products (
          slug, name, story, collection_id, subcategory, category, product_type,
          price_eur, compare_at_eur, price_usd, price_idr, status, featured, origin, default_warehouse, video_url,
-         seo_title, meta_description
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+         seo_title, meta_description, locales
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
        RETURNING id`,
       [
         p.slug,
@@ -290,6 +303,7 @@ export async function createProductInDb(rawBody) {
         p.videoUrl || "",
         p.seoTitle || "",
         p.metaDescription || "",
+        JSON.stringify(p.locales || {}),
       ],
     );
 
@@ -365,6 +379,7 @@ export async function updateProductInDb(currentSlug, rawBody) {
          video_url = $17,
          seo_title = $18,
          meta_description = $19,
+         locales = $20,
          updated_at = now()
        WHERE id = $1`,
       [
@@ -387,6 +402,7 @@ export async function updateProductInDb(currentSlug, rawBody) {
         p.videoUrl || "",
         p.seoTitle || "",
         p.metaDescription || "",
+        JSON.stringify(p.locales || {}),
       ],
     );
 

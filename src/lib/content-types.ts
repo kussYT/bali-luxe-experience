@@ -271,6 +271,14 @@ export type FooterContent = {
   copyright: string;
 };
 
+export type ProductMessagesContent = {
+  regionalUnavailable: string;
+  soldOut: string;
+  unavailableInRegion: string;
+  addToBag: string;
+  inStock: string;
+};
+
 export type SiteContent = {
   announcement: AnnouncementContent;
   homepage: HomepageContent;
@@ -280,6 +288,7 @@ export type SiteContent = {
   care: CareContent;
   sizing: SizingContent;
   footer: FooterContent;
+  productMessages: ProductMessagesContent;
 };
 
 export type JournalPostLocaleFields = {

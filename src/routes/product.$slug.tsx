@@ -4,6 +4,8 @@ import { Heart, Plus, Minus } from "lucide-react";
 import { useRegionalCatalog } from "@/lib/use-regional-catalog";
 import { useCart } from "@/lib/cart";
 import { useCurrency } from "@/lib/currency";
+import { useSiteContent } from "@/lib/content-context";
+import { fillProductMessage } from "@/lib/product-messages";
 import { ProductCard } from "@/components/site/ProductCard";
 import { PageMeta } from "@/components/site/PageMeta";
 import { VariantSelector } from "@/components/site/VariantSelector";
@@ -25,6 +27,7 @@ function ProductPage() {
   const product = publishedProducts.find((p) => p.slug === slug);
   const { add, toggleWish, wishlist } = useCart();
   const { format, shipping } = useCurrency();
+  const { productMessages } = useSiteContent();
   const [qty, setQty] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const wished = wishlist.includes(slug);
@@ -156,9 +159,10 @@ function ProductPage() {
 
           {!regionallyAvailable && (
             <p className="mt-6 text-sm text-muted-foreground border border-border rounded-sm p-4 max-w-md leading-relaxed">
-              Cette pièce est expédiée depuis notre atelier {warehouseLabel} uniquement et n&apos;est pas
-              disponible pour une livraison en {shipping.name}. Changez le pays de livraison dans le menu pour
-              voir les pièces proposées dans votre zone.
+              {fillProductMessage(productMessages.regionalUnavailable, {
+                warehouse: warehouseLabel,
+                country: shipping.name,
+              })}
             </p>
           )}
 
@@ -198,7 +202,11 @@ function ProductPage() {
               disabled={!canAdd || (hasVariants && !selectedVariant)}
               className="btn-primary flex-1 sm:flex-none disabled:opacity-45"
             >
-              {canAdd ? "Add to bag" : regionallyAvailable ? "Sold out" : "Unavailable in your region"}
+              {canAdd
+                ? productMessages.addToBag
+                : regionallyAvailable
+                  ? productMessages.soldOut
+                  : productMessages.unavailableInRegion}
             </button>
             <button
               type="button"
@@ -211,9 +219,16 @@ function ProductPage() {
           </div>
 
           <p className="mt-5 text-caption">
-            {maxQty > 0 ?
-              `${maxQty} in stock${selectedVariant && selectedVariant.title !== "Default" ? ` (${selectedVariant.title})` : ""} — ships from Paris & Bali`
-            : "Out of stock"}
+            {maxQty > 0
+              ? fillProductMessage(productMessages.inStock, {
+                  count: String(maxQty),
+                  variant:
+                    selectedVariant && selectedVariant.title !== "Default"
+                      ? ` (${selectedVariant.title})`
+                      : "",
+                  warehouse: warehouseLabel,
+                })
+              : productMessages.soldOut}
           </p>
         </div>
       </section>

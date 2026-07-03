@@ -166,9 +166,9 @@ function RootComponent() {
 
   return (
 
-    <CatalogProvider>
+    <LocaleProvider>
 
-      <LocaleProvider>
+    <CatalogProvider>
 
       <ContentProvider>
 
@@ -216,9 +216,9 @@ function RootComponent() {
 
       </ContentProvider>
 
-      </LocaleProvider>
-
     </CatalogProvider>
+
+    </LocaleProvider>
 
   );
 

@@ -1,4 +1,9 @@
 import { query, isDatabaseConfigured } from "./pool.mjs";
+import { resolveProductLocaleBlock } from "../i18n-locales.mjs";
+
+function parseProductLocales(raw) {
+  return raw && typeof raw === "object" ? raw : {};
+}
 
 function mapOriginToWarehouse(origin) {
   return origin === "France" ? "france" : "bali";
@@ -18,7 +23,7 @@ function buildVariantSlug(productSlug, variantTitle, index) {
 /**
  * Fetch full catalog from Postgres for API + storefront.
  */
-export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
+export async function fetchCatalogFromDb({ includeDrafts = false, locale, includeLocales = false } = {}) {
   if (!isDatabaseConfigured()) {
     const err = new Error("Database not configured");
     err.status = 503;
@@ -59,6 +64,7 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
       p.seo_title,
       p.meta_description,
       p.sort_order,
+      p.locales,
       c.slug AS collection_slug,
       c.name AS collection_name
     FROM products p
@@ -207,12 +213,18 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
     const extraSlugs = extraCollectionsByProduct.get(p.id) ?? [];
     const primarySlug = p.collection_slug || "shop";
     const allSlugs = [...new Set([primarySlug, ...extraSlugs])];
+    const locales = parseProductLocales(p.locales);
+    const resolved = resolveProductLocaleBlock(locales, locale);
+    const name = resolved?.block?.name?.trim() || p.name;
+    const story = resolved?.block?.story?.trim() || p.story;
+    const seoTitle = resolved?.block?.seoTitle?.trim() || p.seo_title?.trim() || name;
+    const metaDescription = resolved?.block?.metaDescription?.trim() || p.meta_description?.trim() || "";
 
-    return {
+    const product = {
       id: p.id,
       slug: p.slug,
-      name: p.name,
-      story: p.story,
+      name,
+      story,
       collection: p.collection_name || "Shop",
       collectionSlug: primarySlug,
       collectionSlugs: allSlugs.length > 1 ? allSlugs : extraSlugs.length ? extraSlugs : undefined,
@@ -228,8 +240,8 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
       imageFocal: focal,
       imageFocals: imageFocals.length ? imageFocals : undefined,
       videoUrl: p.video_url || undefined,
-      seoTitle: p.seo_title?.trim() || undefined,
-      metaDescription: p.meta_description?.trim() || undefined,
+      seoTitle: seoTitle || undefined,
+      metaDescription: metaDescription || undefined,
       details: p.product_type ? [p.product_type] : [],
       tags: [],
       stock,
@@ -244,6 +256,9 @@ export async function fetchCatalogFromDb({ includeDrafts = false } = {}) {
       defaultWarehouse: p.default_warehouse,
       variants,
     };
+
+    if (includeLocales) product.locales = locales;
+    return product;
   });
 
   return {

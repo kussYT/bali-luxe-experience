@@ -3,6 +3,8 @@ import type { Catalog, Collection, Product } from "@/lib/catalog-types";
 import fallbackCatalog from "@/data/catalog.json";
 import { fetchPublicCatalog } from "@/lib/admin-api";
 import { sortProductsForDisplay } from "@/lib/sort-products";
+import { useLocale } from "@/lib/i18n/locale-context";
+import { applyProductLocale } from "@/lib/product-locale";
 
 const PENDING_CATALOG: Catalog = { products: [], collections: [] };
 
@@ -24,6 +26,7 @@ function normalizeFallback(): Catalog {
 }
 
 export function CatalogProvider({ children }: { children: ReactNode }) {
+  const { locale } = useLocale();
   const [catalog, setCatalog] = useState<Catalog>(PENDING_CATALOG);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +34,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     try {
       setLoading(true);
-      const live = await fetchPublicCatalog();
+      const live = await fetchPublicCatalog(locale);
       setCatalog(live);
       setError(null);
     } catch (e) {
@@ -40,15 +43,18 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     refresh();
   }, [refresh]);
 
   const publishedProducts = useMemo(
-    () => sortProductsForDisplay(catalog.products.filter((p) => p.status === "published")),
-    [catalog.products],
+    () =>
+      sortProductsForDisplay(
+        catalog.products.filter((p) => p.status === "published").map((p) => applyProductLocale(p, locale)),
+      ),
+    [catalog.products, locale],
   );
 
   const featuredProducts = useMemo(() => {

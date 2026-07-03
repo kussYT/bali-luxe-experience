@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Search } from "lucide-react";
 import { deleteProduct, fetchAdminCatalog } from "@/lib/admin-api";
 import type { Catalog, Product } from "@/lib/catalog-types";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,12 +27,26 @@ function AdminProductsPage() {
   const { refresh: refreshPublic } = useCatalog();
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
 
   const load = () => fetchAdminCatalog().then(setCatalog);
 
   useEffect(() => {
     load();
   }, []);
+
+  const filteredProducts = useMemo(() => {
+    const products = catalog?.products ?? [];
+    const needle = query.trim().toLowerCase();
+    if (!needle) return products;
+    return products.filter((p) => {
+      const haystack = [p.name, p.slug, p.collection, p.subcategory, p.category, p.productType]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(needle);
+    });
+  }, [catalog?.products, query]);
 
   const remove = async (product: Product) => {
     await deleteProduct(product.slug);
@@ -62,6 +78,18 @@ function AdminProductsPage() {
         </p>
       )}
 
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <Input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Rechercher par nom, slug, collection…"
+          className="pl-9"
+          aria-label="Rechercher des produits"
+        />
+      </div>
+
       <div className="border border-border overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left">
@@ -75,7 +103,7 @@ function AdminProductsPage() {
             </tr>
           </thead>
           <tbody>
-            {catalog?.products.map((p) => (
+            {filteredProducts.map((p) => (
               <tr key={p.slug} className="border-t border-border">
                 <td className="p-3">
                   <div className="flex items-center gap-3">
@@ -128,6 +156,9 @@ function AdminProductsPage() {
             ))}
           </tbody>
         </table>
+        {filteredProducts.length === 0 && (
+          <p className="p-6 text-sm text-muted-foreground">Aucun produit ne correspond à cette recherche.</p>
+        )}
       </div>
     </div>
   );

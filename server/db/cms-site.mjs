@@ -10,6 +10,7 @@ import {
   mergeCare,
   mergeSizing,
   mergeFooter,
+  mergeProductMessages,
 } from "../content-defaults.mjs";
 
 export async function getAnnouncement() {
@@ -65,8 +66,14 @@ export async function getFooterContent() {
   return mergeFooter(stored);
 }
 
+export async function getProductMessagesContent() {
+  const stored = await getSetting("productMessages", null);
+  return mergeProductMessages(stored);
+}
+
 export async function getPublicSiteContent() {
-  const [announcement, homepage, about, findUs, contact, care, sizing, footer] = await Promise.all([
+  const [announcement, homepage, about, findUs, contact, care, sizing, footer, productMessages] =
+    await Promise.all([
     getAnnouncement(),
     getHomepageContent(),
     getAboutContent(),
@@ -75,6 +82,7 @@ export async function getPublicSiteContent() {
     getCareContent(),
     getSizingContent(),
     getFooterContent(),
+    getProductMessagesContent(),
   ]);
   return {
     announcement,
@@ -85,6 +93,7 @@ export async function getPublicSiteContent() {
     care,
     sizing,
     footer,
+    productMessages,
     defaults: { homepage: DEFAULT_HOMEPAGE },
   };
 }
@@ -98,6 +107,7 @@ export async function getAdminSiteContent() {
   const storedCare = (await getSetting("care", null)) || {};
   const storedSizing = (await getSetting("sizing", null)) || {};
   const storedFooter = (await getSetting("footer", null)) || {};
+  const storedProductMessages = (await getSetting("productMessages", null)) || {};
   return {
     announcement: mergeAnnouncement(storedAnnouncement),
     homepage: mergeHomepage(storedHomepage),
@@ -107,6 +117,7 @@ export async function getAdminSiteContent() {
     care: mergeCare(storedCare),
     sizing: mergeSizing(storedSizing),
     footer: mergeFooter(storedFooter),
+    productMessages: mergeProductMessages(storedProductMessages),
     stored: {
       announcement: storedAnnouncement,
       homepage: storedHomepage,
@@ -116,6 +127,7 @@ export async function getAdminSiteContent() {
       care: storedCare,
       sizing: storedSizing,
       footer: storedFooter,
+      productMessages: storedProductMessages,
     },
   };
 }
@@ -144,6 +156,9 @@ export async function patchAdminSiteContent(body) {
   }
   if (body.footer) {
     await setSetting("footer", body.footer);
+  }
+  if (body.productMessages) {
+    await setSetting("productMessages", body.productMessages);
   }
   return getAdminSiteContent();
 }

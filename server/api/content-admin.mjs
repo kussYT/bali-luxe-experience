@@ -13,9 +13,9 @@ import {
   seedPages,
   getPageBySlug,
 } from "../db/pages.mjs";
-import { listCollectionsAdmin, updateCollection, reorderCollections } from "../db/collections-admin.mjs";
+import { listCollectionsAdmin, updateCollection, reorderCollections, listCollectionProductSlugs, patchCollectionProducts } from "../db/collections-admin.mjs";
 import { getSetting, setSetting } from "../db/settings-store.mjs";
-import { DEFAULT_HOMEPAGE, DEFAULT_ANNOUNCEMENT, DEFAULT_ABOUT, DEFAULT_FIND_US, DEFAULT_CONTACT, DEFAULT_CARE, DEFAULT_SIZING, DEFAULT_FOOTER } from "../content-defaults.mjs";
+import { DEFAULT_HOMEPAGE, DEFAULT_ANNOUNCEMENT, DEFAULT_ABOUT, DEFAULT_FIND_US, DEFAULT_CONTACT, DEFAULT_CARE, DEFAULT_SIZING, DEFAULT_FOOTER, DEFAULT_PRODUCT_MESSAGES } from "../content-defaults.mjs";
 
 export async function getAdminContentResponse() {
   const data = await getAdminSiteContent();
@@ -93,6 +93,19 @@ export async function reorderAdminCollectionsResponse(body) {
   return { collections, source: "postgres" };
 }
 
+export async function getAdminCollectionProductsResponse(slug) {
+  const products = await listCollectionProductSlugs(slug);
+  return { products, source: "postgres" };
+}
+
+export async function patchAdminCollectionProductsResponse(slug, body) {
+  const products = await patchCollectionProducts(slug, {
+    add: Array.isArray(body.add) ? body.add : [],
+    remove: Array.isArray(body.remove) ? body.remove : [],
+  });
+  return { products, source: "postgres" };
+}
+
 export async function seedCmsContent() {
   const [posts, pages] = await Promise.all([seedPosts(), seedPages()]);
   const hasHomepage = await getSetting("homepage", null);
@@ -111,5 +124,7 @@ export async function seedCmsContent() {
   if (!hasSizing) await setSetting("sizing", DEFAULT_SIZING);
   const hasFooter = await getSetting("footer", null);
   if (!hasFooter) await setSetting("footer", DEFAULT_FOOTER);
+  const hasProductMessages = await getSetting("productMessages", null);
+  if (!hasProductMessages) await setSetting("productMessages", DEFAULT_PRODUCT_MESSAGES);
   return { posts, pages, source: "postgres" };
 }

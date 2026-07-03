@@ -24,3 +24,14 @@ export function resolvePageLocaleBlock(locales, locale) {
 export function resolvePostLocaleBlock(locales, locale) {
   return resolvePageLocaleBlock(locales, locale);
 }
+
+/** Product blocks use name, story, seoTitle, metaDescription. */
+export function resolveProductLocaleBlock(locales, locale) {
+  const map = locales && typeof locales === "object" ? locales : {};
+  const order = locale ? [locale, ...FALLBACK_CHAIN.filter((c) => c !== locale)] : FALLBACK_CHAIN;
+  for (const code of order) {
+    const block = map[code];
+    if (block?.name?.trim()) return { code, block };
+  }
+  return null;
+}

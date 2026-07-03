@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { CmsPage, HomepageContent, JournalPost, SiteContent } from "@/lib/content-types";
 import { useLocale } from "@/lib/i18n/locale-context";
-import { FALLBACK_ABOUT, FALLBACK_FIND_US, FALLBACK_CONTACT, FALLBACK_CARE, FALLBACK_SIZING, FALLBACK_FOOTER } from "@/lib/cms-fallbacks";
+import { FALLBACK_ABOUT, FALLBACK_FIND_US, FALLBACK_CONTACT, FALLBACK_CARE, FALLBACK_SIZING, FALLBACK_FOOTER, FALLBACK_PRODUCT_MESSAGES } from "@/lib/cms-fallbacks";
 import {
   BINGIN_SOUNDS,
   CRAFT_DETAILS,
@@ -76,6 +76,7 @@ const PENDING_SITE: SiteContent = {
   care: FALLBACK_CARE,
   sizing: FALLBACK_SIZING,
   footer: FALLBACK_FOOTER,
+  productMessages: FALLBACK_PRODUCT_MESSAGES,
 };
 
 const FALLBACK_SITE: SiteContent = {
@@ -184,6 +185,7 @@ const FALLBACK_SITE: SiteContent = {
   care: FALLBACK_CARE,
   sizing: FALLBACK_SIZING,
   footer: FALLBACK_FOOTER,
+  productMessages: FALLBACK_PRODUCT_MESSAGES,
 };
 
 const FALLBACK_POSTS: JournalPost[] = JOURNAL_ARTICLES.map((a) => ({ ...a }));
@@ -198,6 +200,7 @@ type ContentContextValue = {
   care: SiteContent["care"];
   sizing: SiteContent["sizing"];
   footer: SiteContent["footer"];
+  productMessages: SiteContent["productMessages"];
   posts: JournalPost[];
   loading: boolean;
   error: string | null;
@@ -237,6 +240,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           care: SiteContent["care"];
           sizing: SiteContent["sizing"];
           footer: SiteContent["footer"];
+          productMessages: SiteContent["productMessages"];
         }>("/api/content/site"),
         fetchJson<{ posts: JournalPost[] }>(`/api/content/posts${postsQs}`),
       ]);
@@ -249,6 +253,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         care: siteRes.care,
         sizing: siteRes.sizing,
         footer: siteRes.footer,
+        productMessages: siteRes.productMessages,
       });
       setPosts(postsRes.posts);
       postCacheRef.current = {};
@@ -307,6 +312,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       care: site.care,
       sizing: site.sizing,
       footer: site.footer,
+      productMessages: site.productMessages,
       posts,
       loading,
       error,

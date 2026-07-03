@@ -32,6 +32,13 @@ export type Collection = {
   hidden?: boolean;
 };
 
+export type ProductLocaleFields = {
+  name: string;
+  story: string;
+  seoTitle: string;
+  metaDescription: string;
+};
+
 export type Product = {
   /** Postgres UUID — present when loaded from database */
   id?: string;
@@ -74,6 +81,8 @@ export type Product = {
   /** SEO — empty uses product name for title */
   seoTitle?: string;
   metaDescription?: string;
+  /** Translations — admin API; resolved on storefront per locale */
+  locales?: Partial<Record<import("@/lib/i18n/messages").Locale, ProductLocaleFields>>;
 };
 
 export type Catalog = {

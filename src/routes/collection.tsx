@@ -44,7 +44,9 @@ export const Route = createFileRoute("/collection")({
 
 function Collection() {
   const { c, cat, sub, shop, sale, q } = Route.useSearch();
-  const { regionalProducts, collections } = useRegionalCatalog();
+  const { regionalProducts, publishedProducts, collections } = useRegionalCatalog();
+
+  const catalogPool = sale === "true" || q ? publishedProducts : regionalProducts;
 
   const collectionProducts = useMemo(() => {
     if (!c) return [];
@@ -76,15 +78,15 @@ function Collection() {
   }, [c, collectionProducts, collections]);
 
   const filtered = useMemo(() => {
-    let list = regionalProducts;
+    let list = catalogPool;
     if (c) list = list.filter((p) => productInCollection(p, c));
     if (sub) list = list.filter((p) => productInCollection(p, sub));
     if (cat) list = list.filter((p) => p.category === cat);
     if (shop) list = list.filter((p) => productMatchesShopCategory(p, shop));
     if (sale === "true") list = list.filter((p) => p.onSale);
-    if (q) list = list.filter((p) => productMatchesQuery(p, q));
+    if (q) list = list.filter((p) => productMatchesQuery(p, q, collections));
     return sortProductsForDisplay(list);
-  }, [regionalProducts, c, sub, cat, shop, sale, q]);
+  }, [catalogPool, c, sub, cat, shop, sale, q]);
 
   const activeCollection = c ? collections.find((col) => col.slug === c) : undefined;
   const inCollectionView = Boolean(c) && sale !== "true" && !q;

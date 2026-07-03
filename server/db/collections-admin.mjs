@@ -99,3 +99,118 @@ export async function reorderCollections(orders) {
   });
   return listCollectionsAdmin();
 }
+
+export async function listCollectionProductSlugs(collectionSlug) {
+  if (!isDatabaseConfigured()) {
+    const err = new Error("DATABASE_URL required for collections admin");
+    err.status = 503;
+    throw err;
+  }
+  const { rows: colRows } = await query(`SELECT id FROM collections WHERE slug = $1`, [collectionSlug]);
+  if (!colRows.length) {
+    const err = new Error("Collection not found");
+    err.status = 404;
+    throw err;
+  }
+  const collectionId = colRows[0].id;
+  const { rows } = await query(
+    `
+    SELECT DISTINCT p.slug, p.name, c.slug AS primary_slug
+    FROM products p
+    LEFT JOIN collections c ON c.id = p.collection_id
+    LEFT JOIN product_collection_memberships pcm ON pcm.product_id = p.id
+    WHERE p.collection_id = $1 OR pcm.collection_id = $1
+    ORDER BY p.name ASC
+    `,
+    [collectionId],
+  );
+  return rows.map((r) => ({
+    slug: r.slug,
+    name: r.name,
+    isPrimary: r.primary_slug === collectionSlug,
+  }));
+}
+
+async function getCollectionId(client, slug) {
+  const { rows } = await client.query(`SELECT id FROM collections WHERE slug = $1`, [slug]);
+  if (!rows.length) {
+    const err = new Error("Collection not found");
+    err.status = 404;
+    throw err;
+  }
+  return rows[0].id;
+}
+
+async function getShopCollectionId(client) {
+  const { rows } = await client.query(`SELECT id FROM collections WHERE slug = 'shop' LIMIT 1`);
+  if (rows.length) return rows[0].id;
+  const { rows: created } = await client.query(
+    `INSERT INTO collections (slug, name, season) VALUES ('shop', 'Shop', '') RETURNING id`,
+  );
+  return created[0].id;
+}
+
+export async function patchCollectionProducts(collectionSlug, { add = [], remove = [] } = {}) {
+  if (!isDatabaseConfigured()) {
+    const err = new Error("DATABASE_URL required for collections admin");
+    err.status = 503;
+    throw err;
+  }
+  const addSlugs = [...new Set((add || []).map((s) => String(s).trim()).filter(Boolean))];
+  const removeSlugs = [...new Set((remove || []).map((s) => String(s).trim()).filter(Boolean))];
+
+  await withTransaction(async (client) => {
+    const collectionId = await getCollectionId(client, collectionSlug);
+    const shopId = await getShopCollectionId(client);
+
+    for (const productSlug of addSlugs) {
+      const { rows: products } = await client.query(`SELECT id, collection_id FROM products WHERE slug = $1`, [
+        productSlug,
+      ]);
+      if (!products.length) continue;
+      const productId = products[0].id;
+      if (products[0].collection_id === collectionId) continue;
+
+      const { rows: membership } = await client.query(
+        `SELECT 1 FROM product_collection_memberships WHERE product_id = $1 AND collection_id = $2`,
+        [productId, collectionId],
+      );
+      if (membership.length) continue;
+
+      if (!products[0].collection_id || products[0].collection_id === shopId) {
+        await client.query(`UPDATE products SET collection_id = $2, updated_at = now() WHERE id = $1`, [
+          productId,
+          collectionId,
+        ]);
+      } else {
+        await client.query(
+          `INSERT INTO product_collection_memberships (product_id, collection_id) VALUES ($1, $2)
+           ON CONFLICT DO NOTHING`,
+          [productId, collectionId],
+        );
+      }
+    }
+
+    for (const productSlug of removeSlugs) {
+      const { rows: products } = await client.query(`SELECT id, collection_id FROM products WHERE slug = $1`, [
+        productSlug,
+      ]);
+      if (!products.length) continue;
+      const productId = products[0].id;
+
+      if (products[0].collection_id === collectionId) {
+        await client.query(`UPDATE products SET collection_id = $2, updated_at = now() WHERE id = $1`, [
+          productId,
+          shopId,
+        ]);
+      }
+
+      await client.query(
+        `DELETE FROM product_collection_memberships WHERE product_id = $1 AND collection_id = $2`,
+        [productId, collectionId],
+      );
+    }
+  });
+
+  return listCollectionProductSlugs(collectionSlug);
+}

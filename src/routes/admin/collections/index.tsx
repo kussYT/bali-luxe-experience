@@ -1,6 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { fetchAdminCollections, reorderAdminCollections, updateAdminCollection } from "@/lib/admin-api";
+import { useEffect, useMemo, useState } from "react";
+import {
+  fetchAdminCollections,
+  fetchAdminCatalog,
+  fetchCollectionProducts,
+  patchCollectionProducts,
+  reorderAdminCollections,
+  updateAdminCollection,
+} from "@/lib/admin-api";
 import type { AdminCollectionMeta } from "@/lib/content-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +15,112 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+
+function CollectionProductsPanel({ slug }: { slug: string }) {
+  const [products, setProducts] = useState<{ slug: string; name: string; isPrimary: boolean }[]>([]);
+  const [catalog, setCatalog] = useState<{ slug: string; name: string }[]>([]);
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    Promise.all([fetchCollectionProducts(slug), fetchAdminCatalog()])
+      .then(([res, cat]) => {
+        setProducts(res.products);
+        setCatalog(cat.products.map((p) => ({ slug: p.slug, name: p.name })));
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load products"))
+      .finally(() => setLoading(false));
+  }, [slug]);
+
+  const suggestions = useMemo(() => {
+    const inCollection = new Set(products.map((p) => p.slug));
+    const needle = query.trim().toLowerCase();
+    return catalog
+      .filter((p) => !inCollection.has(p.slug))
+      .filter((p) => !needle || p.name.toLowerCase().includes(needle) || p.slug.includes(needle))
+      .slice(0, 8);
+  }, [catalog, products, query]);
+
+  async function addProduct(productSlug: string) {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await patchCollectionProducts(slug, { add: [productSlug] });
+      setProducts(res.products);
+      setQuery("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Add failed");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function removeProduct(productSlug: string) {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await patchCollectionProducts(slug, { remove: [productSlug] });
+      setProducts(res.products);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Remove failed");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) return <p className="text-sm text-muted-foreground">Chargement des produits…</p>;
+
+  return (
+    <div className="sm:col-span-2 space-y-3 border-t border-border pt-4">
+      <p className="text-sm font-medium">Produits dans cette collection</p>
+      {error && <p className="text-destructive text-sm">{error}</p>}
+      <ul className="space-y-2">
+        {products.map((p) => (
+          <li key={p.slug} className="flex items-center justify-between gap-3 text-sm border border-border px-3 py-2">
+            <div className="min-w-0">
+              <Link to="/admin/products/$slug" params={{ slug: p.slug }} className="link-underline truncate block">
+                {p.name}
+              </Link>
+              <p className="text-xs text-muted-foreground">{p.slug}{p.isPrimary ? " · collection principale" : ""}</p>
+            </div>
+            <Button type="button" variant="outline" size="icon" className="size-8 shrink-0" onClick={() => removeProduct(p.slug)} disabled={saving}>
+              <X className="size-4" />
+            </Button>
+          </li>
+        ))}
+        {products.length === 0 && <p className="text-sm text-muted-foreground">Aucun produit dans cette collection.</p>}
+      </ul>
+      <div className="space-y-2">
+        <Label>Ajouter un produit</Label>
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Rechercher par nom ou slug…"
+        />
+        {query.trim() && suggestions.length > 0 && (
+          <ul className="border border-border divide-y divide-border">
+            {suggestions.map((p) => (
+              <li key={p.slug}>
+                <button
+                  type="button"
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                  onClick={() => addProduct(p.slug)}
+                  disabled={saving}
+                >
+                  {p.name} <span className="text-muted-foreground">({p.slug})</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/admin/collections/")({
   head: () => ({ meta: [{ title: "Collections — Bingin Diaries Admin" }] }),
@@ -192,6 +304,7 @@ function AdminCollectionsPage() {
                   {savingSlug === col.slug ? "Enregistrement…" : "Enregistrer"}
                 </Button>
               </div>
+              <CollectionProductsPanel slug={col.slug} />
             </CardContent>
           </Card>
         ))}
