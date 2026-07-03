@@ -10,6 +10,8 @@ import { CartProvider } from "@/lib/cart";
 
 import { CatalogProvider } from "@/lib/catalog-context";
 
+import { FulfillmentProvider } from "@/lib/fulfillment-context";
+
 import { ContentProvider } from "@/lib/content-context";
 
 import { CookieConsentProvider } from "@/lib/cookie-consent-context";
@@ -174,6 +176,8 @@ function RootComponent() {
 
       <CurrencyProvider>
 
+        <FulfillmentProvider>
+
         <CartProvider>
 
           <CookieConsentProvider>
@@ -203,6 +207,8 @@ function RootComponent() {
           </CookieConsentProvider>
 
         </CartProvider>
+
+        </FulfillmentProvider>
 
       </CurrencyProvider>
 

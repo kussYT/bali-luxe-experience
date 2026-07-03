@@ -17,6 +17,13 @@ import { ImageFocalPicker } from "@/components/admin/ImageFocalPicker";
 import { AdminImagePreview } from "@/components/admin/AdminImagePreview";
 import type { UploadProgress } from "@/lib/upload-admin-files";
 import { UPLOADS_UNAVAILABLE_MESSAGE, useUploadsAvailable } from "@/lib/use-uploads-available";
+import {
+  PRODUCT_COLLECTIONS,
+  SHOP_CATEGORIES,
+  applyShopCategoryToProduct,
+  getCollectionBySlug,
+  shopCategoryFromSubcategory,
+} from "@/lib/catalog-taxonomy";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 
 export type VariantFormRow = {
@@ -172,7 +179,7 @@ export function ProductForm({
   };
 
   const handleCollectionPick = (slug: string) => {
-    const col = collections.find((c) => c.slug === slug);
+    const col = getCollectionBySlug(slug) ?? collections.find((c) => c.slug === slug);
     if (!col) return;
     setValues((prev) => ({
       ...prev,
@@ -181,6 +188,20 @@ export function ProductForm({
       collectionSlugs: prev.collectionSlugs.filter((s) => s !== col.slug),
     }));
   };
+
+  const handleShopCategoryPick = (slug: string) => {
+    const applied = applyShopCategoryToProduct(slug);
+    setValues((prev) => ({
+      ...prev,
+      subcategory: applied.subcategory,
+      category: applied.category,
+      featured: applied.featured ?? prev.featured,
+    }));
+  };
+
+  const shopCategorySlug =
+    shopCategoryFromSubcategory(values.subcategory) || values.subcategory || "";
+  const extraCollections = PRODUCT_COLLECTIONS.filter((c) => c.slug !== values.collectionSlug);
 
   const toggleExtraCollection = (slug: string) => {
     setValues((prev) => {
@@ -424,13 +445,13 @@ export function ProductForm({
 
       <div className="grid md:grid-cols-2 gap-5">
         <div className="space-y-2">
-          <Label>Category (collection)</Label>
+          <Label>Collection</Label>
           <Select value={values.collectionSlug} onValueChange={handleCollectionPick}>
             <SelectTrigger>
-              <SelectValue placeholder="Choose collection" />
+              <SelectValue placeholder="Choisir une collection" />
             </SelectTrigger>
             <SelectContent>
-              {collections.map((c) => (
+              {PRODUCT_COLLECTIONS.map((c) => (
                 <SelectItem key={c.slug} value={c.slug}>
                   {c.name}
                 </SelectItem>
@@ -439,56 +460,50 @@ export function ProductForm({
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="subcategory">Subcategory</Label>
-          <Input
-            id="subcategory"
-            value={values.subcategory}
-            onChange={(e) => set("subcategory", e.target.value)}
-            placeholder="e.g. Wide brim, Kids…"
-          />
+          <Label>Shop by category</Label>
+          <Select value={shopCategorySlug || undefined} onValueChange={handleShopCategoryPick}>
+            <SelectTrigger>
+              <SelectValue placeholder="Choisir une catégorie boutique" />
+            </SelectTrigger>
+            <SelectContent>
+              {SHOP_CATEGORIES.map((c) => (
+                <SelectItem key={c.slug} value={c.slug}>
+                  {c.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Détermine l&apos;affichage dans le menu Shop → Shop by category.
+          </p>
         </div>
       </div>
 
-      {collections.filter((c) => c.slug !== values.collectionSlug).length > 0 && (
+      {extraCollections.length > 0 && (
         <div className="space-y-3 border border-border p-5">
           <div>
-            <Label>Also appears in</Label>
+            <Label>Aussi dans (collections secondaires)</Label>
             <p className="text-xs text-muted-foreground mt-1">
-              Extra collections for navigation (e.g. Special Occasions). Primary collection above stays unchanged.
+              Optionnel — le produit apparaît aussi dans ces collections.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            {collections
-              .filter((c) => c.slug !== values.collectionSlug)
-              .map((col) => (
-                <label key={col.slug} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={values.collectionSlugs.includes(col.slug)}
-                    onChange={() => toggleExtraCollection(col.slug)}
-                    className="size-4"
-                  />
-                  {col.name}
-                </label>
-              ))}
+            {extraCollections.map((col) => (
+              <label key={col.slug} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={values.collectionSlugs.includes(col.slug)}
+                  onChange={() => toggleExtraCollection(col.slug)}
+                  className="size-4"
+                />
+                {col.name}
+              </label>
+            ))}
           </div>
         </div>
       )}
 
-      <div className="grid md:grid-cols-3 gap-5">
-        <div className="space-y-2">
-          <Label>Shop category</Label>
-          <Select value={values.category} onValueChange={(v) => set("category", v as ProductCategory)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="hats">Hats</SelectItem>
-              <SelectItem value="accessories">Accessories</SelectItem>
-              <SelectItem value="bags">Bags</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="grid md:grid-cols-2 gap-5">
         <div className="space-y-2">
           <Label>Status</Label>
           <Select value={values.status} onValueChange={(v) => set("status", v as ProductStatus)}>

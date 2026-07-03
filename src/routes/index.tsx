@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCatalog } from "@/lib/catalog-context";
+import { useRegionalCatalog } from "@/lib/use-regional-catalog";
 import { useSiteContent } from "@/lib/content-context";
 import { PageMeta } from "@/components/site/PageMeta";
 import { ProductCard } from "@/components/site/ProductCard";
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  const { featuredProducts, loading: catalogLoading } = useCatalog();
+  const { regionalFeaturedProducts, loading: catalogLoading } = useRegionalCatalog();
   const { homepage } = useSiteContent();
   const featured = homepage.featuredSection;
   const seo = homepage.seo ?? {
@@ -58,7 +58,7 @@ function Home() {
         </Reveal>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-10 md:gap-x-5 md:gap-y-14">
           {!catalogLoading &&
-            featuredProducts.map((p, i) => (
+            regionalFeaturedProducts.map((p, i) => (
               <ProductCard key={p.slug} product={p} index={i} />
             ))}
         </div>

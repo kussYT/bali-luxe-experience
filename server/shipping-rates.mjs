@@ -1,5 +1,6 @@
 import { SHIPPING_FLAT } from "./pricing.mjs";
 import { getSetting, setSetting } from "./db/settings-store.mjs";
+import { shippingPriceForCountry as matrixPrice } from "./db/country-shipping.mjs";
 
 export const DEFAULT_SHIPPING_SETTINGS = {
   zones: [
@@ -32,6 +33,16 @@ export async function saveShippingSettings(settings) {
 }
 
 export async function shippingAmountForCountry(countryCode, currency) {
+  const countryShipping = await getSetting("countryShipping", null);
+  if (countryShipping?.countries && Object.keys(countryShipping.countries).length > 0) {
+    const price = await matrixPrice(countryCode, currency);
+    if (price == null) {
+      const err = new Error(`Livraison non disponible pour ce pays (${countryCode})`);
+      err.status = 400;
+      throw err;
+    }
+    return price;
+  }
   const settings = await getShippingSettings();
   const code = (countryCode || "FR").toUpperCase();
   let zone = settings.zones.find((z) => z.countries.includes(code));

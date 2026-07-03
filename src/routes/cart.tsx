@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCart, cartLineKey } from "@/lib/cart";
 import { useCurrency } from "@/lib/currency";
 import { getUnitPrice, formatMoney } from "@/lib/pricing";
+import { useFulfillment } from "@/lib/fulfillment-context";
 import { maxCartQty } from "@/lib/warehouse-allocation";
 import { CheckoutButton } from "@/components/site/CheckoutButton";
 import { Minus, Plus, X } from "lucide-react";
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/cart")({
 function CartPage() {
   const { resolved, remove, updateQty } = useCart();
   const { country, shipping } = useCurrency();
+  const { zones } = useFulfillment();
   const currency = country.currency;
 
   const total = resolved.reduce(
@@ -37,7 +39,7 @@ function CartPage() {
         <div className="grid lg:grid-cols-[1fr_minmax(280px,360px)] gap-8 lg:gap-16 mt-10 md:mt-16">
           <ul className="divide-y divide-border">
             {resolved.map(({ product, variant, qty }) => {
-              const max = maxCartQty(product, shipping.code, variant?.id);
+              const max = maxCartQty(product, shipping.code, variant?.id, zones);
               const lineKey = cartLineKey({ slug: product.slug, variantId: variant?.id });
 
               return (

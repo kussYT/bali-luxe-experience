@@ -1,18 +1,23 @@
 import type { Product, ProductVariant } from "@/lib/catalog-types";
+import type { FulfillmentZones } from "@/lib/fulfillment-zones-types";
 import { maxCartQty } from "@/lib/warehouse-allocation";
+import { DEFAULT_FULFILLMENT_ZONES } from "@/lib/fulfillment-zones-default";
 
 type VariantSelectorProps = {
   product: Product;
   selectedId: string | null;
   countryCode: string;
+  zones?: FulfillmentZones;
   onSelect: (variantId: string) => void;
 };
 
-function variantStock(variant: ProductVariant) {
-  return (variant.inventory?.france ?? 0) + (variant.inventory?.bali ?? 0);
-}
-
-export function VariantSelector({ product, selectedId, countryCode, onSelect }: VariantSelectorProps) {
+export function VariantSelector({
+  product,
+  selectedId,
+  countryCode,
+  zones = DEFAULT_FULFILLMENT_ZONES,
+  onSelect,
+}: VariantSelectorProps) {
   const variants = product.variants ?? [];
   if (variants.length <= 1) return null;
 
@@ -23,8 +28,7 @@ export function VariantSelector({ product, selectedId, countryCode, onSelect }: 
       <p className="text-eyebrow text-muted-foreground mb-3">{optionLabel}</p>
       <div className="flex flex-wrap gap-2">
         {variants.map((variant) => {
-          const stock = variantStock(variant);
-          const max = maxCartQty(product, countryCode, variant.id);
+          const max = maxCartQty(product, countryCode, variant.id, zones);
           const disabled = max < 1;
           const selected = selectedId === variant.id;
 
@@ -42,7 +46,7 @@ export function VariantSelector({ product, selectedId, countryCode, onSelect }: 
                     : "border-border hover:border-foreground"
               }`}
               aria-pressed={selected}
-              title={disabled ? "Out of stock" : stock <= 3 ? `${stock} left` : undefined}
+              title={disabled ? "Out of stock in your region" : max <= 3 ? `${max} left` : undefined}
             >
               {variant.option1 || variant.title}
             </button>

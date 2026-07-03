@@ -25,8 +25,10 @@ export function NavMegaBand({ columns, featured = [], onNavigate, className = ""
           }
         >
           <div
-            className={`grid gap-8 md:gap-10 lg:gap-14 xl:gap-16 ${
-              columns.length >= 3 ? "grid-cols-2 md:grid-cols-3" : "grid-cols-2"
+            className={`grid ${
+              columns.length === 2
+                ? "grid-cols-2 gap-4 md:gap-6 max-w-xl"
+                : `gap-8 md:gap-10 lg:gap-14 xl:gap-16 ${columns.length >= 3 ? "grid-cols-2 md:grid-cols-3" : "grid-cols-2"}`
             }`}
           >
             {columns.map((column) => (

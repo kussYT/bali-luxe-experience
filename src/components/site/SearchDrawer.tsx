@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Search, X } from "lucide-react";
-import { useCatalog } from "@/lib/catalog-context";
+import { useRegionalCatalog } from "@/lib/use-regional-catalog";
 import { useLocale } from "@/lib/i18n/locale-context";
 import { useSiteContent } from "@/lib/content-context";
 import { filterProductsForSearch, rankSearchResults, type SearchFilters } from "@/lib/search";
@@ -19,7 +19,7 @@ export function SearchDrawer({ open, onClose }: SearchDrawerProps) {
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<SearchFilters>({ category: "all", sale: false });
   const navigate = useNavigate();
-  const { publishedProducts, collections } = useCatalog();
+  const { regionalProducts, collections } = useRegionalCatalog();
   const { homepage } = useSiteContent();
   const { t } = useLocale();
 
@@ -31,7 +31,7 @@ export function SearchDrawer({ open, onClose }: SearchDrawerProps) {
   const results = useMemo(() => {
     if (!query.trim() && !filters.sale && filters.category === "all") return [];
     const filtered = filterProductsForSearch(
-      publishedProducts,
+      regionalProducts,
       query,
       {
         category: filters.category,
@@ -40,7 +40,7 @@ export function SearchDrawer({ open, onClose }: SearchDrawerProps) {
       collections,
     );
     return rankSearchResults(filtered, query).slice(0, 8);
-  }, [publishedProducts, collections, query, filters]);
+  }, [regionalProducts, collections, query, filters]);
 
   if (!open) return null;
 

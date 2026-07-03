@@ -1,5 +1,6 @@
 import type { Collection, Product } from "@/lib/catalog-types";
 import type { MegaMenuFeaturedContent, MegaMenuFeaturedTile } from "@/lib/content-types";
+import { PRODUCT_COLLECTIONS, SHOP_CATEGORIES } from "@/lib/catalog-taxonomy";
 
 export const POPULAR_SEARCHES = [
   "bob",
@@ -35,27 +36,24 @@ const HIDDEN_NAV_COLLECTION_SLUGS = new Set(["archives", "all-products"]);
 
 export type MegaMenuId = "new-collection" | "shop" | "sales" | "about";
 
-/** New Collection mega-menu. */
+/** New Collection mega-menu — Beatrice layout */
 export function buildNavNewCollectionColumns(): NavColumn[] {
   return [
     {
-      title: "Mi Paradisio 2026",
+      title: "Mi Paradisio",
       items: [
-        { label: "Mi Paradisio 2026", to: "/collection", search: { c: "mi-paradisio-collection" } },
+        { label: "Mi Paradisio", to: "/collection", search: { c: "mi-paradisio-collection" } },
+        { label: "Wedding Guest", to: "/collection", search: { c: "special-occasions" } },
         {
           label: "New Accessories",
           to: "/collection",
           search: { c: "mi-paradisio-collection", cat: "accessories" },
         },
-        { label: "View all new", to: "/collection", search: { c: "mi-paradisio-collection" } },
       ],
     },
     {
       title: "Discover",
-      items: [
-        { label: "Special Occasions", to: "/collection", search: { c: "special-occasions" } },
-        { label: "Shop all", to: "/collection" },
-      ],
+      items: [{ label: "View all", to: "/collection", search: { c: "mi-paradisio-collection" } }],
     },
   ];
 }
@@ -75,41 +73,32 @@ export const NAV_NEW_COLLECTION_FEATURED: NavFeaturedImage[] = [
   },
 ];
 
-/** Shop mega-menu — structured by season & category. */
-export function buildNavShopColumns(collections: Collection[]): NavColumn[] {
-  const collectionLinks = collections
-    .filter((c) => !HIDDEN_NAV_COLLECTION_SLUGS.has(c.slug) && c.slug !== "best-sellers" && !c.hidden)
-    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-    .slice(0, 5)
-    .map((c) => ({
-      label: c.name,
-      to: "/collection",
-      search: { c: c.slug },
-    }));
-
+/** Shop mega-menu — Shop · Collections · Shop by category */
+export function buildNavShopColumns(_collections: Collection[]): NavColumn[] {
+  const shopByCategory = SHOP_CATEGORIES.filter((c) => c.slug !== "best-seller");
   return [
     {
       title: "Shop",
       items: [
         { label: "Shop all", to: "/collection" },
-        { label: "Best sellers", to: "/collection", search: { c: "best-sellers" } },
-        { label: "Summer hats", to: "/collection", search: { c: "sunburn" } },
-        { label: "Winter hats", to: "/collection", search: { c: "fallwinter-2023-2024" } },
-        { label: "Rain hats", to: "/collection", search: { q: "rain" } },
-      ],
-    },
-    {
-      title: "Categories",
-      items: [
-        { label: "Accessories", to: "/collection", search: { cat: "accessories" } },
-        { label: "Bags", to: "/collection", search: { cat: "bags" } },
-        { label: "Knits", to: "/collection", search: { c: "the-knits" } },
-        { label: "Kids", to: "/collection", search: { c: "wild-kids" } },
+        { label: "Best seller", to: "/collection", search: { shop: "best-seller" } },
       ],
     },
     {
       title: "Collections",
-      items: collectionLinks.length > 0 ? collectionLinks : [{ label: "Mi Paradisio", to: "/collection", search: { c: "mi-paradisio-collection" } }],
+      items: PRODUCT_COLLECTIONS.map((c) => ({
+        label: c.name,
+        to: "/collection",
+        search: { c: c.slug },
+      })),
+    },
+    {
+      title: "Shop by category",
+      items: shopByCategory.map((c) => ({
+        label: c.label,
+        to: "/collection",
+        search: { shop: c.slug },
+      })),
     },
   ];
 }
@@ -129,17 +118,19 @@ export const NAV_SHOP_FEATURED: NavFeaturedImage[] = [
   },
 ];
 
-/** About mega-menu — aligned with footer columns. */
+/** About mega-menu */
 export const NAV_ABOUT_COLUMNS: NavColumn[] = [
   {
     title: "Customer care",
     items: [
-      { label: "Contact us", to: "/contact" },
+      { label: "Stockists", to: "/stockists" },
       { label: "Size guide", to: "/sizing" },
       { label: "Care guide", to: "/care" },
-      { label: "FAQ", to: "/faq" },
       { label: "Shipping", to: "/shipping" },
       { label: "Return policy", to: "/returns" },
+      { label: "FAQ", to: "/faq" },
+      { label: "Contact us", to: "/contact" },
+      { label: "Terms & conditions", to: "/terms" },
     ],
   },
   {
@@ -147,7 +138,6 @@ export const NAV_ABOUT_COLUMNS: NavColumn[] = [
     items: [
       { label: "The brand", to: "/about" },
       { label: "Travel guide", to: "/travel-diaries" },
-      { label: "Find us", to: "/find-us" },
     ],
   },
   {
@@ -155,7 +145,6 @@ export const NAV_ABOUT_COLUMNS: NavColumn[] = [
     items: [
       { label: "Artisans & ethics", to: "/about", hash: "artisans" },
       { label: "Materials & quality", to: "/about", hash: "quality" },
-      { label: "Terms & conditions", to: "/terms" },
     ],
   },
 ];
@@ -169,31 +158,11 @@ export function buildNavShop(collections: Collection[]): NavLink[] {
   return buildNavShopColumns(collections).flatMap((col) => col.items);
 }
 
-export function buildNavSalesColumns(products: Product[]): NavColumn[] {
-  const saleProducts = products.filter((p) => p.onSale && p.status === "published");
-  const outletCount = products.filter((p) => p.outlet && p.status === "published").length;
-
-  const saleItems: NavLink[] = [{ label: "All sale", to: "/collection", search: { sale: "true" } }];
-  if (outletCount > 0) {
-    saleItems.push({ label: "Outlet", to: "/collection", search: { c: "archives" } });
-  }
-
+export function buildNavSalesColumns(_products: Product[]): NavColumn[] {
   return [
     {
       title: "Sales",
-      items: saleItems,
-    },
-    {
-      title: "Info",
-      items: [
-        {
-          label: saleProducts.length === 0 ? "How it works" : "Sale guide",
-          to: "/collection",
-          search: { sale: "true" },
-          hash: "sale-info",
-        },
-        { label: "Full collection", to: "/collection" },
-      ],
+      items: [{ label: "All sales", to: "/collection", search: { sale: "true" } }],
     },
   ];
 }
@@ -213,20 +182,8 @@ export const NAV_SALES_FEATURED: NavFeaturedImage[] = [
   },
 ];
 
-export function buildNavSales(products: Product[]): NavLink[] {
-  const saleProducts = products.filter((p) => p.onSale && p.status === "published");
-  const outletCount = products.filter((p) => p.outlet && p.status === "published").length;
-  const items: NavLink[] = [{ label: "All sale", to: "/collection", search: { sale: "true" } }];
-
-  if (outletCount > 0) {
-    items.push({ label: "Outlet", to: "/collection", search: { c: "archives" } });
-  }
-
-  if (saleProducts.length === 0) {
-    items.push({ label: "How it works", to: "/collection", search: { sale: "true" }, hash: "sale-info" });
-  }
-
-  return items;
+export function buildNavSales(_products: Product[]): NavLink[] {
+  return [{ label: "All sales", to: "/collection", search: { sale: "true" } }];
 }
 
 export const NAV_ABOUT: NavLink[] = NAV_ABOUT_COLUMNS.flatMap((col) => col.items);

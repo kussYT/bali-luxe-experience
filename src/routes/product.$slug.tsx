@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Heart, Plus, Minus } from "lucide-react";
-import { useCatalog } from "@/lib/catalog-context";
+import { useRegionalCatalog } from "@/lib/use-regional-catalog";
 import { useCart } from "@/lib/cart";
 import { useCurrency } from "@/lib/currency";
 import { ProductCard } from "@/components/site/ProductCard";
@@ -20,7 +20,8 @@ export const Route = createFileRoute("/product/$slug")({
 
 function ProductPage() {
   const { slug } = Route.useParams();
-  const { publishedProducts } = useCatalog();
+  const { publishedProducts, regionalProducts, isRegionallyAvailable, maxQty: regionalMaxQty, warehouseLabel, countryCode, zones } =
+    useRegionalCatalog();
   const product = publishedProducts.find((p) => p.slug === slug);
   const { add, toggleWish, wishlist } = useCart();
   const { format, shipping } = useCurrency();
@@ -30,11 +31,9 @@ function ProductPage() {
 
   const initialVariantId = useMemo(() => {
     if (!product?.variants?.length) return null;
-    const inStock = product.variants.find(
-      (v) => (v.inventory?.france ?? 0) + (v.inventory?.bali ?? 0) > 0,
-    );
+    const inStock = product.variants.find((v) => maxCartQty(product, countryCode, v.id, zones) > 0);
     return (inStock ?? getDefaultVariant(product))?.id ?? null;
-  }, [product]);
+  }, [product, countryCode, zones]);
 
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(initialVariantId);
 
@@ -60,17 +59,18 @@ function ProductPage() {
   }
 
   const selectedVariant = getVariant(product, selectedVariantId);
-  const maxQty = maxCartQty(product, shipping.code, selectedVariant?.id);
+  const maxQty = regionalMaxQty(product, selectedVariant?.id);
   const hasVariants = (product.variants?.length ?? 0) > 1;
-  const canAdd = maxQty > 0 && product.available;
+  const regionallyAvailable = isRegionallyAvailable(product);
+  const canAdd = maxQty > 0 && product.available && regionallyAvailable;
 
-  const related = publishedProducts
+  const related = regionalProducts
     .filter((p) => p.slug !== product.slug && p.collectionSlug === product.collectionSlug)
     .slice(0, 3);
   const suggestions =
     related.length > 0 ?
       related
-    : publishedProducts.filter((p) => p.slug !== product.slug).slice(0, 3);
+    : regionalProducts.filter((p) => p.slug !== product.slug).slice(0, 3);
 
   const gallery = product.images.length > 0 ? product.images : [product.image];
   const showVideo = Boolean(product.videoUrl);
@@ -154,10 +154,19 @@ function ProductPage() {
             )}
           </div>
 
+          {!regionallyAvailable && (
+            <p className="mt-6 text-sm text-muted-foreground border border-border rounded-sm p-4 max-w-md leading-relaxed">
+              Cette pièce est expédiée depuis notre atelier {warehouseLabel} uniquement et n&apos;est pas
+              disponible pour une livraison en {shipping.name}. Changez le pays de livraison dans le menu pour
+              voir les pièces proposées dans votre zone.
+            </p>
+          )}
+
           <VariantSelector
             product={product}
             selectedId={selectedVariantId}
-            countryCode={shipping.code}
+            countryCode={countryCode}
+            zones={zones}
             onSelect={(id) => {
               setSelectedVariantId(id);
               setQty(1);
@@ -189,7 +198,7 @@ function ProductPage() {
               disabled={!canAdd || (hasVariants && !selectedVariant)}
               className="btn-primary flex-1 sm:flex-none disabled:opacity-45"
             >
-              {canAdd ? "Add to bag" : "Sold out"}
+              {canAdd ? "Add to bag" : regionallyAvailable ? "Sold out" : "Unavailable in your region"}
             </button>
             <button
               type="button"

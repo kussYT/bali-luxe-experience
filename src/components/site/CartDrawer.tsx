@@ -1,6 +1,6 @@
 import { useCart, cartLineKey } from "@/lib/cart";
 import { useCurrency } from "@/lib/currency";
-import { useCatalog } from "@/lib/catalog-context";
+import { useRegionalCatalog } from "@/lib/use-regional-catalog";
 import { getUnitPrice, formatMoney } from "@/lib/pricing";
 import { CheckoutButton } from "@/components/site/CheckoutButton";
 import { PromoCodeField } from "@/components/site/PromoCodeField";
@@ -8,8 +8,8 @@ import { X, Minus } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 export function CartDrawer() {
-  const { publishedProducts } = useCatalog();
-  const suggested = publishedProducts.slice(0, 3);
+  const { regionalProducts } = useRegionalCatalog();
+  const suggested = regionalProducts.slice(0, 3);
   const { open, setOpen, resolved, remove } = useCart();
   const { country, format } = useCurrency();
   const currency = country.currency;

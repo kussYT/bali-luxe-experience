@@ -109,7 +109,17 @@ import {
 } from "./api/promotions-admin.mjs";
 import { getAdminFinanceResponse } from "./api/finance-admin.mjs";
 import { getAdminReadinessResponse } from "./api/readiness-admin.mjs";
+import {
+  getAdminCountryShippingResponse,
+  patchAdminCountryShipping,
+  getPublicEnabledShippingCountries,
+} from "./api/country-shipping-admin.mjs";
 import { getAdminShippingResponse, patchAdminShipping } from "./api/shipping-admin.mjs";
+import {
+  getPublicFulfillmentZonesResponse,
+  getAdminFulfillmentZonesResponse,
+  patchAdminFulfillmentZones,
+} from "./api/fulfillment-zones.mjs";
 
 function jsonResponse(status, body, extraHeaders = {}) {
   return Response.json(body, { status, headers: extraHeaders });
@@ -238,6 +248,16 @@ export async function handleApiRequest(request, context = {}) {
       const includeDrafts = url.searchParams.get("all") === "1";
       const catalog = await getCatalogResponse({ includeDrafts });
       return jsonResponse(200, catalog);
+    }
+
+    if (pathname === "/api/fulfillment-zones" && method === "GET") {
+      const result = await getPublicFulfillmentZonesResponse();
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/shipping-countries" && method === "GET") {
+      const result = await getPublicEnabledShippingCountries();
+      return jsonResponse(200, result);
     }
 
     if (pathname === "/api/analytics/product" && method === "POST") {
@@ -422,6 +442,28 @@ export async function handleApiRequest(request, context = {}) {
     if (pathname === "/api/admin/shipping" && method === "PATCH") {
       const body = await readJsonBody(request);
       const result = await patchAdminShipping(body);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/fulfillment-zones" && method === "GET") {
+      const result = await getAdminFulfillmentZonesResponse();
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/fulfillment-zones" && method === "PATCH") {
+      const body = await readJsonBody(request);
+      const result = await patchAdminFulfillmentZones(body);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/country-shipping" && method === "GET") {
+      const result = await getAdminCountryShippingResponse();
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/country-shipping" && method === "PATCH") {
+      const body = await readJsonBody(request);
+      const result = await patchAdminCountryShipping(body);
       return jsonResponse(200, result);
     }
 

@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { useCatalog } from "@/lib/catalog-context";
+import { useRegionalCatalog } from "@/lib/use-regional-catalog";
 import { productInCollection, productMatchesQuery } from "@/lib/search";
+import { getShopCategoryBySlug, productMatchesShopCategory } from "@/lib/catalog-taxonomy";
 import { sortProductsForDisplay } from "@/lib/sort-products";
 import { ProductCard } from "@/components/site/ProductCard";
 import { SALE_PAGE_SUBTITLE, SALE_PAGE_TITLE } from "@/data/sale-copy";
@@ -18,6 +19,7 @@ type CollectionSearch = {
   c?: string;
   cat?: string;
   sub?: string;
+  shop?: string;
   sale?: string;
   q?: string;
 };
@@ -27,6 +29,7 @@ export const Route = createFileRoute("/collection")({
     c: typeof search.c === "string" ? search.c : undefined,
     cat: typeof search.cat === "string" ? search.cat : undefined,
     sub: typeof search.sub === "string" ? search.sub : undefined,
+    shop: typeof search.shop === "string" ? search.shop : undefined,
     sale: search.sale === "true" || search.sale === true ? "true" : undefined,
     q: typeof search.q === "string" ? search.q : undefined,
   }),
@@ -40,13 +43,13 @@ export const Route = createFileRoute("/collection")({
 });
 
 function Collection() {
-  const { c, cat, sub, sale, q } = Route.useSearch();
-  const { publishedProducts, collections } = useCatalog();
+  const { c, cat, sub, shop, sale, q } = Route.useSearch();
+  const { regionalProducts, collections } = useRegionalCatalog();
 
   const collectionProducts = useMemo(() => {
     if (!c) return [];
-    return sortProductsForDisplay(publishedProducts.filter((p) => productInCollection(p, c)));
-  }, [c, publishedProducts]);
+    return sortProductsForDisplay(regionalProducts.filter((p) => productInCollection(p, c)));
+  }, [c, regionalProducts]);
 
   const scopedCategoryFilters = useMemo(() => {
     const cats = new Set<string>();
@@ -73,14 +76,15 @@ function Collection() {
   }, [c, collectionProducts, collections]);
 
   const filtered = useMemo(() => {
-    let list = publishedProducts;
+    let list = regionalProducts;
     if (c) list = list.filter((p) => productInCollection(p, c));
     if (sub) list = list.filter((p) => productInCollection(p, sub));
     if (cat) list = list.filter((p) => p.category === cat);
+    if (shop) list = list.filter((p) => productMatchesShopCategory(p, shop));
     if (sale === "true") list = list.filter((p) => p.onSale);
     if (q) list = list.filter((p) => productMatchesQuery(p, q));
     return sortProductsForDisplay(list);
-  }, [publishedProducts, c, sub, cat, sale, q]);
+  }, [regionalProducts, c, sub, cat, shop, sale, q]);
 
   const activeCollection = c ? collections.find((col) => col.slug === c) : undefined;
   const inCollectionView = Boolean(c) && sale !== "true" && !q;
@@ -91,6 +95,7 @@ function Collection() {
     c ? (activeCollection?.name ?? "Collection") :
     cat === "accessories" ? "Accessories" :
     cat === "bags" ? "Bags" :
+    shop ? (getShopCategoryBySlug(shop)?.label ?? "Shop") :
     "The Collection";
 
   const subtitle =

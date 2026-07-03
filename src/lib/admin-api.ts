@@ -1,5 +1,6 @@
 import type { UploadProgress } from "@/lib/upload-admin-files";
 import { uploadAdminFiles } from "@/lib/upload-admin-files";
+import type { CountryShippingRow } from "@/lib/country-shipping-types";
 import type { Catalog, Product } from "@/lib/catalog-types";
 import type {
   AboutContent,
@@ -726,6 +727,22 @@ export async function fetchAdminReadiness() {
   }>("/api/admin/readiness");
 }
 
+export async function fetchAdminCountryShipping() {
+  return request<{ rows: CountryShippingRow[]; source: string }>("/api/admin/country-shipping");
+}
+
+export async function updateAdminCountryShipping(config: {
+  countries: Record<
+    string,
+    { enabled: boolean; warehouse: "france" | "bali"; shippingPrice: number }
+  >;
+}) {
+  return request<{ rows: CountryShippingRow[]; source: string }>("/api/admin/country-shipping", {
+    method: "PATCH",
+    body: JSON.stringify(config),
+  });
+}
+
 export type ShippingZone = {
   id: string;
   name: string;
@@ -741,5 +758,22 @@ export async function updateAdminShipping(zones: ShippingZone[]) {
   return request<{ settings: { zones: ShippingZone[] } }>("/api/admin/shipping", {
     method: "PATCH",
     body: JSON.stringify({ zones }),
+  });
+}
+
+export type FulfillmentZonesSettings = {
+  franceWarehouseCountries: string[];
+  baliWarehouseCountries: string[];
+  restOfWorldWarehouse: "france" | "bali";
+};
+
+export async function fetchAdminFulfillmentZones() {
+  return request<{ zones: FulfillmentZonesSettings; source: string }>("/api/admin/fulfillment-zones");
+}
+
+export async function updateAdminFulfillmentZones(zones: FulfillmentZonesSettings) {
+  return request<{ zones: FulfillmentZonesSettings; source: string }>("/api/admin/fulfillment-zones", {
+    method: "PATCH",
+    body: JSON.stringify(zones),
   });
 }

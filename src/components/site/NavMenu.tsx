@@ -3,7 +3,7 @@ import { focalObjectPosition } from "@/lib/image-focal";
 import { X } from "lucide-react";
 import type { NavColumn, NavFeaturedImage } from "@/lib/navigation";
 import { getMegaMenuContent, type MegaMenuId } from "@/lib/navigation";
-import { useCatalog } from "@/lib/catalog-context";
+import { useRegionalCatalog } from "@/lib/use-regional-catalog";
 import { useSiteContent } from "@/lib/content-context";
 import { BrandLogo } from "@/components/site/BrandLogo";
 import { CurrencySelector } from "@/components/site/CurrencySelector";
@@ -92,7 +92,7 @@ function FeaturedNavLink({ item, onClose }: { item: NavFeaturedImage; onClose: (
 }
 
 export function NavMenu({ open, onClose, sections }: NavMenuProps) {
-  const { collections, publishedProducts } = useCatalog();
+  const { collections, regionalProducts } = useRegionalCatalog();
   const { homepage } = useSiteContent();
 
   if (!open) return null;
@@ -112,7 +112,7 @@ export function NavMenu({ open, onClose, sections }: NavMenuProps) {
             const { columns, featured } = getMegaMenuContent(
               section.mega,
               collections,
-              publishedProducts,
+              regionalProducts,
               homepage.megaMenuFeatured,
             );
             return (

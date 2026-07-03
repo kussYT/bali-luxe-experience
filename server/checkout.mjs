@@ -1,5 +1,5 @@
 import { readCatalog } from "./catalog-store.mjs";
-import { availableForCheckout, getVariant } from "./warehouse-allocation.mjs";
+import { availableForCheckoutSync, getVariant, getFulfillmentZones, fulfillmentWarehouseForCountry } from "./warehouse-allocation.mjs";
 import {
   createPendingOrder,
   attachStripeSession,
@@ -19,6 +19,8 @@ import { sendOrderConfirmationEmail } from "./emails/order-emails.mjs";
 import { validatePromoCode, incrementPromoUsage } from "./db/promo-codes.mjs";
 import { computePromoAmounts, lineUnitAfterPromo } from "./promo-apply.mjs";
 import { shippingAmountForCountry } from "./shipping-rates.mjs";
+import { isCountryShippingEnabled } from "./db/country-shipping.mjs";
+import { getSetting } from "./db/settings-store.mjs";
 
 /** ISO codes for Stripe shipping_address_collection */
 export const SHIPPING_COUNTRY_CODES = [
@@ -41,13 +43,23 @@ function lineDisplayName(product, variant) {
   return product.name;
 }
 
-export function validateCartItems(catalog, lineItems, countryCode) {
+export async function validateCartItems(catalog, lineItems, countryCode) {
   if (!Array.isArray(lineItems) || lineItems.length === 0) {
     const err = new Error("Cart is empty");
     err.status = 400;
     throw err;
   }
 
+  const countryShipping = await getSetting("countryShipping", null);
+  if (countryShipping?.countries && Object.keys(countryShipping.countries).length > 0) {
+    if (!(await isCountryShippingEnabled(countryCode))) {
+      const err = new Error("Livraison non disponible pour ce pays");
+      err.status = 400;
+      throw err;
+    }
+  }
+
+  const zones = await getFulfillmentZones();
   const resolved = [];
   for (const line of lineItems) {
     const slug = line?.slug;
@@ -67,10 +79,16 @@ export function validateCartItems(catalog, lineItems, countryCode) {
     }
 
     const variant = getVariant(product, variantId);
-    const stockCheck = availableForCheckout(product, countryCode, qty, variant?.id);
+    const stockCheck = availableForCheckoutSync(product, countryCode, qty, variant?.id, zones);
     if (!stockCheck.ok) {
       const label = lineDisplayName(product, variant);
-      const err = new Error(`Insufficient stock for ${label}`);
+      const warehouse = fulfillmentWarehouseForCountry(countryCode, zones, product);
+      const hub = warehouse === "france" ? "Paris" : "Bali";
+      const err = new Error(
+        stockCheck.available === 0
+          ? `${label} is not available for delivery from ${hub}`
+          : `Insufficient stock for ${label} (${hub})`,
+      );
       err.status = 409;
       throw err;
     }
@@ -160,7 +178,7 @@ export async function createCheckoutSession({
   }
 
   const catalog = await readCatalog();
-  const resolved = validateCartItems(catalog, items, countryCode);
+  const resolved = await validateCartItems(catalog, items, countryCode);
   const siteUrl = getSiteUrl();
 
   const shippingAmount = await shippingAmountForCountry(countryCode, currency);
@@ -413,7 +431,7 @@ export async function resumeCheckoutSession(orderId) {
     variantId: item.variantId || undefined,
     qty: item.qty,
   }));
-  const resolved = validateCartItems(catalog, cartLines, countryCode);
+  const resolved = await validateCartItems(catalog, cartLines, countryCode);
 
   const shippingAmount = await shippingAmountForCountry(countryCode, currency);
   const shippingSmallest = toStripeAmount(shippingAmount, currency);
