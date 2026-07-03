@@ -12,7 +12,9 @@ import type {
   FooterContent,
   HomepageContent,
   JournalPost,
+  JournalPostBlock,
   ProductMessagesContent,
+  ProductMessagesStored,
   SizingContent,
   AdminCollectionMeta,
 } from "@/lib/content-types";
@@ -391,7 +393,7 @@ export async function fetchAdminSiteContent() {
     care: CareContent;
     sizing: SizingContent;
     footer: FooterContent;
-    productMessages: ProductMessagesContent;
+    productMessages: ProductMessagesStored;
     stored: {
       announcement: Partial<AnnouncementContent>;
       homepage: Partial<HomepageContent>;
@@ -401,7 +403,7 @@ export async function fetchAdminSiteContent() {
       care: Partial<CareContent>;
       sizing: Partial<SizingContent>;
       footer: Partial<FooterContent>;
-      productMessages: Partial<ProductMessagesContent>;
+      productMessages: Partial<ProductMessagesStored>;
     };
     source: string;
   }>("/api/admin/content/site");
@@ -416,7 +418,7 @@ export async function updateAdminSiteContent(payload: {
   care?: CareContent;
   sizing?: SizingContent;
   footer?: FooterContent;
-  productMessages?: ProductMessagesContent;
+  productMessages?: ProductMessagesStored;
 }) {
   return request<{
     announcement: AnnouncementContent;
@@ -427,7 +429,7 @@ export async function updateAdminSiteContent(payload: {
     care: CareContent;
     sizing: SizingContent;
     footer: FooterContent;
-    productMessages: ProductMessagesContent;
+    productMessages: ProductMessagesStored;
     stored: {
       announcement: Partial<AnnouncementContent>;
       homepage: Partial<HomepageContent>;
@@ -437,7 +439,7 @@ export async function updateAdminSiteContent(payload: {
       care: Partial<CareContent>;
       sizing: Partial<SizingContent>;
       footer: Partial<FooterContent>;
-      productMessages: Partial<ProductMessagesContent>;
+      productMessages: Partial<ProductMessagesStored>;
     };
     source: string;
   }>("/api/admin/content/site", { method: "PATCH", body: JSON.stringify(payload) });
@@ -623,10 +625,19 @@ export async function autoTranslatePage(payload: {
 export async function autoTranslatePost(payload: {
   sourceLocale: string;
   targetLocales: string[];
-  fields: { title: string; excerpt: string; category: string; body: string[] };
+  fields: {
+    title: string;
+    excerpt: string;
+    category: string;
+    body: string[];
+    blocks?: JournalPostBlock[];
+  };
 }) {
   return request<{
-    locales: Record<string, { title: string; excerpt: string; category: string; body: string[] }>;
+    locales: Record<
+      string,
+      { title: string; excerpt: string; category: string; body: string[]; blocks?: JournalPostBlock[] }
+    >;
     provider: string;
   }>("/api/admin/translate-post", {
     method: "POST",
@@ -643,6 +654,35 @@ export async function autoTranslateProduct(payload: {
     locales: Record<string, { name: string; story: string; seoTitle: string; metaDescription: string }>;
     provider: string;
   }>("/api/admin/translate-product", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function autoTranslateProductMessages(payload: {
+  sourceLocale: string;
+  targetLocales: string[];
+  fields: {
+    regionalUnavailable: string;
+    soldOut: string;
+    unavailableInRegion: string;
+    addToBag: string;
+    inStock: string;
+  };
+}) {
+  return request<{
+    locales: Record<
+      string,
+      {
+        regionalUnavailable: string;
+        soldOut: string;
+        unavailableInRegion: string;
+        addToBag: string;
+        inStock: string;
+      }
+    >;
+    provider: string;
+  }>("/api/admin/translate-product-messages", {
     method: "POST",
     body: JSON.stringify(payload),
   });

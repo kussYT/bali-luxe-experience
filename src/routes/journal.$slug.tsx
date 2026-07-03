@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Reveal } from "@/components/lifestyle/Reveal";
+import { JournalArticleBlocks } from "@/components/journal/JournalArticleBlocks";
+import { resolvePostBlocks } from "@/lib/journal-blocks";
 import { useCmsPost } from "@/lib/use-cms-post";
 import { focalObjectPosition } from "@/lib/image-focal";
 
@@ -36,6 +38,8 @@ function JournalArticlePage() {
     );
   }
 
+  const blocks = resolvePostBlocks(article);
+
   return (
     <article>
       <header className="relative min-h-[50vh] md:min-h-[60vh] overflow-hidden bg-foreground">
@@ -55,13 +59,9 @@ function JournalArticlePage() {
         </div>
       </header>
 
-      <div className="page-wrap section-pad section-gap max-w-2xl">
+      <div className="page-wrap section-pad section-gap max-w-3xl">
         <Reveal>
-          <div className="space-y-6 text-[1.05rem] leading-relaxed text-muted-foreground">
-            {article.body.map((paragraph) => (
-              <p key={paragraph.slice(0, 24)}>{paragraph}</p>
-            ))}
-          </div>
+          <JournalArticleBlocks blocks={blocks} />
         </Reveal>
         <Reveal delay={100}>
           <div className="mt-16 pt-8 border-t border-border flex flex-col sm:flex-row gap-6 justify-between">

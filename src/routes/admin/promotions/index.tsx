@@ -14,6 +14,7 @@ import {
 import type { Product } from "@/lib/catalog-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/admin/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -275,10 +276,9 @@ function AdminPromotionsPage() {
               </div>
               <div className="space-y-2">
                 <Label>Valeur (% ou €)</Label>
-                <Input
-                  type="number"
+                <MoneyInput
                   value={draft.discountValue ?? 0}
-                  onChange={(e) => setDraft({ ...draft, discountValue: Number(e.target.value) })}
+                  onChange={(n) => setDraft({ ...draft, discountValue: n ?? 0 })}
                   disabled={draft.discountType === "free"}
                 />
               </div>
@@ -401,15 +401,10 @@ function AdminPromotionsPage() {
               <div className="grid gap-4 sm:grid-cols-2 mt-4">
                 <div className="space-y-2">
                   <Label>Panier éligible min. (€)</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={rules.minSubtotalEur ?? ""}
-                    onChange={(e) =>
-                      patchRules({
-                        minSubtotalEur: e.target.value ? Number(e.target.value) : null,
-                      })
-                    }
+                  <MoneyInput
+                    allowEmpty
+                    value={rules.minSubtotalEur ?? undefined}
+                    onChange={(n) => patchRules({ minSubtotalEur: n ?? null })}
                     placeholder="Ex. 80"
                   />
                 </div>

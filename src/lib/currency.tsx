@@ -29,6 +29,8 @@ type Ctx = {
   setMarketId: (code: string) => void;
   setCountry: (c: Country) => void;
   format: (p: Product) => string;
+  /** Format a EUR list amount in the shopper's currency (commas, locale). */
+  formatEur: (eur: number) => string;
   shippingLabel: string;
 };
 
@@ -103,6 +105,19 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     [country.currency, locale],
   );
 
+  const formatEur = useCallback(
+    (eur: number) => {
+      const value =
+        country.currency === "EUR"
+          ? eur
+          : country.currency === "USD"
+            ? Math.round(eur * 1.1)
+            : Math.round(eur * 17_000);
+      return formatMoneyAmount(value, country.currency, locale);
+    },
+    [country.currency, locale],
+  );
+
   const shippingLabel = formatShippingLabel(shipping);
 
   const value = useMemo(
@@ -114,8 +129,9 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       setMarketId: setShippingCountryCode,
       setCountry: setCountryLegacy,
       format,
+      formatEur,
     }),
-    [country, shipping, shippingLabel, setShippingCountryCode, setCountryLegacy, format],
+    [country, shipping, shippingLabel, setShippingCountryCode, setCountryLegacy, format, formatEur],
   );
 
   return <CurrencyContext.Provider value={value}>{children}</CurrencyContext.Provider>;

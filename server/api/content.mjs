@@ -6,8 +6,8 @@ const CACHE_HEADERS = {
   "Cache-Control": "public, max-age=60, s-maxage=300",
 };
 
-export async function getSiteContentResponse() {
-  const content = await getPublicSiteContent();
+export async function getSiteContentResponse(locale) {
+  const content = await getPublicSiteContent({ locale });
   return Response.json(content, { headers: CACHE_HEADERS });
 }
 

@@ -35,3 +35,14 @@ export function resolveProductLocaleBlock(locales, locale) {
   }
   return null;
 }
+
+/** Product page CMS strings — block is valid when addToBag is set. */
+export function resolveProductMessagesLocaleBlock(locales, locale) {
+  const map = locales && typeof locales === "object" ? locales : {};
+  const order = locale ? [locale, ...FALLBACK_CHAIN.filter((c) => c !== locale)] : FALLBACK_CHAIN;
+  for (const code of order) {
+    const block = map[code];
+    if (block?.addToBag?.trim()) return { code, block };
+  }
+  return null;
+}

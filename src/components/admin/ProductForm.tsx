@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { Product, ProductCategory, ProductStatus } from "@/lib/catalog-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,13 +12,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { uploadProductImages } from "@/lib/admin-api";
+import { MoneyInput } from "@/components/admin/MoneyInput";
+import { parseMoneyValue } from "@/lib/parse-money";
 import { CmsMediaGuide } from "@/components/admin/CmsMediaGuide";
 import { ImageFocalPicker } from "@/components/admin/ImageFocalPicker";
 import { AdminImagePreview } from "@/components/admin/AdminImagePreview";
 import type { UploadProgress } from "@/lib/upload-admin-files";
 import { UPLOADS_UNAVAILABLE_MESSAGE, useUploadsAvailable } from "@/lib/use-uploads-available";
 import {
-  PRODUCT_COLLECTIONS,
   SHOP_CATEGORIES,
   applyShopCategoryToProduct,
   getCollectionBySlug,
@@ -61,6 +62,8 @@ type ProductFormProps = {
   onSubmit: (values: ProductFormValues) => Promise<void>;
   onCancel: () => void;
   submitLabel?: string;
+  /** When true, name/description/SEO are edited in ProductLocaleEditor instead. */
+  hideLocalizedFields?: boolean;
 };
 
 const emptyVariant = (): VariantFormRow => ({ title: "", stock: 1 });
@@ -125,6 +128,7 @@ export function ProductForm({
   onSubmit,
   onCancel,
   submitLabel = "Save",
+  hideLocalizedFields = false,
 }: ProductFormProps) {
   const [focalEditIndex, setFocalEditIndex] = useState(0);
   const [values, setValues] = useState<ProductFormValues>(() => {
@@ -201,7 +205,20 @@ export function ProductForm({
 
   const shopCategorySlug =
     shopCategoryFromSubcategory(values.subcategory) || values.subcategory || "";
-  const extraCollections = PRODUCT_COLLECTIONS.filter((c) => c.slug !== values.collectionSlug);
+  const collectionOptions = useMemo(() => {
+    const map = new Map<string, { slug: string; name: string }>();
+    for (const c of collections) {
+      if (c.slug) map.set(c.slug, { slug: c.slug, name: c.name || c.slug });
+    }
+    if (values.collectionSlug && !map.has(values.collectionSlug)) {
+      map.set(values.collectionSlug, {
+        slug: values.collectionSlug,
+        name: values.collection || values.collectionSlug,
+      });
+    }
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, "fr"));
+  }, [collections, values.collectionSlug, values.collection]);
+  const extraCollections = collectionOptions.filter((c) => c.slug !== values.collectionSlug);
 
   const toggleExtraCollection = (slug: string) => {
     setValues((prev) => {
@@ -283,9 +300,28 @@ export function ProductForm({
         return;
       }
 
+      const priceEUR = parseMoneyValue(values.priceEUR);
+      if (priceEUR <= 0) {
+        setError("Indiquez un prix catalogue valide (ex. 69 ou 69,50).");
+        setSaving(false);
+        return;
+      }
+
+      const compareAtEUR =
+        values.compareAtEUR != null && values.compareAtEUR !== undefined
+          ? parseMoneyValue(values.compareAtEUR)
+          : undefined;
+      if (compareAtEUR != null && compareAtEUR <= 0) {
+        setError("Le prix soldé doit être supérieur à 0, ou laissez le champ vide.");
+        setSaving(false);
+        return;
+      }
+
       await onSubmit({
         ...values,
         slug,
+        priceEUR,
+        compareAtEUR,
         variants,
         collectionSlug: values.collectionSlug || slugify(values.collection),
         image: values.images[0] || "",
@@ -303,86 +339,89 @@ export function ProductForm({
   const multiSize = values.variants.length > 1 || values.variants.some((v) => v.title && v.title !== "Default");
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 max-w-3xl">
+    <form onSubmit={handleSubmit} noValidate className="space-y-8 max-w-3xl">
       {error && <p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 p-3">{error}</p>}
 
-      <div className="grid md:grid-cols-2 gap-5">
-        <div className="space-y-2">
-          <Label htmlFor="name">Product name *</Label>
-          <Input
-            id="name"
-            value={values.name}
-            onChange={(e) => {
-              set("name", e.target.value);
-              if (!initial?.slug) set("slug", slugify(e.target.value));
-            }}
-            required
-          />
-        </div>
+      {!hideLocalizedFields && (
+        <>
+          <div className="grid md:grid-cols-2 gap-5">
+            <div className="space-y-2">
+              <Label htmlFor="name">Product name *</Label>
+              <Input
+                id="name"
+                value={values.name}
+                onChange={(e) => {
+                  set("name", e.target.value);
+                  if (!initial?.slug) set("slug", slugify(e.target.value));
+                }}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="slug">URL slug</Label>
+              <Input id="slug" value={values.slug} onChange={(e) => set("slug", slugify(e.target.value))} />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="story">Description</Label>
+            <Textarea id="story" rows={5} value={values.story} onChange={(e) => set("story", e.target.value)} />
+          </div>
+
+          <div className="space-y-4 border border-border p-5">
+            <div>
+              <Label className="text-base">SEO (Google)</Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Titre et description affichés dans les résultats de recherche. Laissez vide pour utiliser le nom du produit.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="seo-title">Meta titre</Label>
+              <Input
+                id="seo-title"
+                value={values.seoTitle}
+                onChange={(e) => set("seoTitle", e.target.value)}
+                placeholder={values.name ? `${values.name} — Bingin Diaries` : "Nom du produit — Bingin Diaries"}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="seo-desc">Meta description</Label>
+              <Textarea
+                id="seo-desc"
+                rows={3}
+                value={values.metaDescription}
+                onChange={(e) => set("metaDescription", e.target.value)}
+                placeholder="Courte description pour Google (150–160 caractères idéal)"
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      {hideLocalizedFields && (
         <div className="space-y-2">
           <Label htmlFor="slug">URL slug</Label>
           <Input id="slug" value={values.slug} onChange={(e) => set("slug", slugify(e.target.value))} />
         </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="story">Description</Label>
-        <Textarea id="story" rows={5} value={values.story} onChange={(e) => set("story", e.target.value)} />
-      </div>
-
-      <div className="space-y-4 border border-border p-5">
-        <div>
-          <Label className="text-base">SEO (Google)</Label>
-          <p className="text-xs text-muted-foreground mt-1">
-            Titre et description affichés dans les résultats de recherche. Laissez vide pour utiliser le nom du produit.
-          </p>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="seo-title">Meta titre</Label>
-          <Input
-            id="seo-title"
-            value={values.seoTitle}
-            onChange={(e) => set("seoTitle", e.target.value)}
-            placeholder={values.name ? `${values.name} — Bingin Diaries` : "Nom du produit — Bingin Diaries"}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="seo-desc">Meta description</Label>
-          <Textarea
-            id="seo-desc"
-            rows={3}
-            value={values.metaDescription}
-            onChange={(e) => set("metaDescription", e.target.value)}
-            placeholder="Courte description pour Google (150–160 caractères idéal)"
-          />
-        </div>
-      </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-5">
         <div className="space-y-2">
           <Label htmlFor="price">Price (EUR) *</Label>
-          <Input
+          <MoneyInput
             id="price"
-            type="number"
-            min={0}
-            step={1}
-            value={values.priceEUR || ""}
-            onChange={(e) => set("priceEUR", Number(e.target.value))}
-            required
+            value={values.priceEUR || undefined}
+            onChange={(n) => set("priceEUR", n ?? 0)}
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="compare">Sale price (EUR)</Label>
-          <Input
+          <MoneyInput
             id="compare"
-            type="number"
-            min={0}
-            step={1}
-            value={values.compareAtEUR ?? ""}
-            onChange={(e) =>
-              set("compareAtEUR", e.target.value === "" ? undefined : Number(e.target.value))
-            }
-            placeholder="Optional — lower than list price"
+            value={values.compareAtEUR}
+            allowEmpty
+            onChange={(n) => set("compareAtEUR", n)}
+            placeholder="Optionnel — inférieur au prix catalogue"
           />
           <p className="text-xs text-muted-foreground">
             If set below the list price, the piece appears under <strong>Sales</strong> in the menu with a
@@ -451,7 +490,7 @@ export function ProductForm({
               <SelectValue placeholder="Choisir une collection" />
             </SelectTrigger>
             <SelectContent>
-              {PRODUCT_COLLECTIONS.map((c) => (
+              {collectionOptions.map((c) => (
                 <SelectItem key={c.slug} value={c.slug}>
                   {c.name}
                 </SelectItem>

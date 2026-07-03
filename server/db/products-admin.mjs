@@ -10,10 +10,12 @@ function slugify(value) {
     .replace(/^-+|-+$/g, "");
 }
 
+import { parseMoneyValue } from "../parse-money.mjs";
+
 export function normalizeAdminProductBody(body) {
-  const priceEUR = Number(body.priceEUR) || 0;
+  const priceEUR = parseMoneyValue(body.priceEUR);
   const compareRaw =
-    body.compareAtEUR != null && body.compareAtEUR !== "" ? Number(body.compareAtEUR) : null;
+    body.compareAtEUR != null && body.compareAtEUR !== "" ? parseMoneyValue(body.compareAtEUR) : null;
   const onSale = compareRaw != null && compareRaw < priceEUR;
   const images =
     Array.isArray(body.images) && body.images.length > 0

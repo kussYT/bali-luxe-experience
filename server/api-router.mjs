@@ -101,7 +101,7 @@ import {
   getAdminCustomersExportCsv,
   getAdminCustomersExportBrevoCsv,
 } from "./api/customers-admin.mjs";
-import { postAdminTranslatePage, postAdminTranslatePost, postAdminTranslateProduct, getAdminTranslateStatusResponse } from "./api/translate-admin.mjs";
+import { postAdminTranslatePage, postAdminTranslatePost, postAdminTranslateProduct, postAdminTranslateProductMessages, getAdminTranslateStatusResponse } from "./api/translate-admin.mjs";
 import {
   getAdminPromotionsResponse,
   postAdminPromotion,
@@ -300,7 +300,8 @@ export async function handleApiRequest(request, context = {}) {
     }
 
     if (pathname === "/api/content/site" && method === "GET") {
-      return getSiteContentResponse();
+      const locale = url.searchParams.get("locale") || undefined;
+      return getSiteContentResponse(locale);
     }
 
     if (pathname === "/api/content/posts" && method === "GET") {
@@ -821,6 +822,12 @@ export async function handleApiRequest(request, context = {}) {
     if (pathname === "/api/admin/translate-product" && method === "POST") {
       const body = await readJsonBody(request);
       const result = await postAdminTranslateProduct(body);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/translate-product-messages" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await postAdminTranslateProductMessages(body);
       return jsonResponse(200, result);
     }
 

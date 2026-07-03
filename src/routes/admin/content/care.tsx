@@ -51,7 +51,9 @@ function AdminCareContentPage() {
       <div>
         <p className="text-eyebrow text-muted-foreground">CMS</p>
         <h2 className="font-display text-4xl mt-2">Guide d&apos;entretien</h2>
-        <p className="text-sm text-muted-foreground mt-2">Page /care — conseils par matière.</p>
+        <p className="text-sm text-muted-foreground mt-2">
+          Page /care — PDF officiel ou conseils par matière (si pas de PDF).
+        </p>
       </div>
 
       {error && <p className="text-destructive text-sm">{error}</p>}
@@ -74,9 +76,21 @@ function AdminCareContentPage() {
               onChange={(v) => setCare({ ...care, metaDescription: v })}
             />
             <CmsField label="Lien retour" value={care.backLink} onChange={(v) => setCare({ ...care, backLink: v })} />
+            <CmsField
+              label="PDF (URL publique)"
+              value={care.pdfUrl ?? ""}
+              onChange={(v) => setCare({ ...care, pdfUrl: v })}
+              placeholder="/docs/washcare-rev.pdf"
+            />
+            <CmsField
+              label="Libellé lien PDF"
+              value={care.pdfDownloadLabel ?? ""}
+              onChange={(v) => setCare({ ...care, pdfDownloadLabel: v })}
+            />
           </CardContent>
         </Card>
 
+        {!care.pdfUrl?.trim() && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4">
             <CardTitle className="text-lg">Sections par matière</CardTitle>
@@ -129,6 +143,7 @@ function AdminCareContentPage() {
             ))}
           </CardContent>
         </Card>
+        )}
 
         <Button type="submit" disabled={saving}>
           {saving ? "Enregistrement…" : "Enregistrer Care"}

@@ -5,6 +5,7 @@ import { ProductForm, type ProductFormValues } from "@/components/admin/ProductF
 import { ProductLocaleEditor } from "@/components/admin/ProductLocaleEditor";
 import type { Product } from "@/lib/catalog-types";
 import { useCatalog } from "@/lib/catalog-context";
+import { resolveProductLocaleFields } from "@/lib/product-locale";
 
 export const Route = createFileRoute("/admin/products/$slug")({
   head: ({ params }) => ({ meta: [{ title: `Edit ${params.slug} — Admin` }] }),
@@ -14,8 +15,9 @@ export const Route = createFileRoute("/admin/products/$slug")({
 function AdminEditProductPage() {
   const { slug } = Route.useParams();
   const navigate = useNavigate();
-  const { collections, refresh } = useCatalog();
+  const { refresh } = useCatalog();
   const [product, setProduct] = useState<Product | null>(null);
+  const [collections, setCollections] = useState<{ slug: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,6 +25,7 @@ function AdminEditProductPage() {
       .then((catalog) => {
         const found = catalog.products.find((p) => p.slug === slug);
         setProduct(found ?? null);
+        setCollections(catalog.collections);
       })
       .finally(() => setLoading(false));
   }, [slug]);
@@ -31,7 +34,15 @@ function AdminEditProductPage() {
   if (!product) return <p className="text-destructive">Product not found.</p>;
 
   const handleSubmit = async (values: ProductFormValues) => {
-    await updateProduct(slug, { ...values, locales: product.locales });
+    const fr = resolveProductLocaleFields({ ...product, locales: product.locales }, "fr");
+    await updateProduct(slug, {
+      ...values,
+      name: fr.name || values.name,
+      story: fr.story || values.story,
+      seoTitle: fr.seoTitle || values.seoTitle,
+      metaDescription: fr.metaDescription || values.metaDescription,
+      locales: product.locales,
+    });
     await refresh();
     navigate({ to: "/admin/products" });
   };
@@ -51,6 +62,7 @@ function AdminEditProductPage() {
       <ProductForm
         initial={product}
         collections={collections}
+        hideLocalizedFields
         submitLabel="Save changes"
         onSubmit={handleSubmit}
         onCancel={() => navigate({ to: "/admin/products" })}

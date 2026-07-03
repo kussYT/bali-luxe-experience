@@ -22,8 +22,14 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CmsMediaField } from "@/components/admin/CmsMediaField";
+import { JournalBlockEditor } from "@/components/admin/JournalBlockEditor";
 import { UploadsUnavailableBanner } from "@/components/admin/UploadsUnavailableBanner";
 import { useUploadsAvailable } from "@/lib/use-uploads-available";
+import {
+  bodyFromBlocks,
+  defaultArticleBlocks,
+  resolvePostBlocks,
+} from "@/lib/journal-blocks";
 
 export const Route = createFileRoute("/admin/blog/$slug")({
   head: () => ({ meta: [{ title: "Edit article — Bingin Diaries Admin" }] }),
@@ -42,11 +48,12 @@ const EMPTY: JournalPost & { status: string } = {
 };
 
 function localeFields(post: JournalPost, code: Locale): JournalPostLocaleFields {
-  return post.locales?.[code] || emptyPostLocaleFields();
-}
-
-function bodyText(fields: JournalPostLocaleFields) {
-  return (fields.body || []).join("\n\n");
+  const raw = post.locales?.[code] || emptyPostLocaleFields();
+  return {
+    ...raw,
+    blocks: resolvePostBlocks(raw),
+    body: bodyFromBlocks(resolvePostBlocks(raw)),
+  };
 }
 
 function AdminBlogEditPage() {
@@ -56,7 +63,6 @@ function AdminBlogEditPage() {
   const [post, setPost] = useState<JournalPost & { status: string }>(EMPTY);
   const [activeLocale, setActiveLocale] = useState<Locale>("fr");
   const [sourceLocale, setSourceLocale] = useState<Locale>("en");
-  const [bodyTextByLocale, setBodyTextByLocale] = useState<Partial<Record<Locale, string>>>({});
   const [translateAvailable, setTranslateAvailable] = useState<boolean | null>(null);
   const [translateNote, setTranslateNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -72,8 +78,10 @@ function AdminBlogEditPage() {
 
   useEffect(() => {
     if (isNew) {
-      setPost(EMPTY);
-      setBodyTextByLocale({});
+      setPost({
+        ...EMPTY,
+        locales: { fr: { ...emptyPostLocaleFields(), blocks: defaultArticleBlocks() } },
+      });
       return;
     }
     fetchAdminPost(routeSlug)
@@ -86,15 +94,20 @@ function AdminBlogEditPage() {
             excerpt: loaded.excerpt,
             category: loaded.category,
             body: loaded.body || [],
+            blocks: resolvePostBlocks({ body: loaded.body || [], blocks: loaded.blocks }),
           };
           loaded.locales = locales;
         }
-        setPost(loaded);
-        const bodies: Partial<Record<Locale, string>> = {};
         for (const { code } of CMS_LOCALES) {
-          bodies[code] = bodyText(localeFields(loaded, code));
+          if (locales[code]) {
+            locales[code] = {
+              ...locales[code],
+              blocks: resolvePostBlocks(locales[code]),
+              body: bodyFromBlocks(resolvePostBlocks(locales[code])),
+            };
+          }
         }
-        setBodyTextByLocale(bodies);
+        setPost(loaded);
       })
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load"));
   }, [routeSlug, isNew]);
@@ -117,9 +130,8 @@ function AdminBlogEditPage() {
       setError(`Ajoutez un titre en ${CMS_LOCALES.find((l) => l.code === source)?.adminLabel} avant de traduire.`);
       return;
     }
-    const bodyRaw = bodyTextByLocale[source] ?? "";
-    const body = bodyRaw.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
     const fields = localeFields(post, source);
+    const blocks = fields.blocks;
 
     setTranslating(true);
     setError(null);
@@ -133,25 +145,26 @@ function AdminBlogEditPage() {
           title: fields.title,
           excerpt: fields.excerpt,
           category: fields.category,
-          body,
+          blocks,
+          body: bodyFromBlocks(blocks),
         },
       });
 
-      setPost({
-        ...post,
-        locales: {
-          ...post.locales,
-          [source]: { ...fields, body },
-          ...res.locales,
-        },
-      });
-
-      const bodies: Partial<Record<Locale, string>> = { ...bodyTextByLocale, [source]: bodyRaw };
+      const nextLocales = { ...post.locales, [source]: { ...fields, blocks, body: bodyFromBlocks(blocks) } };
       for (const code of targetLocales) {
         const translated = res.locales[code];
-        if (translated) bodies[code as Locale] = (translated.body || []).join("\n\n");
+        if (translated) {
+          const translatedBlocks = resolvePostBlocks(translated);
+          nextLocales[code as Locale] = {
+            ...localeFields(post, code as Locale),
+            ...translated,
+            blocks: translatedBlocks,
+            body: bodyFromBlocks(translatedBlocks),
+          };
+        }
       }
-      setBodyTextByLocale(bodies);
+
+      setPost({ ...post, locales: nextLocales });
       setTranslateNote(
         `Traduction DeepL : ${CMS_LOCALES.find((l) => l.code === source)?.adminLabel} → ${targetLocales.map((c) => c.toUpperCase()).join(", ")} — relisez avant publication.`,
       );
@@ -169,11 +182,12 @@ function AdminBlogEditPage() {
     try {
       const locales = { ...post.locales } as Partial<Record<Locale, JournalPostLocaleFields>>;
       for (const { code } of CMS_LOCALES) {
-        const text = bodyTextByLocale[code] ?? "";
         const fields = localeFields(post, code);
+        const blocks = fields.blocks;
         locales[code] = {
           ...fields,
-          body: text.split(/\n\n+/).map((p) => p.trim()).filter(Boolean),
+          blocks,
+          body: bodyFromBlocks(blocks),
         };
       }
       const res = await saveAdminPost({
@@ -185,12 +199,15 @@ function AdminBlogEditPage() {
         locales,
       });
       const loaded = { ...res.post, status: res.post.status || post.status };
-      setPost(loaded);
-      const bodies: Partial<Record<Locale, string>> = {};
       for (const { code } of CMS_LOCALES) {
-        bodies[code] = bodyText(localeFields(loaded, code));
+        if (loaded.locales?.[code]) {
+          loaded.locales[code] = {
+            ...loaded.locales[code],
+            blocks: resolvePostBlocks(loaded.locales[code]),
+          };
+        }
       }
-      setBodyTextByLocale(bodies);
+      setPost(loaded);
       if (isNew) {
         navigate({ to: "/admin/blog/$slug", params: { slug: res.post.slug } });
       }
@@ -211,7 +228,7 @@ function AdminBlogEditPage() {
         </Link>
         <h2 className="font-display text-4xl mt-4">{isNew ? "Nouvel article" : "Éditer l'article"}</h2>
         <p className="text-sm text-muted-foreground mt-2">
-          Contenu par langue (FR · EN · ID · ES). Image et temps de lecture communs à toutes les langues.
+          Modèle article : texte → 2 photos côte à côte → texte → photo. Contenu par langue (FR · EN · ID · ES).
         </p>
       </div>
 
@@ -350,14 +367,16 @@ function AdminBlogEditPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="body">Corps (paragraphes séparés par une ligne vide)</Label>
-              <Textarea
-                id="body"
-                value={bodyTextByLocale[activeLocale] ?? ""}
-                onChange={(e) =>
-                  setBodyTextByLocale((prev) => ({ ...prev, [activeLocale]: e.target.value }))
+              <Label>Corps de l&apos;article</Label>
+              <JournalBlockEditor
+                blocks={fields.blocks ?? defaultArticleBlocks()}
+                mediaFolder={`blog/${post.slug || "draft"}`}
+                onChange={(blocks) =>
+                  patchLocale(activeLocale, {
+                    blocks,
+                    body: bodyFromBlocks(blocks),
+                  })
                 }
-                rows={12}
               />
             </div>
             <Button type="submit" disabled={saving}>

@@ -1,4 +1,5 @@
 import { SITE_LOCALE_CODES } from "./i18n-locales.mjs";
+import { resolvePostBlocks } from "./journal-blocks.mjs";
 
 const DEEPL_LANG = { fr: "FR", en: "EN", es: "ES", id: "ID" };
 
@@ -121,19 +122,50 @@ export async function translatePostLocales({ sourceLocale, targetLocales, fields
 
   const out = {};
 
+  const sourceBlocks = resolvePostBlocks(fields);
+
   for (const target of targets) {
     if (!SITE_LOCALE_CODES.includes(target)) continue;
-    const body = Array.isArray(fields.body) ? fields.body : [];
-    const translatedBody = [];
-    for (const paragraph of body) {
-      translatedBody.push(paragraph?.trim() ? await translateText(paragraph, source, target) : "");
+
+    const translatedBlocks = [];
+    for (const block of sourceBlocks) {
+      if (block.type === "text") {
+        const paragraphs = [];
+        for (const paragraph of block.paragraphs) {
+          paragraphs.push(paragraph?.trim() ? await translateText(paragraph, source, target) : "");
+        }
+        translatedBlocks.push({ type: "text", paragraphs: paragraphs.filter(Boolean) });
+      } else if (block.type === "photo") {
+        translatedBlocks.push({
+          type: "photo",
+          image: block.image,
+          imageFocal: block.imageFocal,
+          alt: block.alt,
+          caption: block.caption?.trim() ? await translateText(block.caption, source, target) : "",
+        });
+      } else if (block.type === "photoPair") {
+        const translateSlot = async (slot) => ({
+          image: slot.image,
+          imageFocal: slot.imageFocal,
+          alt: slot.alt,
+          caption: slot.caption?.trim() ? await translateText(slot.caption, source, target) : "",
+        });
+        translatedBlocks.push({
+          type: "photoPair",
+          left: await translateSlot(block.left),
+          right: await translateSlot(block.right),
+        });
+      }
     }
 
     out[target] = {
       title: await translateText(fields.title, source, target),
       excerpt: fields.excerpt?.trim() ? await translateText(fields.excerpt, source, target) : "",
       category: fields.category?.trim() ? await translateText(fields.category, source, target) : "",
-      body: translatedBody.filter(Boolean),
+      blocks: translatedBlocks,
+      body: translatedBlocks
+        .filter((b) => b.type === "text")
+        .flatMap((b) => b.paragraphs),
     };
   }
 
@@ -170,6 +202,40 @@ export async function translateProductLocales({ sourceLocale, targetLocales, fie
         ? await translateText(fields.metaDescription, source, target)
         : "",
     };
+  }
+
+  return { locales: out, provider: "deepl" };
+}
+
+export async function translateProductMessagesLocales({ sourceLocale, targetLocales, fields }) {
+  const source = sourceLocale?.trim().toLowerCase();
+  const targets = (targetLocales || []).filter((t) => t && t !== source);
+  if (!source || !SITE_LOCALE_CODES.includes(source)) {
+    const err = new Error("Invalid source locale");
+    err.status = 400;
+    throw err;
+  }
+  if (!fields?.addToBag?.trim()) {
+    const err = new Error("Source addToBag text is required");
+    err.status = 400;
+    throw err;
+  }
+  if (!isTranslateConfigured()) {
+    const err = new Error("Traduction indisponible : configurez DEEPL_API_KEY.");
+    err.status = 503;
+    throw err;
+  }
+
+  const keys = ["regionalUnavailable", "soldOut", "unavailableInRegion", "addToBag", "inStock"];
+  const out = {};
+  for (const target of targets) {
+    if (!SITE_LOCALE_CODES.includes(target)) continue;
+    const block = {};
+    for (const key of keys) {
+      const text = fields[key];
+      block[key] = text?.trim() ? await translateText(text, source, target) : "";
+    }
+    out[target] = block;
   }
 
   return { locales: out, provider: "deepl" };

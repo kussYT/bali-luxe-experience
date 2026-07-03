@@ -26,7 +26,7 @@ function ProductPage() {
     useRegionalCatalog();
   const product = publishedProducts.find((p) => p.slug === slug);
   const { add, toggleWish, wishlist } = useCart();
-  const { format, shipping } = useCurrency();
+  const { format, formatEur, shipping } = useCurrency();
   const { productMessages } = useSiteContent();
   const [qty, setQty] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
@@ -150,7 +150,7 @@ function ProductPage() {
           <div className="mt-8 flex items-baseline gap-4">
             <p className="text-xl tracking-wide">{format(product)}</p>
             {product.onSale && product.compareAtEUR != null && (
-              <p className="text-sm text-muted-foreground line-through">€{product.priceEUR}</p>
+              <p className="text-sm text-muted-foreground line-through">{formatEur(product.priceEUR)}</p>
             )}
             {product.onSale && (
               <span className="text-eyebrow !text-accent">Sale</span>

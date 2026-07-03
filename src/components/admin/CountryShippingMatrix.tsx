@@ -3,6 +3,7 @@ import type { CountryShippingRow } from "@/lib/country-shipping-types";
 import { SHIPPING_CONTINENTS } from "@/data/shipping-continents";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/admin/MoneyInput";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
@@ -171,18 +172,14 @@ function ContinentBlock({
                   </td>
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-1">
-                      <Input
-                        type="number"
-                        min={0}
+                      <MoneyInput
                         className="h-8 w-24"
                         value={row.shippingPrice}
                         disabled={!row.enabled}
-                        onChange={(e) =>
+                        onChange={(n) =>
                           onChange(
                             rows.map((r) =>
-                              r.code === row.code
-                                ? { ...r, shippingPrice: Number(e.target.value) }
-                                : r,
+                              r.code === row.code ? { ...r, shippingPrice: n ?? 0 } : r,
                             ),
                           )
                         }

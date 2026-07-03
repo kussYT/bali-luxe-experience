@@ -11,6 +11,7 @@ import {
   mergeSizing,
   mergeFooter,
   mergeProductMessages,
+  resolveProductMessages,
 } from "../content-defaults.mjs";
 
 export async function getAnnouncement() {
@@ -66,14 +67,15 @@ export async function getFooterContent() {
   return mergeFooter(stored);
 }
 
-export async function getProductMessagesContent() {
+export async function getProductMessagesContent(locale) {
   const stored = await getSetting("productMessages", null);
+  if (locale) return resolveProductMessages(stored, locale);
   return mergeProductMessages(stored);
 }
 
-export async function getPublicSiteContent() {
-  const [announcement, homepage, about, findUs, contact, care, sizing, footer, productMessages] =
-    await Promise.all([
+export async function getPublicSiteContent({ locale } = {}) {
+  const storedProductMessages = await getSetting("productMessages", null);
+  const [announcement, homepage, about, findUs, contact, care, sizing, footer] = await Promise.all([
     getAnnouncement(),
     getHomepageContent(),
     getAboutContent(),
@@ -82,7 +84,6 @@ export async function getPublicSiteContent() {
     getCareContent(),
     getSizingContent(),
     getFooterContent(),
-    getProductMessagesContent(),
   ]);
   return {
     announcement,
@@ -93,7 +94,7 @@ export async function getPublicSiteContent() {
     care,
     sizing,
     footer,
-    productMessages,
+    productMessages: resolveProductMessages(storedProductMessages, locale),
     defaults: { homepage: DEFAULT_HOMEPAGE },
   };
 }
@@ -158,7 +159,11 @@ export async function patchAdminSiteContent(body) {
     await setSetting("footer", body.footer);
   }
   if (body.productMessages) {
-    await setSetting("productMessages", body.productMessages);
+    const payload =
+      body.productMessages.locales && typeof body.productMessages.locales === "object"
+        ? body.productMessages
+        : { locales: body.productMessages };
+    await setSetting("productMessages", payload);
   }
   return getAdminSiteContent();
 }

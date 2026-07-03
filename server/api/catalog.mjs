@@ -5,7 +5,7 @@ import { readCatalog } from "../catalog-store.mjs";
 /**
  * Production catalog handler — Postgres first, JSON fallback for local dev without DB.
  */
-export async function getCatalogResponse({ includeDrafts = false, locale, includeLocales = false } = {}) {
+export async function getCatalogResponse({ includeDrafts = false, locale, includeLocales = true } = {}) {
   if (isDatabaseConfigured()) {
     return fetchCatalogFromDb({ includeDrafts, locale, includeLocales });
   }

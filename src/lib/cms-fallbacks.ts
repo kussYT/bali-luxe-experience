@@ -77,6 +77,8 @@ export const FALLBACK_CARE: CareContent = {
   title: BRAND_CONTENT.care.title,
   metaDescription: BRAND_CONTENT.care.intro,
   intro: BRAND_CONTENT.care.intro,
+  pdfUrl: "/docs/washcare-rev.pdf",
+  pdfDownloadLabel: "Download the care guide (PDF)",
   sections: BRAND_CONTENT.care.sections.map((s) => ({
     title: s.title,
     tips: [...s.tips],

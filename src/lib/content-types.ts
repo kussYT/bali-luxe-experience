@@ -234,6 +234,9 @@ export type CareContent = {
   title: string;
   metaDescription: string;
   intro: string;
+  /** Public URL to the care guide PDF, e.g. /docs/washcare-rev.pdf */
+  pdfUrl?: string;
+  pdfDownloadLabel?: string;
   sections: CareSectionContent[];
   backLink: string;
 };
@@ -271,12 +274,20 @@ export type FooterContent = {
   copyright: string;
 };
 
-export type ProductMessagesContent = {
+export type ProductMessagesLocaleFields = {
   regionalUnavailable: string;
   soldOut: string;
   unavailableInRegion: string;
   addToBag: string;
   inStock: string;
+};
+
+/** Resolved copy for one locale (storefront). */
+export type ProductMessagesContent = ProductMessagesLocaleFields;
+
+/** All locales as stored in CMS settings. */
+export type ProductMessagesStored = {
+  locales: Partial<Record<import("@/lib/i18n/messages").Locale, ProductMessagesLocaleFields>>;
 };
 
 export type SiteContent = {
@@ -296,7 +307,20 @@ export type JournalPostLocaleFields = {
   excerpt: string;
   category: string;
   body: string[];
+  blocks?: JournalPostBlock[];
 };
+
+export type JournalPhotoSlot = {
+  image: string;
+  caption?: string;
+  alt?: string;
+  imageFocal?: ImageFocal;
+};
+
+export type JournalPostBlock =
+  | { type: "text"; paragraphs: string[] }
+  | ({ type: "photo" } & JournalPhotoSlot)
+  | { type: "photoPair"; left: JournalPhotoSlot; right: JournalPhotoSlot };
 
 export type JournalPost = {
   slug: string;
@@ -307,6 +331,7 @@ export type JournalPost = {
   category: string;
   readMinutes: number;
   body: string[];
+  blocks?: JournalPostBlock[];
   status?: string;
   /** All translations — present in admin API responses */
   locales?: Partial<Record<import("@/lib/i18n/messages").Locale, JournalPostLocaleFields>>;

@@ -24,9 +24,10 @@ export function resolveProductLocaleFields(
   for (const code of order) {
     const block = map[code];
     if (block?.name?.trim()) {
+      const story = block.story?.trim();
       return {
         name: block.name.trim(),
-        story: block.story?.trim() || product.story || "",
+        story: story || "",
         seoTitle: block.seoTitle?.trim() || product.seoTitle?.trim() || block.name.trim(),
         metaDescription: block.metaDescription?.trim() || product.metaDescription?.trim() || "",
       };

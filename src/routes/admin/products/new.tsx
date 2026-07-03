@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { createProduct } from "@/lib/admin-api";
+import { useEffect, useState } from "react";
+import { createProduct, fetchAdminCatalog } from "@/lib/admin-api";
 import { ProductForm, type ProductFormValues } from "@/components/admin/ProductForm";
 import { useCatalog } from "@/lib/catalog-context";
 
@@ -10,7 +11,12 @@ export const Route = createFileRoute("/admin/products/new")({
 
 function AdminNewProductPage() {
   const navigate = useNavigate();
-  const { collections, refresh } = useCatalog();
+  const { refresh } = useCatalog();
+  const [collections, setCollections] = useState<{ slug: string; name: string }[]>([]);
+
+  useEffect(() => {
+    fetchAdminCatalog().then((catalog) => setCollections(catalog.collections));
+  }, []);
 
   const handleSubmit = async (values: ProductFormValues) => {
     await createProduct(values);

@@ -1,6 +1,7 @@
 /** Default editorial content — mirrors src/data/lifestyle-content.ts (fallback when DB empty). */
 
 import stockists from "../src/data/stockists.json" with { type: "json" };
+import { SITE_LOCALE_CODES, resolveProductMessagesLocaleBlock } from "./i18n-locales.mjs";
 
 export const DEFAULT_ANNOUNCEMENT = {
   enabled: true,
@@ -299,6 +300,8 @@ export const DEFAULT_CARE = {
     "A well-cared-for hat stays beautiful for a long time. Our pieces are made to last with a few simple habits, you can keep their shape, texture, and style season after season.",
   intro:
     "A well-cared-for hat stays beautiful for a long time. Our pieces are made to last with a few simple habits, you can keep their shape, texture, and style season after season.",
+  pdfUrl: "/docs/washcare-rev.pdf",
+  pdfDownloadLabel: "Download the care guide (PDF)",
   sections: [
     {
       title: "Coton",
@@ -398,6 +401,76 @@ export const DEFAULT_PRODUCT_MESSAGES = {
   addToBag: "Ajouter au panier",
   inStock: "{count} en stock{variant} — expédié depuis {warehouse}",
 };
+
+export const DEFAULT_PRODUCT_MESSAGES_BY_LOCALE = {
+  fr: DEFAULT_PRODUCT_MESSAGES,
+  en: {
+    regionalUnavailable:
+      "This piece is not available for delivery to {country}. Stock for your zone ships from our {warehouse} workshop. Change your delivery country in the menu to see pieces available in your region.",
+    soldOut: "Sold out",
+    unavailableInRegion: "Unavailable in your region",
+    addToBag: "Add to bag",
+    inStock: "{count} in stock{variant} — shipped from {warehouse}",
+  },
+  id: {
+    regionalUnavailable:
+      "Produk ini tidak tersedia untuk pengiriman ke {country}. Stok untuk wilayah Anda dikirim dari bengkel {warehouse} kami. Ubah negara pengiriman di menu untuk melihat produk yang tersedia di wilayah Anda.",
+    soldOut: "Habis",
+    unavailableInRegion: "Tidak tersedia di wilayah Anda",
+    addToBag: "Tambah ke tas",
+    inStock: "{count} tersedia{variant} — dikirim dari {warehouse}",
+  },
+  es: {
+    regionalUnavailable:
+      "Esta pieza no está disponible para envíos a {country}. El stock de tu zona se envía desde nuestro taller en {warehouse}. Cambia el país de entrega en el menú para ver las piezas disponibles en tu zona.",
+    soldOut: "Agotado",
+    unavailableInRegion: "No disponible en tu región",
+    addToBag: "Añadir a la bolsa",
+    inStock: "{count} en stock{variant} — enviado desde {warehouse}",
+  },
+};
+
+function isLegacyProductMessages(stored) {
+  return (
+    stored &&
+    typeof stored === "object" &&
+    ("addToBag" in stored || "soldOut" in stored) &&
+    !stored.locales
+  );
+}
+
+export function normalizeProductMessagesStored(stored) {
+  const locales = {};
+  for (const code of SITE_LOCALE_CODES) {
+    locales[code] = deepMerge(DEFAULT_PRODUCT_MESSAGES_BY_LOCALE[code], {});
+  }
+
+  if (isLegacyProductMessages(stored)) {
+    locales.fr = deepMerge(DEFAULT_PRODUCT_MESSAGES, stored);
+  } else if (stored?.locales && typeof stored.locales === "object") {
+    for (const code of SITE_LOCALE_CODES) {
+      if (stored.locales[code]) {
+        locales[code] = deepMerge(DEFAULT_PRODUCT_MESSAGES_BY_LOCALE[code], stored.locales[code]);
+      }
+    }
+  }
+
+  return { locales };
+}
+
+export function resolveProductMessages(stored, locale) {
+  const { locales } = normalizeProductMessagesStored(stored);
+  const resolved = resolveProductMessagesLocaleBlock(locales, locale);
+  const defaults = DEFAULT_PRODUCT_MESSAGES_BY_LOCALE[resolved?.code] || DEFAULT_PRODUCT_MESSAGES;
+  const block = resolved?.block || locales.fr || DEFAULT_PRODUCT_MESSAGES;
+  return {
+    regionalUnavailable: block.regionalUnavailable?.trim() || defaults.regionalUnavailable,
+    soldOut: block.soldOut?.trim() || defaults.soldOut,
+    unavailableInRegion: block.unavailableInRegion?.trim() || defaults.unavailableInRegion,
+    addToBag: block.addToBag?.trim() || defaults.addToBag,
+    inStock: block.inStock?.trim() || defaults.inStock,
+  };
+}
 
 export const DEFAULT_POSTS = [
   {
@@ -568,5 +641,5 @@ export function mergeFooter(stored) {
 }
 
 export function mergeProductMessages(stored) {
-  return deepMerge(DEFAULT_PRODUCT_MESSAGES, stored || {});
+  return normalizeProductMessagesStored(stored);
 }

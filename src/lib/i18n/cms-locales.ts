@@ -14,3 +14,13 @@ export function emptyPageLocaleFields() {
 export function emptyPostLocaleFields() {
   return { title: "", excerpt: "", category: "", body: [] as string[] };
 }
+
+export function emptyProductMessagesLocaleFields() {
+  return {
+    regionalUnavailable: "",
+    soldOut: "",
+    unavailableInRegion: "",
+    addToBag: "",
+    inStock: "",
+  };
+}

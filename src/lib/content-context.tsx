@@ -230,6 +230,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       const postsQs = `?locale=${encodeURIComponent(locale)}`;
+      const siteQs = `?locale=${encodeURIComponent(locale)}`;
       const [siteRes, postsRes] = await Promise.all([
         fetchJson<{
           announcement: SiteContent["announcement"];
@@ -241,7 +242,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           sizing: SiteContent["sizing"];
           footer: SiteContent["footer"];
           productMessages: SiteContent["productMessages"];
-        }>("/api/content/site"),
+        }>(`/api/content/site${siteQs}`),
         fetchJson<{ posts: JournalPost[] }>(`/api/content/posts${postsQs}`),
       ]);
       setSite({

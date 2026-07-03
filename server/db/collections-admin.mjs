@@ -1,4 +1,5 @@
 import { query, isDatabaseConfigured, withTransaction } from "./pool.mjs";
+import { ensureCollectionsCatalog } from "../collections-catalog.mjs";
 
 function mapCollection(row) {
   return {
@@ -20,6 +21,7 @@ export async function listCollectionsAdmin() {
     err.status = 503;
     throw err;
   }
+  await ensureCollectionsCatalog((sql, params) => query(sql, params));
   const { rows } = await query(
     `
     SELECT c.slug, c.name, c.season, c.description, c.hero_image, c.sort_order, c.hidden, c.updated_at,

@@ -17,6 +17,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useCatalog } from "@/lib/catalog-context";
+import { formatMoneyAmount } from "@/lib/format-money";
 
 export const Route = createFileRoute("/admin/products/")({
   head: () => ({ meta: [{ title: "Products — Admin" }] }),
@@ -116,9 +117,11 @@ function AdminProductsPage() {
                 </td>
                 <td className="p-3">{p.collection}</td>
                 <td className="p-3 font-mono">
-                  €{p.priceEUR}
+                  {formatMoneyAmount(p.priceEUR, "EUR", "fr")}
                   {p.onSale && p.compareAtEUR != null && (
-                    <span className="text-muted-foreground line-through ml-2">€{p.compareAtEUR}</span>
+                    <span className="text-muted-foreground line-through ml-2">
+                      {formatMoneyAmount(p.compareAtEUR, "EUR", "fr")}
+                    </span>
                   )}
                 </td>
                 <td className="p-3">{p.stock}</td>
