@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ContentSubnav } from "@/components/admin/ContentSubnav";
 import { CmsField } from "@/components/admin/CmsField";
+import { CmsMediaField } from "@/components/admin/CmsMediaField";
 
 export const Route = createFileRoute("/admin/content/care")({
   head: () => ({ meta: [{ title: "Care — Bingin Diaries Admin" }] }),
@@ -20,7 +21,7 @@ function AdminCareContentPage() {
 
   useEffect(() => {
     fetchAdminSiteContent()
-      .then((res) => setCare(res.care))
+      .then((res) => setCare({ ...res.care, images: res.care.images ?? [] }))
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load"));
   }, []);
 
@@ -32,7 +33,7 @@ function AdminCareContentPage() {
     setError(null);
     try {
       const res = await updateAdminSiteContent({ care });
-      setCare(res.care);
+      setCare({ ...res.care, images: res.care.images ?? [] });
       setMessage("Guide d'entretien enregistré.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
@@ -51,9 +52,7 @@ function AdminCareContentPage() {
       <div>
         <p className="text-eyebrow text-muted-foreground">CMS</p>
         <h2 className="font-display text-4xl mt-2">Guide d&apos;entretien</h2>
-        <p className="text-sm text-muted-foreground mt-2">
-          Page /care — PDF officiel ou conseils par matière (si pas de PDF).
-        </p>
+        <p className="text-sm text-muted-foreground mt-2">Page /care — visuels du guide (images dans public/care/).</p>
       </div>
 
       {error && <p className="text-destructive text-sm">{error}</p>}
@@ -62,88 +61,69 @@ function AdminCareContentPage() {
       <form onSubmit={handleSave} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">En-tête</CardTitle>
+            <CardTitle className="text-lg">SEO & navigation</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
-            <CmsField label="Eyebrow" value={care.eyebrow} onChange={(v) => setCare({ ...care, eyebrow: v })} />
-            <CmsField label="Titre" value={care.title} onChange={(v) => setCare({ ...care, title: v })} />
-            <div className="sm:col-span-2">
-              <CmsField label="Introduction" value={care.intro} onChange={(v) => setCare({ ...care, intro: v })} multiline />
-            </div>
+            <CmsField label="Titre (SEO / accessibilité)" value={care.title} onChange={(v) => setCare({ ...care, title: v })} />
             <CmsField
               label="Meta description (SEO)"
               value={care.metaDescription}
               onChange={(v) => setCare({ ...care, metaDescription: v })}
             />
             <CmsField label="Lien retour" value={care.backLink} onChange={(v) => setCare({ ...care, backLink: v })} />
-            <CmsField
-              label="PDF (URL publique)"
-              value={care.pdfUrl ?? ""}
-              onChange={(v) => setCare({ ...care, pdfUrl: v })}
-              placeholder="/docs/washcare-rev.pdf"
-            />
-            <CmsField
-              label="Libellé lien PDF"
-              value={care.pdfDownloadLabel ?? ""}
-              onChange={(v) => setCare({ ...care, pdfDownloadLabel: v })}
-            />
           </CardContent>
         </Card>
 
-        {!care.pdfUrl?.trim() && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4">
-            <CardTitle className="text-lg">Sections par matière</CardTitle>
+            <CardTitle className="text-lg">Visuels du guide</CardTitle>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setCare({ ...care, sections: [...care.sections, { title: "", tips: [] }] })}
+              onClick={() => setCare({ ...care, images: [...care.images, { src: "", alt: "" }] })}
             >
-              Ajouter une section
+              Ajouter une image
             </Button>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {care.sections.map((section, i) => (
-              <div key={i} className="border border-border p-4 rounded-sm space-y-3">
+          <CardContent className="space-y-6">
+            {care.images.map((img, i) => (
+              <div key={i} className="border border-border p-4 space-y-3">
                 <div className="flex justify-between items-center gap-2">
-                  <p className="text-sm font-medium">Section {i + 1}</p>
+                  <p className="text-sm font-medium">Image {i + 1}</p>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => setCare({ ...care, sections: care.sections.filter((_, j) => j !== i) })}
+                    onClick={() => setCare({ ...care, images: care.images.filter((_, j) => j !== i) })}
                   >
                     Supprimer
                   </Button>
                 </div>
-                <CmsField
-                  label="Titre matière"
-                  value={section.title}
-                  onChange={(v) => {
-                    const sections = [...care.sections];
-                    sections[i] = { ...sections[i], title: v };
-                    setCare({ ...care, sections });
+                <CmsMediaField
+                  label="Fichier"
+                  folder="care"
+                  value={img.src}
+                  onChange={(src) => {
+                    const images = [...care.images];
+                    images[i] = { ...images[i], src };
+                    setCare({ ...care, images });
                   }}
+                  accept="image/*"
                 />
                 <CmsField
-                  label="Conseils (un par ligne)"
-                  value={section.tips.join("\n")}
+                  label="Texte alternatif"
+                  value={img.alt}
                   onChange={(v) => {
-                    const sections = [...care.sections];
-                    sections[i] = {
-                      ...sections[i],
-                      tips: v.split("\n").map((t) => t.trim()).filter(Boolean),
-                    };
-                    setCare({ ...care, sections });
+                    const images = [...care.images];
+                    images[i] = { ...images[i], alt: v };
+                    setCare({ ...care, images });
                   }}
-                  multiline
                 />
               </div>
             ))}
           </CardContent>
         </Card>
-        )}
 
         <Button type="submit" disabled={saving}>
           {saving ? "Enregistrement…" : "Enregistrer Care"}

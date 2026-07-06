@@ -77,8 +77,10 @@ export const FALLBACK_CARE: CareContent = {
   title: BRAND_CONTENT.care.title,
   metaDescription: BRAND_CONTENT.care.intro,
   intro: BRAND_CONTENT.care.intro,
-  pdfUrl: "/docs/washcare-rev.pdf",
-  pdfDownloadLabel: "Download the care guide (PDF)",
+  images: [
+    { src: "/care/how-to-care.png", alt: "How to take care of your hat — Bingin Diaries" },
+    { src: "/care/care-by-material.png", alt: "Care guide by hat type — Bingin Diaries" },
+  ],
   sections: BRAND_CONTENT.care.sections.map((s) => ({
     title: s.title,
     tips: [...s.tips],

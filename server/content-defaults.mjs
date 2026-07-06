@@ -300,8 +300,16 @@ export const DEFAULT_CARE = {
     "A well-cared-for hat stays beautiful for a long time. Our pieces are made to last with a few simple habits, you can keep their shape, texture, and style season after season.",
   intro:
     "A well-cared-for hat stays beautiful for a long time. Our pieces are made to last with a few simple habits, you can keep their shape, texture, and style season after season.",
-  pdfUrl: "/docs/washcare-rev.pdf",
-  pdfDownloadLabel: "Download the care guide (PDF)",
+  images: [
+    {
+      src: "/care/how-to-care.png",
+      alt: "How to take care of your hat — Bingin Diaries",
+    },
+    {
+      src: "/care/care-by-material.png",
+      alt: "Care guide by hat type — Bingin Diaries",
+    },
+  ],
   sections: [
     {
       title: "Coton",

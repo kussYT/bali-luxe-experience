@@ -229,14 +229,17 @@ export type CareSectionContent = {
   tips: string[];
 };
 
+export type CareImageContent = {
+  src: string;
+  alt: string;
+};
+
 export type CareContent = {
   eyebrow: string;
   title: string;
   metaDescription: string;
   intro: string;
-  /** Public URL to the care guide PDF, e.g. /docs/washcare-rev.pdf */
-  pdfUrl?: string;
-  pdfDownloadLabel?: string;
+  images: CareImageContent[];
   sections: CareSectionContent[];
   backLink: string;
 };
