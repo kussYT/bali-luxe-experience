@@ -32,6 +32,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check required secrets
+        env:
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+        run: |
+          missing=0
+          if [ -z "$INSTAGRAM_ACCESS_TOKEN" ]; then
+            echo "::error::Missing secret INSTAGRAM_ACCESS_TOKEN"
+            missing=1
+          else
+            echo "INSTAGRAM_ACCESS_TOKEN is set (${#INSTAGRAM_ACCESS_TOKEN} chars)"
+          fi
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::Missing secret CLOUDFLARE_API_TOKEN"
+            missing=1
+          fi
+          if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Missing secret CLOUDFLARE_ACCOUNT_ID"
+            missing=1
+          fi
+          if [ "$missing" -ne 0 ]; then
+            echo "Add the missing secrets under Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -48,27 +72,51 @@ jobs:
           INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
         run: node scripts/refresh-instagram-token.mjs --github-output
 
-      - name: Update Cloudflare Instagram secret
-        if: steps.refresh.outputs.access_token != ''
+      - name: Resolve active token
+        id: token
+        env:
+          REFRESHED: ${{ steps.refresh.outputs.access_token }}
+          FALLBACK: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
         run: |
-          echo -n "${{ steps.refresh.outputs.access_token }}" | npx wrangler secret put INSTAGRAM_ACCESS_TOKEN
+          if [ -n "$REFRESHED" ]; then
+            echo "Using refreshed Instagram token"
+            echo "access_token<<IG_TOKEN_EOF" >> "$GITHUB_OUTPUT"
+            echo "$REFRESHED" >> "$GITHUB_OUTPUT"
+            echo "IG_TOKEN_EOF" >> "$GITHUB_OUTPUT"
+            echo "refreshed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Token refresh skipped/failed — using existing INSTAGRAM_ACCESS_TOKEN secret"
+            echo "access_token<<IG_TOKEN_EOF" >> "$GITHUB_OUTPUT"
+            echo "$FALLBACK" >> "$GITHUB_OUTPUT"
+            echo "IG_TOKEN_EOF" >> "$GITHUB_OUTPUT"
+            echo "refreshed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update Cloudflare Instagram secret
+        if: steps.token.outputs.refreshed == 'true'
+        env:
+          TOKEN: ${{ steps.token.outputs.access_token }}
+        run: |
+          printf '%s' "$TOKEN" | npx wrangler secret put INSTAGRAM_ACCESS_TOKEN
 
       - name: Update GitHub Instagram secret
-        if: steps.refresh.outputs.access_token != ''
+        if: steps.token.outputs.refreshed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
+          TOKEN: ${{ steps.token.outputs.access_token }}
         run: |
           if [ -z "$GH_TOKEN" ]; then
             echo "GH_PAT not configured — skipping GitHub secret update."
             echo "Add GH_PAT (repo Secrets write) so the refreshed token stays in sync for CI."
             exit 0
           fi
-          echo -n "${{ steps.refresh.outputs.access_token }}" | gh secret set INSTAGRAM_ACCESS_TOKEN --repo "${{ github.repository }}"
+          printf '%s' "$TOKEN" | gh secret set INSTAGRAM_ACCESS_TOKEN --repo "${{ github.repository }}"
 
       - name: Sync Instagram feed
         env:
-          INSTAGRAM_ACCESS_TOKEN: ${{ steps.refresh.outputs.access_token || secrets.INSTAGRAM_ACCESS_TOKEN }}
+          INSTAGRAM_ACCESS_TOKEN: ${{ steps.token.outputs.access_token }}
           INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+          INSTAGRAM_SYNC_STRICT: "1"
         run: npm run instagram:sync
 
       - name: Commit synced assets

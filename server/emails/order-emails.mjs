@@ -1,4 +1,4 @@
-import { sendEmail, formatMoneyEmail, siteUrl } from "../email.mjs";
+import { sendEmail, formatMoneyEmail, siteUrl, opsInbox } from "../email.mjs";
 
 function layout({ title, body }) {
   return `<!DOCTYPE html>
@@ -63,6 +63,95 @@ export async function sendOrderConfirmationEmail(order) {
     to: email,
     subject: `Order confirmed — Bingin Diaries`,
     html: layout({ title: "Order confirmed", body }),
+  });
+}
+
+function channelLabel(channel) {
+  if (channel === "wolf_badger") return "Wolf & Badger";
+  if (channel === "influencer") return "Influenceur";
+  if (channel === "other") return "Marketplace";
+  return "Site web";
+}
+
+/** Alert the ops inbox when a new order is paid (team notification). */
+export async function sendNewOrderAlertEmail(order) {
+  const currency = order.currency || "EUR";
+  const total = formatMoneyEmail(order.amountTotal, currency);
+  const adminUrl = `${siteUrl()}/admin/orders/${encodeURIComponent(order.id)}`;
+  const channel = channelLabel(order.channel || "website");
+  const customer = order.customerEmail?.trim() || "—";
+  const country = (order.shippingCountryCode || order.countryCode || "—").toUpperCase();
+  const promo = order.promoCode?.trim();
+
+  const body = `
+    <p>Nouvelle commande payée sur Bingin Diaries.</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0;font-size:14px;">
+      <tr><td style="padding:6px 0;color:#8a8278;">Canal</td><td style="padding:6px 0;text-align:right;"><strong>${channel}</strong></td></tr>
+      <tr><td style="padding:6px 0;color:#8a8278;">Client</td><td style="padding:6px 0;text-align:right;">${customer}</td></tr>
+      <tr><td style="padding:6px 0;color:#8a8278;">Pays</td><td style="padding:6px 0;text-align:right;">${country}</td></tr>
+      <tr><td style="padding:6px 0;color:#8a8278;">Total</td><td style="padding:6px 0;text-align:right;"><strong>${total}</strong></td></tr>
+      ${promo ? `<tr><td style="padding:6px 0;color:#8a8278;">Code promo</td><td style="padding:6px 0;text-align:right;font-family:monospace;">${promo}</td></tr>` : ""}
+      <tr><td style="padding:6px 0;color:#8a8278;">Réf.</td><td style="padding:6px 0;text-align:right;font-family:monospace;font-size:12px;">${order.id.slice(0, 8)}…</td></tr>
+    </table>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;font-size:14px;">
+      ${itemsHtml(order.items || [], currency)}
+    </table>
+    <p style="margin-top:24px;">
+      <a href="${adminUrl}" style="display:inline-block;padding:12px 20px;background:#1a1a1a;color:#fff;text-decoration:none;font-size:13px;letter-spacing:0.06em;">Voir dans l'admin</a>
+    </p>
+  `;
+
+  return sendEmail({
+    to: opsInbox(),
+    subject: `[Commande] ${total} — ${customer}`,
+    html: layout({ title: "Nouvelle commande", body }),
+  });
+}
+
+export function notifyOrderPaid(order) {
+  sendOrderConfirmationEmail(order).catch((e) => {
+    console.error("[email] order confirmation failed:", e.message);
+  });
+  sendNewOrderAlertEmail(order).catch((e) => {
+    console.error("[email] order alert failed:", e.message);
+  });
+}
+
+/** Email the customer a payment link for a manual (admin-created) invoice order. */
+export async function sendPaymentInvoiceEmail(order, { paymentUrl }) {
+  const email = order.customerEmail?.trim();
+  if (!email) return { skipped: true, reason: "no customer email" };
+  if (!paymentUrl) return { skipped: true, reason: "no payment url" };
+
+  const currency = order.currency || "EUR";
+  const total = formatMoneyEmail(order.amountTotal, currency);
+  const shipping =
+    order.amountShipping != null ? formatMoneyEmail(order.amountShipping, currency) : null;
+
+  const body = `
+    <p>Voici le récapitulatif de votre commande Bingin Diaries.</p>
+    <p>Cliquez sur le bouton ci-dessous pour régler en toute sécurité (carte bancaire via Stripe).</p>
+    <p style="font-size:12px;color:#8a8278;">Commande <span style="font-family:monospace;">${order.id.slice(0, 8)}…</span></p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;font-size:14px;">
+      ${itemsHtml(order.items || [], currency)}
+    </table>
+    ${shipping ? `<p style="text-align:right;font-size:14px;">Livraison : ${shipping}</p>` : ""}
+    <p style="text-align:right;font-size:16px;margin-top:8px;"><strong>Total : ${total}</strong></p>
+    <p style="text-align:center;margin:28px 0;">
+      <a href="${paymentUrl}" style="display:inline-block;background:#1a1a1a;color:#f5f0e8;text-decoration:none;padding:14px 28px;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;">
+        Payer ma commande
+      </a>
+    </p>
+    <p style="font-size:13px;color:#8a8278;margin-top:24px;">
+      Ce lien est valable 30 jours. Une fois le paiement reçu, vous recevrez un email de confirmation.
+      Pour toute question, répondez simplement à cet e-mail.
+    </p>
+  `;
+
+  return sendEmail({
+    to: email,
+    subject: `Votre commande à régler — Bingin Diaries (${total})`,
+    html: layout({ title: "Paiement de votre commande", body }),
   });
 }
 

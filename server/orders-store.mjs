@@ -101,6 +101,33 @@ export async function findOrderById(orderId) {
   return orders.find((o) => o.id === orderId) ?? null;
 }
 
+export async function holdOrderAfterPaymentBlocked(orderId, payload) {
+  if (isDatabaseConfigured()) {
+    const db = await getDbOrders();
+    return db.holdOrderAfterPaymentBlocked(orderId, payload);
+  }
+
+  const orders = await readAllJson();
+  const idx = orders.findIndex((o) => o.id === orderId);
+  if (idx === -1) return null;
+  if (orders[idx].status === "paid" || orders[idx].status === "on_hold") return orders[idx];
+
+  const note = `[checkout_blocked] ${payload.reason}`.trim();
+  orders[idx] = {
+    ...orders[idx],
+    status: "on_hold",
+    stripeSessionId: payload.stripeSessionId || orders[idx].stripeSessionId,
+    customerEmail: payload.customerEmail || orders[idx].customerEmail,
+    amountTotal: payload.amountTotal,
+    currency: payload.currency || orders[idx].currency,
+    shippingCountryCode: payload.shippingCountryCode || null,
+    notes: orders[idx].notes ? `${orders[idx].notes}\n${note}` : note,
+    paidAt: new Date().toISOString(),
+  };
+  await writeAllJson(orders);
+  return orders[idx];
+}
+
 export async function markOrderPaid(orderId, paymentMeta) {
   if (isDatabaseConfigured()) {
     const db = await getDbOrders();
@@ -121,8 +148,10 @@ export async function markOrderPaid(orderId, paymentMeta) {
 
   const orders = await readAllJson();
   const idx = orders.findIndex((o) => o.id === orderId);
-  if (idx === -1) return null;
-  if (orders[idx].status === "paid") return orders[idx];
+  if (idx === -1) return { order: null, newlyPaid: false };
+  if (orders[idx].status === "paid") {
+    return { order: orders[idx], newlyPaid: false };
+  }
 
   orders[idx] = {
     ...orders[idx],
@@ -135,7 +164,7 @@ export async function markOrderPaid(orderId, paymentMeta) {
     paidAt: new Date().toISOString(),
   };
   await writeAllJson(orders);
-  return orders[idx];
+  return { order: orders[idx], newlyPaid: true };
 }
 
 export async function listOrders() {

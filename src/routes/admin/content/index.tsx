@@ -18,6 +18,9 @@ import { CmsMediaField } from "@/components/admin/CmsMediaField";
 import { UploadsUnavailableBanner } from "@/components/admin/UploadsUnavailableBanner";
 import { CmsMediaGuide } from "@/components/admin/CmsMediaGuide";
 import { useUploadsAvailable } from "@/lib/use-uploads-available";
+import { NavigationLocaleEditor } from "@/components/admin/NavigationLocaleEditor";
+import type { Locale } from "@/lib/i18n/messages";
+import type { SiteNavigationStored } from "@/lib/content-types";
 
 export const Route = createFileRoute("/admin/content/")({
   head: () => ({ meta: [{ title: "Content — Bingin Diaries Admin" }] }),
@@ -31,6 +34,8 @@ function AdminContentPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [seeding, setSeeding] = useState(false);
+  const [navLocale, setNavLocale] = useState<Locale>("fr");
+  const [navigationStored, setNavigationStored] = useState<SiteNavigationStored>({ locales: {} });
   const { available: uploadsAvailable, loading: uploadsLoading } = useUploadsAvailable();
 
   useEffect(() => {
@@ -42,6 +47,7 @@ function AdminContentPage() {
       const res = await fetchAdminSiteContent();
       setAnnouncement(res.announcement);
       setHomepage(res.homepage);
+      setNavigationStored(res.homepage.navigationStored ?? { locales: {} });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load content");
     }
@@ -54,9 +60,16 @@ function AdminContentPage() {
     setMessage(null);
     setError(null);
     try {
-      const res = await updateAdminSiteContent({ announcement, homepage });
+      const res = await updateAdminSiteContent({
+        announcement,
+        homepage: {
+          ...homepage,
+          navigation: { locales: navigationStored.locales },
+        },
+      });
       setAnnouncement(res.announcement);
       setHomepage(res.homepage);
+      setNavigationStored(res.homepage.navigationStored ?? { locales: navigationStored.locales });
       setMessage("Contenu enregistré.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
@@ -442,62 +455,13 @@ function AdminContentPage() {
           <CardHeader>
             <CardTitle className="text-lg">Navigation (libellés menu)</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <CmsField
-              label="New Collection"
-              value={homepage.navigation?.newCollection ?? ""}
-              onChange={(v) =>
-                setHomepage({
-                  ...homepage,
-                  navigation: { ...(homepage.navigation ?? { popularSearches: [] }), newCollection: v },
-                })
-              }
+          <CardContent>
+            <NavigationLocaleEditor
+              stored={navigationStored}
+              activeLocale={navLocale}
+              onLocaleChange={setNavLocale}
+              onChange={(locales) => setNavigationStored({ locales })}
             />
-            <CmsField
-              label="Shop"
-              value={homepage.navigation?.shop ?? ""}
-              onChange={(v) =>
-                setHomepage({
-                  ...homepage,
-                  navigation: { ...(homepage.navigation ?? { popularSearches: [] }), shop: v },
-                })
-              }
-            />
-            <CmsField
-              label="Sales"
-              value={homepage.navigation?.sales ?? ""}
-              onChange={(v) =>
-                setHomepage({
-                  ...homepage,
-                  navigation: { ...(homepage.navigation ?? { popularSearches: [] }), sales: v },
-                })
-              }
-            />
-            <CmsField
-              label="About us"
-              value={homepage.navigation?.aboutUs ?? ""}
-              onChange={(v) =>
-                setHomepage({
-                  ...homepage,
-                  navigation: { ...(homepage.navigation ?? { popularSearches: [] }), aboutUs: v },
-                })
-              }
-            />
-            <div className="sm:col-span-2">
-              <CmsField
-                label="Recherches populaires (séparées par des virgules)"
-                value={(homepage.navigation?.popularSearches ?? []).join(", ")}
-                onChange={(v) =>
-                  setHomepage({
-                    ...homepage,
-                    navigation: {
-                      ...(homepage.navigation ?? { newCollection: "", shop: "", sales: "", aboutUs: "" }),
-                      popularSearches: v.split(",").map((s) => s.trim()).filter(Boolean),
-                    },
-                  })
-                }
-              />
-            </div>
           </CardContent>
         </Card>
 

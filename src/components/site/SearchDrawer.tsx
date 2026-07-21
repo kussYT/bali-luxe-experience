@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Search, X } from "lucide-react";
+import { useRegionalCatalog } from "@/lib/use-regional-catalog";
 import { useCatalog } from "@/lib/catalog-context";
 import { useLocale } from "@/lib/i18n/locale-context";
 import { useSiteContent } from "@/lib/content-context";
@@ -19,7 +20,8 @@ export function SearchDrawer({ open, onClose }: SearchDrawerProps) {
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<SearchFilters>({ category: "all", sale: false });
   const navigate = useNavigate();
-  const { publishedProducts, collections } = useCatalog();
+  const { regionalProducts, collections } = useRegionalCatalog();
+  const { publishedProducts } = useCatalog();
   const { homepage } = useSiteContent();
   const { t } = useLocale();
 
@@ -39,7 +41,7 @@ export function SearchDrawer({ open, onClose }: SearchDrawerProps) {
       },
       collections,
     );
-    return rankSearchResults(filtered, query).slice(0, 8);
+    return rankSearchResults(filtered, query, collections).slice(0, 12);
   }, [publishedProducts, collections, query, filters]);
 
   if (!open) return null;

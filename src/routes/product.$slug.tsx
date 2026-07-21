@@ -1,14 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Heart, Plus, Minus } from "lucide-react";
-import { useCatalog } from "@/lib/catalog-context";
+import { useRegionalCatalog } from "@/lib/use-regional-catalog";
 import { useCart } from "@/lib/cart";
 import { useCurrency } from "@/lib/currency";
+import { useSiteContent } from "@/lib/content-context";
+import { fillProductMessage } from "@/lib/product-messages";
 import { ProductCard } from "@/components/site/ProductCard";
 import { PageMeta } from "@/components/site/PageMeta";
 import { VariantSelector } from "@/components/site/VariantSelector";
 import { getDefaultVariant, getVariant, maxCartQty } from "@/lib/warehouse-allocation";
-import { productObjectPosition } from "@/lib/image-focal";
+import { productObjectPosition, focalObjectPosition } from "@/lib/image-focal";
+import { trackProductEvent, productFocalAt } from "@/lib/track-product-analytics";
 
 export const Route = createFileRoute("/product/$slug")({
   head: ({ params }) => ({
@@ -19,28 +22,48 @@ export const Route = createFileRoute("/product/$slug")({
 
 function ProductPage() {
   const { slug } = Route.useParams();
-  const { publishedProducts } = useCatalog();
+  const { publishedProducts, regionalProducts, isRegionallyAvailable, maxQty: regionalMaxQty, warehouseLabel, countryCode, zones } =
+    useRegionalCatalog();
   const product = publishedProducts.find((p) => p.slug === slug);
   const { add, toggleWish, wishlist } = useCart();
-  const { format, shipping } = useCurrency();
+  const { format, formatEur, shipping } = useCurrency();
+  const { productMessages } = useSiteContent();
   const [qty, setQty] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const wished = wishlist.includes(slug);
 
   const initialVariantId = useMemo(() => {
     if (!product?.variants?.length) return null;
-    const inStock = product.variants.find(
-      (v) => (v.inventory?.france ?? 0) + (v.inventory?.bali ?? 0) > 0,
-    );
+    const inStock = product.variants.find((v) => maxCartQty(product, countryCode, v.id, zones) > 0);
     return (inStock ?? getDefaultVariant(product))?.id ?? null;
-  }, [product]);
+  }, [product, countryCode, zones]);
 
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(initialVariantId);
 
   useEffect(() => {
     setSelectedVariantId(initialVariantId);
     setQty(1);
-  }, [slug, initialVariantId]);
+    setActiveImage(0);
+  }, [slug]);
+
+  useEffect(() => {
+    if (!product?.variants?.length) return;
+    const currentValid =
+      selectedVariantId != null &&
+      product.variants.some(
+        (variant) =>
+          variant.id === selectedVariantId &&
+          maxCartQty(product, countryCode, variant.id, zones) > 0,
+      );
+    if (!currentValid) {
+      setSelectedVariantId(initialVariantId);
+      setQty(1);
+    }
+  }, [product, countryCode, zones, initialVariantId, selectedVariantId]);
+
+  useEffect(() => {
+    if (product?.slug) trackProductEvent(product.slug, "view");
+  }, [product?.slug]);
 
   if (!product) {
     return (
@@ -54,22 +77,27 @@ function ProductPage() {
   }
 
   const selectedVariant = getVariant(product, selectedVariantId);
-  const maxQty = maxCartQty(product, shipping.code, selectedVariant?.id);
+  const maxQty = regionalMaxQty(product, selectedVariant?.id);
   const hasVariants = (product.variants?.length ?? 0) > 1;
-  const canAdd = maxQty > 0 && product.available;
+  const regionallyAvailable = isRegionallyAvailable(product);
+  const canAdd = maxQty > 0 && product.available && regionallyAvailable;
 
-  const related = publishedProducts
+  const related = regionalProducts
     .filter((p) => p.slug !== product.slug && p.collectionSlug === product.collectionSlug)
     .slice(0, 3);
   const suggestions =
     related.length > 0 ?
       related
-    : publishedProducts.filter((p) => p.slug !== product.slug).slice(0, 3);
+    : regionalProducts.filter((p) => p.slug !== product.slug).slice(0, 3);
 
   const gallery = product.images.length > 0 ? product.images : [product.image];
   const showVideo = Boolean(product.videoUrl);
   const isVideoActive = showVideo && activeImage === 0;
   const imageIndex = showVideo ? activeImage - 1 : activeImage;
+  const displayImageIndex = Math.max(0, imageIndex);
+  const displayFocal =
+    productFocalAt(product, displayImageIndex) ??
+    (displayImageIndex === 0 ? productObjectPosition(product) : focalObjectPosition());
   const pageTitle = product.seoTitle?.trim() || `${product.name} — Bingin Diaries`;
   const pageDescription = product.metaDescription?.trim() || undefined;
 
@@ -90,14 +118,10 @@ function ProductPage() {
             />
           ) : (
             <img
-              src={gallery[Math.max(0, imageIndex)] ?? gallery[0]}
+              src={gallery[displayImageIndex] ?? gallery[0]}
               alt={product.name}
               className="w-full h-full object-cover aspect-[4/5] md:aspect-auto md:min-h-[calc(100vh-5.25rem)] image-editorial animate-fade-in"
-              style={
-                (showVideo ? imageIndex : activeImage) === 0
-                  ? { objectPosition: productObjectPosition(product) }
-                  : undefined
-              }
+              style={{ objectPosition: displayFocal }}
             />
           )}
           {(gallery.length > 1 || showVideo) && (
@@ -118,7 +142,12 @@ function ProductPage() {
                   onClick={() => setActiveImage(showVideo ? i + 1 : i)}
                   className={`shrink-0 size-14 overflow-hidden rounded-sm border transition-colors duration-300 ${activeImage === (showVideo ? i + 1 : i) ? "border-foreground" : "border-transparent opacity-60 hover:opacity-100"}`}
                 >
-                  <img src={src} alt="" className="size-full object-cover image-editorial" />
+                  <img
+                    src={src}
+                    alt=""
+                    className="size-full object-cover image-editorial"
+                    style={{ objectPosition: productFocalAt(product, i) ?? focalObjectPosition() }}
+                  />
                 </button>
               ))}
             </div>
@@ -136,17 +165,27 @@ function ProductPage() {
           <div className="mt-8 flex items-baseline gap-4">
             <p className="text-xl tracking-wide">{format(product)}</p>
             {product.onSale && product.compareAtEUR != null && (
-              <p className="text-sm text-muted-foreground line-through">€{product.priceEUR}</p>
+              <p className="text-sm text-muted-foreground line-through">{formatEur(product.priceEUR)}</p>
             )}
             {product.onSale && (
               <span className="text-eyebrow !text-accent">Sale</span>
             )}
           </div>
 
+          {!regionallyAvailable && (
+            <p className="mt-6 text-sm text-muted-foreground border border-border rounded-sm p-4 max-w-md leading-relaxed">
+              {fillProductMessage(productMessages.regionalUnavailable, {
+                warehouse: warehouseLabel,
+                country: shipping.name,
+              })}
+            </p>
+          )}
+
           <VariantSelector
             product={product}
             selectedId={selectedVariantId}
-            countryCode={shipping.code}
+            countryCode={countryCode}
+            zones={zones}
             onSelect={(id) => {
               setSelectedVariantId(id);
               setQty(1);
@@ -178,7 +217,11 @@ function ProductPage() {
               disabled={!canAdd || (hasVariants && !selectedVariant)}
               className="btn-primary flex-1 sm:flex-none disabled:opacity-45"
             >
-              {canAdd ? "Add to bag" : "Sold out"}
+              {canAdd
+                ? productMessages.addToBag
+                : regionallyAvailable
+                  ? productMessages.soldOut
+                  : productMessages.unavailableInRegion}
             </button>
             <button
               type="button"
@@ -191,9 +234,16 @@ function ProductPage() {
           </div>
 
           <p className="mt-5 text-caption">
-            {maxQty > 0 ?
-              `${maxQty} in stock${selectedVariant && selectedVariant.title !== "Default" ? ` (${selectedVariant.title})` : ""} — ships from Paris & Bali`
-            : "Out of stock"}
+            {maxQty > 0
+              ? fillProductMessage(productMessages.inStock, {
+                  count: String(maxQty),
+                  variant:
+                    selectedVariant && selectedVariant.title !== "Default"
+                      ? ` (${selectedVariant.title})`
+                      : "",
+                  warehouse: warehouseLabel,
+                })
+              : productMessages.soldOut}
           </p>
         </div>
       </section>

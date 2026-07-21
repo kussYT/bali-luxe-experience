@@ -10,6 +10,8 @@ import { CartProvider } from "@/lib/cart";
 
 import { CatalogProvider } from "@/lib/catalog-context";
 
+import { FulfillmentProvider } from "@/lib/fulfillment-context";
+
 import { ContentProvider } from "@/lib/content-context";
 
 import { CookieConsentProvider } from "@/lib/cookie-consent-context";
@@ -27,6 +29,10 @@ import { SitePreferencesDock } from "@/components/site/SitePreferencesDock";
 import { BinginSounds } from "@/components/lifestyle/BinginSounds";
 
 import { CookieConsent } from "@/components/site/CookieConsent";
+
+import { NewsletterPopup } from "@/components/site/NewsletterPopup";
+
+import { SiteAnalyticsTracker } from "@/components/site/SiteAnalyticsTracker";
 
 import { Toaster } from "@/components/ui/sonner";
 
@@ -88,7 +94,7 @@ export const Route = createRootRoute({
 
       { name: "twitter:card", content: "summary_large_image" },
 
-      { property: "og:image", content: "/logo.png" },
+      { property: "og:image", content: "/logo-mark.png" },
 
     ],
 
@@ -96,7 +102,7 @@ export const Route = createRootRoute({
 
       { rel: "stylesheet", href: appCss },
 
-      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "icon", href: "/logo-mark.png", type: "image/png" },
 
       { rel: "apple-touch-icon", href: "/logo-mark.png" },
 
@@ -164,15 +170,17 @@ function RootComponent() {
 
   return (
 
-    <CatalogProvider>
+    <LocaleProvider>
 
-      <LocaleProvider>
+    <CatalogProvider>
 
       <ContentProvider>
 
       <AccountProvider>
 
       <CurrencyProvider>
+
+        <FulfillmentProvider>
 
         <CartProvider>
 
@@ -198,11 +206,17 @@ function RootComponent() {
 
               {!isAdmin && <CookieConsent />}
 
+              {!isAdmin && <NewsletterPopup />}
+
+              {!isAdmin && <SiteAnalyticsTracker />}
+
               <Toaster position="top-center" />
 
           </CookieConsentProvider>
 
         </CartProvider>
+
+        </FulfillmentProvider>
 
       </CurrencyProvider>
 
@@ -210,9 +224,9 @@ function RootComponent() {
 
       </ContentProvider>
 
-      </LocaleProvider>
-
     </CatalogProvider>
+
+    </LocaleProvider>
 
   );
 

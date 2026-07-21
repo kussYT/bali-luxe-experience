@@ -32,10 +32,26 @@ import {
   resendAdminOrderConfirmation,
   getAdminOrdersCsv,
   postMarketplaceOrder,
+  postManualInvoiceOrder,
+  previewManualInvoiceOrder,
+  sendPaymentInvoiceLink,
   getAdminAbandonedCheckoutsResponse,
   sendAbandonedCheckoutRecovery,
 } from "./api/orders.mjs";
 import { getAdminAnalyticsResponse } from "./api/analytics.mjs";
+import {
+  postProductAnalyticsEvent,
+  getAdminProductAnalyticsResponse,
+} from "./api/product-analytics.mjs";
+import {
+  postSitePageview,
+  getAdminSiteTrafficResponse,
+} from "./api/site-analytics.mjs";
+import {
+  getAbandonedRecoverySettings,
+  saveAbandonedRecoverySettings,
+  processAbandonedRecoveries,
+} from "./db/abandoned-recovery.mjs";
 import {
   getNewsletterCopyResponse,
   getAdminNewsletterResponse,
@@ -63,10 +79,12 @@ import {
   getAdminCollectionsResponse,
   patchAdminCollectionResponse,
   reorderAdminCollectionsResponse,
+  getAdminCollectionProductsResponse,
+  patchAdminCollectionProductsResponse,
   seedCmsContent,
 } from "./api/content-admin.mjs";
 import { getAdminCmsStatusResponse } from "./api/cms-status.mjs";
-import { mergeFeedWithLocalImages, sanitizeInstagramFeed } from "./instagram-utils.mjs";
+import { mergeFeedWithLocalImages, sanitizeInstagramFeed, LIFESTYLE_FALLBACK_IMAGES } from "./instagram-utils.mjs";
 import {
   createAdminProduct,
   updateAdminProduct,
@@ -90,7 +108,7 @@ import {
   getAdminCustomersExportCsv,
   getAdminCustomersExportBrevoCsv,
 } from "./api/customers-admin.mjs";
-import { postAdminTranslatePage, postAdminTranslatePost, getAdminTranslateStatusResponse } from "./api/translate-admin.mjs";
+import { postAdminTranslatePage, postAdminTranslatePost, postAdminTranslateProduct, postAdminTranslateProductMessages, getAdminTranslateStatusResponse } from "./api/translate-admin.mjs";
 import {
   getAdminPromotionsResponse,
   postAdminPromotion,
@@ -100,7 +118,17 @@ import {
 } from "./api/promotions-admin.mjs";
 import { getAdminFinanceResponse } from "./api/finance-admin.mjs";
 import { getAdminReadinessResponse } from "./api/readiness-admin.mjs";
+import {
+  getAdminCountryShippingResponse,
+  patchAdminCountryShipping,
+  getPublicEnabledShippingCountries,
+} from "./api/country-shipping-admin.mjs";
 import { getAdminShippingResponse, patchAdminShipping } from "./api/shipping-admin.mjs";
+import {
+  getPublicFulfillmentZonesResponse,
+  getAdminFulfillmentZonesResponse,
+  patchAdminFulfillmentZones,
+} from "./api/fulfillment-zones.mjs";
 
 function jsonResponse(status, body, extraHeaders = {}) {
   return Response.json(body, { status, headers: extraHeaders });
@@ -129,12 +157,27 @@ async function parseMultipartRequest(request) {
   return files;
 }
 
+function hasLocalInstagramImages(feed) {
+  return feed?.posts?.some((p) => typeof p.image === "string" && p.image.startsWith("/instagram/"));
+}
+
+function usesLifestyleFallbacks(feed) {
+  return feed?.posts?.some((p) => LIFESTYLE_FALLBACK_IMAGES.includes(p.image));
+}
+
 async function instagramResponse(request) {
+  const staticFeed = sanitizeInstagramFeed(getStaticInstagramFeed());
   let liveError = null;
   try {
     const live = await fetchInstagramFeed();
     if (live) {
-      const merged = mergeFeedWithLocalImages(live, getStaticInstagramFeed());
+      const merged = sanitizeInstagramFeed(mergeFeedWithLocalImages(live, staticFeed));
+      if (usesLifestyleFallbacks(merged) && hasLocalInstagramImages(staticFeed)) {
+        return jsonResponse(200, {
+          ...staticFeed,
+          source: staticFeed.source || "static",
+        });
+      }
       return jsonResponse(200, merged);
     }
   } catch (e) {
@@ -143,11 +186,10 @@ async function instagramResponse(request) {
   }
 
   try {
-    const payload = sanitizeInstagramFeed(getStaticInstagramFeed());
-    if (payload?.posts?.length) {
+    if (staticFeed?.posts?.length) {
       return jsonResponse(200, {
-        ...payload,
-        source: payload.source || "static",
+        ...staticFeed,
+        source: staticFeed.source || "static",
         error: liveError ? "Instagram live feed unavailable. Using cached content." : undefined,
       });
     }
@@ -227,8 +269,41 @@ export async function handleApiRequest(request, context = {}) {
 
     if (pathname === "/api/catalog" && method === "GET") {
       const includeDrafts = url.searchParams.get("all") === "1";
-      const catalog = await getCatalogResponse({ includeDrafts });
+      const includeLocales = url.searchParams.get("includeLocales") === "1";
+      const locale = url.searchParams.get("locale") || undefined;
+      const catalog = await getCatalogResponse({ includeDrafts, locale, includeLocales });
       return jsonResponse(200, catalog);
+    }
+
+    if (pathname === "/api/fulfillment-zones" && method === "GET") {
+      const result = await getPublicFulfillmentZonesResponse();
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/shipping-countries" && method === "GET") {
+      const result = await getPublicEnabledShippingCountries();
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/analytics/product" && method === "POST") {
+      const result = await postProductAnalyticsEvent(request);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/analytics/pageview" && method === "POST") {
+      const result = await postSitePageview(request);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/cron/abandoned-recovery" && method === "POST") {
+      const expected = process.env.CRON_SECRET?.trim();
+      const auth = request.headers.get("Authorization") || "";
+      const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+      if (!expected || token !== expected) {
+        return jsonResponse(401, { error: "Unauthorized" });
+      }
+      const result = await processAbandonedRecoveries();
+      return jsonResponse(200, result);
     }
 
     if (pathname === "/api/newsletter" && method === "POST") {
@@ -251,7 +326,8 @@ export async function handleApiRequest(request, context = {}) {
     }
 
     if (pathname === "/api/content/site" && method === "GET") {
-      return getSiteContentResponse();
+      const locale = url.searchParams.get("locale") || undefined;
+      return getSiteContentResponse(locale);
     }
 
     if (pathname === "/api/content/posts" && method === "GET") {
@@ -337,7 +413,7 @@ export async function handleApiRequest(request, context = {}) {
     requireAdmin(request);
 
     if (pathname === "/api/admin/catalog" && method === "GET") {
-      const catalog = await getCatalogResponse({ includeDrafts: true });
+      const catalog = await getCatalogResponse({ includeDrafts: true, includeLocales: true });
       return jsonResponse(200, catalog);
     }
 
@@ -400,6 +476,28 @@ export async function handleApiRequest(request, context = {}) {
       return jsonResponse(200, result);
     }
 
+    if (pathname === "/api/admin/fulfillment-zones" && method === "GET") {
+      const result = await getAdminFulfillmentZonesResponse();
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/fulfillment-zones" && method === "PATCH") {
+      const body = await readJsonBody(request);
+      const result = await patchAdminFulfillmentZones(body);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/country-shipping" && method === "GET") {
+      const result = await getAdminCountryShippingResponse();
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/country-shipping" && method === "PATCH") {
+      const body = await readJsonBody(request);
+      const result = await patchAdminCountryShipping(body);
+      return jsonResponse(200, result);
+    }
+
     if (pathname === "/api/admin/newsletter" && method === "GET") {
       const newsletter = await getAdminNewsletterResponse();
       return jsonResponse(200, newsletter);
@@ -428,6 +526,32 @@ export async function handleApiRequest(request, context = {}) {
       return jsonResponse(200, result);
     }
 
+    if (pathname === "/api/admin/abandoned-recovery/settings" && method === "GET") {
+      const settings = await getAbandonedRecoverySettings();
+      return jsonResponse(200, { settings });
+    }
+
+    if (pathname === "/api/admin/abandoned-recovery/settings" && method === "PATCH") {
+      const body = await readJsonBody(request);
+      const settings = await saveAbandonedRecoverySettings(body);
+      return jsonResponse(200, { settings });
+    }
+
+    if (pathname === "/api/admin/abandoned-recovery/run" && method === "POST") {
+      const result = await processAbandonedRecoveries();
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/analytics/products" && method === "GET") {
+      const result = await getAdminProductAnalyticsResponse(request);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/analytics/traffic" && method === "GET") {
+      const result = await getAdminSiteTrafficResponse(request);
+      return jsonResponse(200, result);
+    }
+
     if (pathname === "/api/admin/orders" && method === "GET") {
       const channel = url.searchParams.get("channel") || undefined;
       const orders = await getAdminOrdersResponse({ channel });
@@ -438,6 +562,18 @@ export async function handleApiRequest(request, context = {}) {
       const body = await readJsonBody(request);
       const result = await postMarketplaceOrder(body);
       return jsonResponse(201, result);
+    }
+
+    if (pathname === "/api/admin/orders/invoice" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await postManualInvoiceOrder(body);
+      return jsonResponse(201, result);
+    }
+
+    if (pathname === "/api/admin/orders/invoice/preview" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await previewManualInvoiceOrder(body);
+      return jsonResponse(200, result);
     }
 
     if (pathname === "/api/admin/orders/export.csv" && method === "GET") {
@@ -455,6 +591,13 @@ export async function handleApiRequest(request, context = {}) {
     if (orderResendMatch && method === "POST") {
       const orderId = decodeURIComponent(orderResendMatch[1]);
       const result = await resendAdminOrderConfirmation(orderId);
+      return jsonResponse(200, result);
+    }
+
+    const orderInvoiceMatch = pathname.match(/^\/api\/admin\/orders\/([^/]+)\/send-payment-link$/);
+    if (orderInvoiceMatch && method === "POST") {
+      const orderId = decodeURIComponent(orderInvoiceMatch[1]);
+      const result = await sendPaymentInvoiceLink(orderId);
       return jsonResponse(200, result);
     }
 
@@ -659,6 +802,19 @@ export async function handleApiRequest(request, context = {}) {
       return jsonResponse(200, result);
     }
 
+    const adminCollectionProductsMatch = pathname.match(/^\/api\/admin\/collections\/([^/]+)\/products$/);
+    if (adminCollectionProductsMatch && method === "GET") {
+      const slug = decodeURIComponent(adminCollectionProductsMatch[1]);
+      const result = await getAdminCollectionProductsResponse(slug);
+      return jsonResponse(200, result);
+    }
+    if (adminCollectionProductsMatch && method === "PATCH") {
+      const slug = decodeURIComponent(adminCollectionProductsMatch[1]);
+      const body = await readJsonBody(request);
+      const result = await patchAdminCollectionProductsResponse(slug, body);
+      return jsonResponse(200, result);
+    }
+
     if (pathname === "/api/admin/customers" && method === "GET") {
       const result = await getAdminCustomersResponse(request);
       return jsonResponse(200, result);
@@ -705,6 +861,23 @@ export async function handleApiRequest(request, context = {}) {
     if (pathname === "/api/admin/translate-post" && method === "POST") {
       const body = await readJsonBody(request);
       const result = await postAdminTranslatePost(body);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/translate-product" && method === "GET") {
+      const status = await getAdminTranslateStatusResponse();
+      return jsonResponse(200, status);
+    }
+
+    if (pathname === "/api/admin/translate-product" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await postAdminTranslateProduct(body);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/translate-product-messages" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await postAdminTranslateProductMessages(body);
       return jsonResponse(200, result);
     }
 

@@ -1,6 +1,7 @@
 /** Default editorial content — mirrors src/data/lifestyle-content.ts (fallback when DB empty). */
 
 import stockists from "../src/data/stockists.json" with { type: "json" };
+import { SITE_LOCALE_CODES, resolveProductMessagesLocaleBlock, resolveNavigationLocaleBlock } from "./i18n-locales.mjs";
 
 export const DEFAULT_ANNOUNCEMENT = {
   enabled: true,
@@ -47,6 +48,7 @@ export const DEFAULT_HOMEPAGE = {
     sales: "",
     aboutUs: "",
     popularSearches: [],
+    locales: {},
   },
   megaMenuFeatured: {
     newCollection: [
@@ -299,6 +301,16 @@ export const DEFAULT_CARE = {
     "A well-cared-for hat stays beautiful for a long time. Our pieces are made to last with a few simple habits, you can keep their shape, texture, and style season after season.",
   intro:
     "A well-cared-for hat stays beautiful for a long time. Our pieces are made to last with a few simple habits, you can keep their shape, texture, and style season after season.",
+  images: [
+    {
+      src: "/care/how-to-care.png",
+      alt: "How to take care of your hat — Bingin Diaries",
+    },
+    {
+      src: "/care/care-by-material.png",
+      alt: "Care guide by hat type — Bingin Diaries",
+    },
+  ],
   sections: [
     {
       title: "Coton",
@@ -389,6 +401,172 @@ export const DEFAULT_FOOTER = {
   materials: "Materials & quality",
   copyright: "© 2026 Bingin Diaries",
 };
+
+export const DEFAULT_PRODUCT_MESSAGES = {
+  regionalUnavailable:
+    "Cette pièce n'est pas disponible pour une livraison en {country}. Le stock pour votre zone est expédié depuis notre atelier {warehouse}. Changez le pays de livraison dans le menu pour voir les pièces proposées dans votre zone.",
+  soldOut: "Rupture de stock",
+  unavailableInRegion: "Indisponible dans votre région",
+  addToBag: "Ajouter au panier",
+  inStock: "{count} en stock{variant} — expédié depuis {warehouse}",
+};
+
+export const DEFAULT_PRODUCT_MESSAGES_BY_LOCALE = {
+  fr: DEFAULT_PRODUCT_MESSAGES,
+  en: {
+    regionalUnavailable:
+      "This piece is not available for delivery to {country}. Stock for your zone ships from our {warehouse} workshop. Change your delivery country in the menu to see pieces available in your region.",
+    soldOut: "Sold out",
+    unavailableInRegion: "Unavailable in your region",
+    addToBag: "Add to bag",
+    inStock: "{count} in stock{variant} — shipped from {warehouse}",
+  },
+  id: {
+    regionalUnavailable:
+      "Produk ini tidak tersedia untuk pengiriman ke {country}. Stok untuk wilayah Anda dikirim dari bengkel {warehouse} kami. Ubah negara pengiriman di menu untuk melihat produk yang tersedia di wilayah Anda.",
+    soldOut: "Habis",
+    unavailableInRegion: "Tidak tersedia di wilayah Anda",
+    addToBag: "Tambah ke tas",
+    inStock: "{count} tersedia{variant} — dikirim dari {warehouse}",
+  },
+  es: {
+    regionalUnavailable:
+      "Esta pieza no está disponible para envíos a {country}. El stock de tu zona se envía desde nuestro taller en {warehouse}. Cambia el país de entrega en el menú para ver las piezas disponibles en tu zona.",
+    soldOut: "Agotado",
+    unavailableInRegion: "No disponible en tu región",
+    addToBag: "Añadir a la bolsa",
+    inStock: "{count} en stock{variant} — enviado desde {warehouse}",
+  },
+};
+
+function isLegacyProductMessages(stored) {
+  return (
+    stored &&
+    typeof stored === "object" &&
+    ("addToBag" in stored || "soldOut" in stored) &&
+    !stored.locales
+  );
+}
+
+export function normalizeProductMessagesStored(stored) {
+  const locales = {};
+  for (const code of SITE_LOCALE_CODES) {
+    locales[code] = deepMerge(DEFAULT_PRODUCT_MESSAGES_BY_LOCALE[code], {});
+  }
+
+  if (isLegacyProductMessages(stored)) {
+    locales.fr = deepMerge(DEFAULT_PRODUCT_MESSAGES, stored);
+  } else if (stored?.locales && typeof stored.locales === "object") {
+    for (const code of SITE_LOCALE_CODES) {
+      if (stored.locales[code]) {
+        locales[code] = deepMerge(DEFAULT_PRODUCT_MESSAGES_BY_LOCALE[code], stored.locales[code]);
+      }
+    }
+  }
+
+  return { locales };
+}
+
+export function resolveProductMessages(stored, locale) {
+  const { locales } = normalizeProductMessagesStored(stored);
+  const resolved = resolveProductMessagesLocaleBlock(locales, locale);
+  const defaults = DEFAULT_PRODUCT_MESSAGES_BY_LOCALE[resolved?.code] || DEFAULT_PRODUCT_MESSAGES;
+  const block = resolved?.block || locales.fr || DEFAULT_PRODUCT_MESSAGES;
+  return {
+    regionalUnavailable: block.regionalUnavailable?.trim() || defaults.regionalUnavailable,
+    soldOut: block.soldOut?.trim() || defaults.soldOut,
+    unavailableInRegion: block.unavailableInRegion?.trim() || defaults.unavailableInRegion,
+    addToBag: block.addToBag?.trim() || defaults.addToBag,
+    inStock: block.inStock?.trim() || defaults.inStock,
+  };
+}
+
+const DEFAULT_NAVIGATION_BY_LOCALE = {
+  fr: {
+    newCollection: "Nouvelle collection",
+    shop: "Boutique",
+    sales: "Soldes",
+    aboutUs: "À propos",
+    popularSearches: [],
+  },
+  en: {
+    newCollection: "New Collection",
+    shop: "Shop",
+    sales: "Sales",
+    aboutUs: "About us",
+    popularSearches: [],
+  },
+  id: {
+    newCollection: "Koleksi baru",
+    shop: "Toko",
+    sales: "Obral",
+    aboutUs: "Tentang kami",
+    popularSearches: [],
+  },
+  es: {
+    newCollection: "Nueva colección",
+    shop: "Tienda",
+    sales: "Rebajas",
+    aboutUs: "Sobre nosotros",
+    popularSearches: [],
+  },
+};
+
+function emptyNavigationFields() {
+  return { newCollection: "", shop: "", sales: "", aboutUs: "", popularSearches: [] };
+}
+
+export function normalizeNavigationStored(stored) {
+  const locales = {};
+  for (const code of SITE_LOCALE_CODES) {
+    locales[code] = deepMerge(DEFAULT_NAVIGATION_BY_LOCALE[code], emptyNavigationFields());
+  }
+
+  if (stored?.locales && typeof stored.locales === "object") {
+    for (const code of SITE_LOCALE_CODES) {
+      if (stored.locales[code]) {
+        locales[code] = deepMerge(locales[code], stored.locales[code]);
+      }
+    }
+  }
+
+  const legacyFlat = {
+    newCollection: stored?.newCollection?.trim() || "",
+    shop: stored?.shop?.trim() || "",
+    sales: stored?.sales?.trim() || "",
+    aboutUs: stored?.aboutUs?.trim() || "",
+    popularSearches: Array.isArray(stored?.popularSearches) ? stored.popularSearches : [],
+  };
+  if (legacyFlat.newCollection || legacyFlat.shop || legacyFlat.sales || legacyFlat.aboutUs) {
+    locales.en = deepMerge(locales.en, legacyFlat);
+  }
+
+  return { locales, legacyFlat };
+}
+
+export function resolveNavigation(stored, locale) {
+  const { locales, legacyFlat } = normalizeNavigationStored(stored || {});
+  const resolved = resolveNavigationLocaleBlock(locales, locale);
+  const defaults = DEFAULT_NAVIGATION_BY_LOCALE[resolved?.code] || DEFAULT_NAVIGATION_BY_LOCALE.en;
+  const block = resolved?.block || locales.fr || defaults;
+  const pick = (key) => block[key]?.trim() || legacyFlat[key]?.trim() || defaults[key] || "";
+  return {
+    newCollection: pick("newCollection"),
+    shop: pick("shop"),
+    sales: pick("sales"),
+    aboutUs: pick("aboutUs"),
+    popularSearches:
+      Array.isArray(block.popularSearches) && block.popularSearches.length
+        ? block.popularSearches
+        : legacyFlat.popularSearches.length
+          ? legacyFlat.popularSearches
+          : defaults.popularSearches,
+  };
+}
+
+export function navigationStoredForAdmin(stored) {
+  return normalizeNavigationStored(stored || {});
+}
 
 export const DEFAULT_POSTS = [
   {
@@ -509,6 +687,7 @@ export const SITE_CONTENT_PAGE_KEYS = [
   "care",
   "sizing",
   "footer",
+  "productMessages",
 ];
 
 function deepMerge(base, patch) {
@@ -525,8 +704,78 @@ function deepMerge(base, patch) {
   return out;
 }
 
+const SHOPIFY_CDN_BASE = "https://cdn.shopify.com/s/files/1/0437/5992/7449/files";
+
+/** Rewrite dead bingindiaries.com/cdn/shop/... paths to Shopify CDN (still hosted by Shopify). */
+export function rewriteLegacyShopifyImageUrl(url) {
+  if (!url || typeof url !== "string") return url;
+  const trimmed = url.trim();
+  const match = trimmed.match(/\/cdn\/shop\/files\/(.+)$/i);
+  if (match) return `${SHOPIFY_CDN_BASE}/${match[1]}`;
+  return trimmed;
+}
+
+/** Legacy Shopify paths on our domain 404 after migration off Shopify. */
+export function isBrokenCmsImageUrl(url) {
+  if (!url || typeof url !== "string") return true;
+  return url.includes("/cdn/shop/");
+}
+
+function resolveCmsImageUrl(url, fallback) {
+  if (!url || typeof url !== "string") return fallback;
+  if (isBrokenCmsImageUrl(url)) return rewriteLegacyShopifyImageUrl(url) || fallback;
+  return url;
+}
+
+/** Accept bare ID, full Spotify URL, or ID with ?si= query params pasted by mistake. */
+export function extractSpotifyPlaylistId(idOrUrl) {
+  if (!idOrUrl || typeof idOrUrl !== "string") return "";
+  const trimmed = idOrUrl.trim();
+  const fromUrl = trimmed.match(/playlist\/([a-zA-Z0-9]+)/);
+  if (fromUrl) return fromUrl[1];
+  return trimmed.split("?")[0].split("&")[0];
+}
+
+function sanitizePhotoStrip(photoStrip) {
+  const defaults = DEFAULT_HOMEPAGE.photoStrip;
+  if (!photoStrip?.tiles?.length) return defaults;
+  return {
+    ...photoStrip,
+    tiles: photoStrip.tiles.map((tile, i) => ({
+      ...tile,
+      image: isBrokenCmsImageUrl(tile.image)
+        ? resolveCmsImageUrl(tile.image, defaults.tiles[i]?.image ?? defaults.tiles[0].image)
+        : tile.image,
+    })),
+  };
+}
+
+function sanitizeBinginSounds(binginSounds) {
+  const defaults = DEFAULT_HOMEPAGE.binginSounds;
+  const merged = { ...defaults, ...(binginSounds || {}) };
+  const id =
+    extractSpotifyPlaylistId(merged.spotifyPlaylistId) ||
+    extractSpotifyPlaylistId(merged.spotifyUrl) ||
+    defaults.spotifyPlaylistId;
+  return {
+    ...merged,
+    spotifyPlaylistId: id,
+    spotifyUrl: merged.spotifyUrl?.includes("open.spotify.com")
+      ? merged.spotifyUrl.split("?")[0]
+      : `https://open.spotify.com/playlist/${id}`,
+  };
+}
+
+export function sanitizeHomepage(homepage) {
+  return {
+    ...homepage,
+    photoStrip: sanitizePhotoStrip(homepage.photoStrip),
+    binginSounds: sanitizeBinginSounds(homepage.binginSounds),
+  };
+}
+
 export function mergeHomepage(stored) {
-  return deepMerge(DEFAULT_HOMEPAGE, stored || {});
+  return sanitizeHomepage(deepMerge(DEFAULT_HOMEPAGE, stored || {}));
 }
 
 export function mergeAnnouncement(stored) {
@@ -555,4 +804,8 @@ export function mergeSizing(stored) {
 
 export function mergeFooter(stored) {
   return deepMerge(DEFAULT_FOOTER, stored || {});
+}
+
+export function mergeProductMessages(stored) {
+  return normalizeProductMessagesStored(stored);
 }

@@ -1,10 +1,20 @@
 import { Reveal } from "@/components/lifestyle/Reveal";
 import { useSiteContent } from "@/lib/content-context";
 
+function playlistIdFrom(value: string) {
+  const trimmed = value.trim();
+  const fromUrl = trimmed.match(/playlist\/([a-zA-Z0-9]+)/);
+  if (fromUrl) return fromUrl[1];
+  return trimmed.split("?")[0].split("&")[0];
+}
+
 export function BinginSounds() {
   const { homepage } = useSiteContent();
   const { title, playlistName, description, spotifyUrl, spotifyPlaylistId } = homepage.binginSounds;
-  const embedSrc = `https://open.spotify.com/embed/playlist/${spotifyPlaylistId}?utm_source=generator&theme=0`;
+  const playlistId = playlistIdFrom(spotifyPlaylistId || spotifyUrl || "");
+  const embedSrc = playlistId
+    ? `https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0`
+    : "";
 
   return (
     <section id="bingin-sounds" className="page-wrap section-pad py-16 md:py-20 bg-white border-t border-border scroll-mt-24">
@@ -25,15 +35,19 @@ export function BinginSounds() {
           </div>
 
           <div className="rounded-sm overflow-hidden border border-border bg-secondary aspect-square max-h-[380px] w-full">
-            <iframe
-              title={`${playlistName} on Spotify`}
-              src={embedSrc}
-              width="100%"
-              height="100%"
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              loading="lazy"
-              className="size-full min-h-[280px]"
-            />
+            {embedSrc ? (
+              <iframe
+                title={`${playlistName} on Spotify`}
+                src={embedSrc}
+                width="100%"
+                height="100%"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"
+                className="size-full min-h-[280px]"
+              />
+            ) : (
+              <p className="p-6 text-caption text-muted-foreground">Spotify playlist not configured.</p>
+            )}
           </div>
         </div>
       </Reveal>

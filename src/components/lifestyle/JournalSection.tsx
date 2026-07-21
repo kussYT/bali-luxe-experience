@@ -1,11 +1,16 @@
 import { Link } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Reveal } from "@/components/lifestyle/Reveal";
 import { useSiteContent } from "@/lib/content-context";
 import { focalObjectPosition } from "@/lib/image-focal";
 
 export function JournalSection({ showHeader = true }: { showHeader?: boolean }) {
-  const { posts, homepage } = useSiteContent();
+  const { posts, postsLoading, ensurePostsLoaded, homepage } = useSiteContent();
   const header = homepage.journalSection;
+
+  useEffect(() => {
+    void ensurePostsLoaded();
+  }, [ensurePostsLoaded]);
 
   return (
     <section className={`page-wrap section-pad ${showHeader ? "section-gap" : "pb-16 md:pb-24"}`}>
@@ -27,7 +32,15 @@ export function JournalSection({ showHeader = true }: { showHeader?: boolean }) 
       )}
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-        {posts.map((article, i) => (
+        {postsLoading && posts.length === 0 ?
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="aspect-[4/5] bg-secondary" />
+              <div className="mt-5 h-3 w-20 bg-secondary" />
+              <div className="mt-3 h-8 w-full bg-secondary" />
+            </div>
+          ))
+        : posts.map((article, i) => (
           <Reveal key={article.slug} delay={i * 70}>
             <Link to="/journal/$slug" params={{ slug: article.slug }} className="group block">
               <div className="overflow-hidden aspect-[4/5] bg-secondary">

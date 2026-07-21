@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Heart, Menu, Search, ShoppingBag } from "lucide-react";
 import { useCart } from "@/lib/cart";
-import { useCatalog } from "@/lib/catalog-context";
+import { useRegionalCatalog } from "@/lib/use-regional-catalog";
 import { buildNavMain, type MegaMenuId } from "@/lib/navigation";
 import { BrandLogo } from "@/components/site/BrandLogo";
 import { NavMenu } from "@/components/site/NavMenu";
@@ -21,11 +21,11 @@ const iconBtn =
 export function Header() {
   const { count, wishlist, setOpen } = useCart();
   const wishCount = wishlist.length;
-  const { collections, publishedProducts } = useCatalog();
+  const { collections, regionalProducts } = useRegionalCatalog();
   const { homepage } = useSiteContent();
   const { t } = useLocale();
   const nav = homepage.navigation;
-  const navMain = buildNavMain(collections, publishedProducts, {
+  const navMain = buildNavMain(collections, regionalProducts, {
     newCollection: nav?.newCollection || t("nav.newCollection"),
     shop: nav?.shop || t("nav.shop"),
     sales: nav?.sales || t("nav.sales"),

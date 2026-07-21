@@ -1,45 +1,37 @@
 /** @typedef {'france' | 'bali'} WarehouseId */
 
-/** Countries fulfilled primarily from Bali */
-const BALI_FIRST = new Set([
-  "ID", "AU", "NZ", "SG", "HK", "JP", "KR", "TW", "TH", "VN", "MY", "NC", "PF",
-]);
+import { getFulfillmentZones, normalizeFulfillmentZones } from "./db/fulfillment-settings.mjs";
+import DEFAULT_RAW from "../data/fulfillment-zones.default.json" with { type: "json" };
 
-/** France + EU / nearby — fulfilled from Paris */
-const FRANCE_FIRST = new Set([
-  "FR", "DE", "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "ES", "EE", "FI", "GR", "HU", "IE",
-  "IT", "LV", "LT", "LU", "MT", "MC", "NL", "PL", "PT", "RO", "SK", "SI", "SE", "GB", "CH",
-  "NO", "AD", "GF", "GP", "MQ", "YT", "RE", "BL", "MF", "PM", "AX", "JE", "MC",
-]);
-
-/**
- * Preferred fulfillment warehouse for a shipping country.
- * @param {string | null | undefined} countryCode ISO 3166-1 alpha-2
- * @param {{ defaultWarehouse?: WarehouseId }} [product]
- * @returns {WarehouseId}
- */
-export function preferredWarehouse(countryCode, product) {
-  const code = (countryCode || "FR").toUpperCase();
-  if (BALI_FIRST.has(code)) return "bali";
-  if (FRANCE_FIRST.has(code)) return "france";
-  return product?.defaultWarehouse === "france" ? "france" : "bali";
+function defaultZones() {
+  return normalizeFulfillmentZones(DEFAULT_RAW);
 }
 
 /**
- * Default variant for cart/checkout when no variant is selected.
- * @param {{ variants?: { isDefault?: boolean }[] }} product
+ * Preferred fulfillment warehouse for a shipping country.
+ * @param {string | null | undefined} countryCode
+ * @param {{ defaultWarehouse?: WarehouseId }} [product]
+ * @param {import('./db/fulfillment-settings.mjs').normalizeFulfillmentZones extends (...args: any) => infer R ? R : never} [zones]
  */
+export function fulfillmentWarehouseForCountry(countryCode, zones, product) {
+  const z = zones || defaultZones();
+  const code = (countryCode || "FR").toUpperCase();
+  if (z.franceWarehouseCountries.includes(code)) return "france";
+  if (z.baliWarehouseCountries.includes(code)) return "bali";
+  return product?.defaultWarehouse === "france" ? "france" : z.restOfWorldWarehouse;
+}
+
+/** @deprecated use fulfillmentWarehouseForCountry */
+export function preferredWarehouse(countryCode, product, zones) {
+  return fulfillmentWarehouseForCountry(countryCode, zones, product);
+}
+
 export function getDefaultVariant(product) {
   const variants = product?.variants;
   if (!variants?.length) return null;
   return variants.find((v) => v.isDefault) ?? variants[0];
 }
 
-/**
- * Resolve a variant by id, falling back to default.
- * @param {{ variants?: { id: string, isDefault?: boolean }[] }} product
- * @param {string | null | undefined} variantId
- */
 export function getVariant(product, variantId) {
   const variants = product?.variants;
   if (!variants?.length) return null;
@@ -50,29 +42,32 @@ export function getVariant(product, variantId) {
   return getDefaultVariant(product);
 }
 
-/**
- * Available units for checkout: primary warehouse first, then fallback.
- * @param {{ stock?: number, defaultWarehouse?: WarehouseId, variants?: { id: string, isDefault?: boolean, inventory?: { france: number, bali: number } }[] }} product
- * @param {string | null | undefined} countryCode
- * @param {number} qty
- * @param {string | null | undefined} [variantId]
- */
-export function availableForCheckout(product, countryCode, qty = 1, variantId = null) {
+function stockAtWarehouse(product, variant, warehouse) {
+  if (variant?.inventory) return variant.inventory[warehouse] ?? 0;
+  if (warehouse === "france") return product.stockFrance ?? 0;
+  return product.stockBali ?? 0;
+}
+
+export function availableForCheckoutSync(product, countryCode, qty = 1, variantId = null, zones) {
+  const z = zones || defaultZones();
+  const warehouse = fulfillmentWarehouseForCountry(countryCode, z, product);
   const variant = getVariant(product, variantId);
-  if (!variant?.inventory) {
+  const available = stockAtWarehouse(product, variant, warehouse);
+
+  if (!variant?.inventory && !product.stockFrance && !product.stockBali && product.stock != null) {
     return { ok: (product.stock ?? 0) >= qty, available: product.stock ?? 0, warehouse: null };
   }
 
-  const primary = preferredWarehouse(countryCode, product);
-  const secondary = primary === "france" ? "bali" : "france";
-  const primaryQty = variant.inventory[primary] ?? 0;
-  const secondaryQty = variant.inventory[secondary] ?? 0;
-
-  if (primaryQty >= qty) {
-    return { ok: true, available: primaryQty + secondaryQty, warehouse: primary };
-  }
-  if (primaryQty + secondaryQty >= qty) {
-    return { ok: true, available: primaryQty + secondaryQty, warehouse: secondary };
-  }
-  return { ok: false, available: primaryQty + secondaryQty, warehouse: primary };
+  return {
+    ok: available >= qty,
+    available,
+    warehouse,
+  };
 }
+
+export async function availableForCheckout(product, countryCode, qty = 1, variantId = null, zones) {
+  const z = zones || (await getFulfillmentZones());
+  return availableForCheckoutSync(product, countryCode, qty, variantId, z);
+}
+
+export { getFulfillmentZones };

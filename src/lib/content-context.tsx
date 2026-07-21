@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { CmsPage, HomepageContent, JournalPost, SiteContent } from "@/lib/content-types";
 import { useLocale } from "@/lib/i18n/locale-context";
-import { FALLBACK_ABOUT, FALLBACK_FIND_US, FALLBACK_CONTACT, FALLBACK_CARE, FALLBACK_SIZING, FALLBACK_FOOTER } from "@/lib/cms-fallbacks";
+import { FALLBACK_ABOUT, FALLBACK_FIND_US, FALLBACK_CONTACT, FALLBACK_CARE, FALLBACK_SIZING, FALLBACK_FOOTER, FALLBACK_PRODUCT_MESSAGES } from "@/lib/cms-fallbacks";
 import {
   BINGIN_SOUNDS,
   CRAFT_DETAILS,
@@ -76,6 +76,7 @@ const PENDING_SITE: SiteContent = {
   care: FALLBACK_CARE,
   sizing: FALLBACK_SIZING,
   footer: FALLBACK_FOOTER,
+  productMessages: FALLBACK_PRODUCT_MESSAGES,
 };
 
 const FALLBACK_SITE: SiteContent = {
@@ -184,6 +185,7 @@ const FALLBACK_SITE: SiteContent = {
   care: FALLBACK_CARE,
   sizing: FALLBACK_SIZING,
   footer: FALLBACK_FOOTER,
+  productMessages: FALLBACK_PRODUCT_MESSAGES,
 };
 
 const FALLBACK_POSTS: JournalPost[] = JOURNAL_ARTICLES.map((a) => ({ ...a }));
@@ -198,10 +200,13 @@ type ContentContextValue = {
   care: SiteContent["care"];
   sizing: SiteContent["sizing"];
   footer: SiteContent["footer"];
+  productMessages: SiteContent["productMessages"];
   posts: JournalPost[];
+  postsLoading: boolean;
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
+  ensurePostsLoaded: () => Promise<void>;
   fetchPage: (slug: string, locale?: string) => Promise<CmsPage | null>;
   fetchPost: (slug: string, locale?: string) => Promise<JournalPost | null>;
 };
@@ -218,28 +223,32 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const { locale } = useLocale();
   const [site, setSite] = useState<SiteContent>(PENDING_SITE);
   const [posts, setPosts] = useState<JournalPost[]>([]);
+  const [postsLoading, setPostsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const pageCacheRef = useRef<Record<string, CmsPage>>({});
   const postCacheRef = useRef<Record<string, JournalPost>>({});
+  const postsLoadedRef = useRef(false);
+  const postsLoadPromiseRef = useRef<Promise<void> | null>(null);
 
   const refresh = useCallback(async () => {
     try {
       setLoading(true);
-      const postsQs = `?locale=${encodeURIComponent(locale)}`;
-      const [siteRes, postsRes] = await Promise.all([
-        fetchJson<{
-          announcement: SiteContent["announcement"];
-          homepage: HomepageContent;
-          about: SiteContent["about"];
-          findUs: SiteContent["findUs"];
-          contact: SiteContent["contact"];
-          care: SiteContent["care"];
-          sizing: SiteContent["sizing"];
-          footer: SiteContent["footer"];
-        }>("/api/content/site"),
-        fetchJson<{ posts: JournalPost[] }>(`/api/content/posts${postsQs}`),
-      ]);
+      postsLoadedRef.current = false;
+      postsLoadPromiseRef.current = null;
+      setPosts([]);
+      const siteQs = `?locale=${encodeURIComponent(locale)}`;
+      const siteRes = await fetchJson<{
+        announcement: SiteContent["announcement"];
+        homepage: HomepageContent;
+        about: SiteContent["about"];
+        findUs: SiteContent["findUs"];
+        contact: SiteContent["contact"];
+        care: SiteContent["care"];
+        sizing: SiteContent["sizing"];
+        footer: SiteContent["footer"];
+        productMessages: SiteContent["productMessages"];
+      }>(`/api/content/site${siteQs}`);
       setSite({
         announcement: siteRes.announcement,
         homepage: siteRes.homepage,
@@ -249,17 +258,44 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         care: siteRes.care,
         sizing: siteRes.sizing,
         footer: siteRes.footer,
+        productMessages: siteRes.productMessages,
       });
-      setPosts(postsRes.posts);
       postCacheRef.current = {};
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load content");
       setSite(FALLBACK_SITE);
       setPosts(FALLBACK_POSTS);
+      postsLoadedRef.current = true;
     } finally {
       setLoading(false);
     }
+  }, [locale]);
+
+  const ensurePostsLoaded = useCallback(async () => {
+    if (postsLoadedRef.current) return;
+    if (postsLoadPromiseRef.current) {
+      await postsLoadPromiseRef.current;
+      return;
+    }
+
+    postsLoadPromiseRef.current = (async () => {
+      setPostsLoading(true);
+      try {
+        const postsQs = `?locale=${encodeURIComponent(locale)}`;
+        const postsRes = await fetchJson<{ posts: JournalPost[] }>(`/api/content/posts${postsQs}`);
+        setPosts(postsRes.posts);
+        postsLoadedRef.current = true;
+      } catch {
+        setPosts(FALLBACK_POSTS);
+        postsLoadedRef.current = true;
+      } finally {
+        setPostsLoading(false);
+        postsLoadPromiseRef.current = null;
+      }
+    })();
+
+    await postsLoadPromiseRef.current;
   }, [locale]);
 
   useEffect(() => {
@@ -307,14 +343,17 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       care: site.care,
       sizing: site.sizing,
       footer: site.footer,
+      productMessages: site.productMessages,
       posts,
+      postsLoading,
       loading,
       error,
       refresh,
+      ensurePostsLoaded,
       fetchPage,
       fetchPost,
     }),
-    [site, posts, loading, error, refresh, fetchPage, fetchPost],
+    [site, posts, postsLoading, loading, error, refresh, ensurePostsLoaded, fetchPage, fetchPost],
   );
 
   return <ContentContext.Provider value={value}>{children}</ContentContext.Provider>;

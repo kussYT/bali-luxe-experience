@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { Product, ProductCategory, ProductStatus } from "@/lib/catalog-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,11 +12,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { uploadProductImages } from "@/lib/admin-api";
+import { MoneyInput } from "@/components/admin/MoneyInput";
+import { parseMoneyValue } from "@/lib/parse-money";
 import { CmsMediaGuide } from "@/components/admin/CmsMediaGuide";
 import { ImageFocalPicker } from "@/components/admin/ImageFocalPicker";
 import { AdminImagePreview } from "@/components/admin/AdminImagePreview";
 import type { UploadProgress } from "@/lib/upload-admin-files";
 import { UPLOADS_UNAVAILABLE_MESSAGE, useUploadsAvailable } from "@/lib/use-uploads-available";
+import {
+  SHOP_CATEGORIES,
+  applyShopCategoryToProduct,
+  getCollectionBySlug,
+  shopCategoryFromSubcategory,
+} from "@/lib/catalog-taxonomy";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 
 export type VariantFormRow = {
@@ -39,6 +47,7 @@ export type ProductFormValues = {
   status: ProductStatus;
   featured: boolean;
   images: string[];
+  imageFocals: { x: number; y: number }[];
   imageFocal: { x: number; y: number };
   origin: "Bali" | "France";
   collectionSlugs: string[];
@@ -53,6 +62,8 @@ type ProductFormProps = {
   onSubmit: (values: ProductFormValues) => Promise<void>;
   onCancel: () => void;
   submitLabel?: string;
+  /** When true, name/description/SEO are edited in ProductLocaleEditor instead. */
+  hideLocalizedFields?: boolean;
 };
 
 const emptyVariant = (): VariantFormRow => ({ title: "", stock: 1 });
@@ -93,6 +104,7 @@ const empty: ProductFormValues = {
   status: "published",
   featured: false,
   images: [],
+  imageFocals: [],
   imageFocal: { x: 50, y: 50 },
   origin: "Bali",
   collectionSlugs: [],
@@ -116,20 +128,37 @@ export function ProductForm({
   onSubmit,
   onCancel,
   submitLabel = "Save",
+  hideLocalizedFields = false,
 }: ProductFormProps) {
-  const [values, setValues] = useState<ProductFormValues>(() => ({
-    ...empty,
-    ...initial,
-    variants: variantsFromProduct(initial),
-    images: initial?.images?.length ? initial.images : initial?.image ? [initial.image] : [],
-    imageFocal: initial?.imageFocal ?? { x: 50, y: 50 },
-    collectionSlugs: (initial?.collectionSlugs ?? []).filter(
-      (slug) => slug && slug !== (initial?.collectionSlug ?? ""),
-    ),
-    videoUrl: initial?.videoUrl ?? "",
-    seoTitle: initial?.seoTitle ?? "",
-    metaDescription: initial?.metaDescription ?? "",
-  }));
+  const [focalEditIndex, setFocalEditIndex] = useState(0);
+  const [values, setValues] = useState<ProductFormValues>(() => {
+    const images = initial?.images?.length ? initial.images : initial?.image ? [initial.image] : [];
+    const imageFocals =
+      initial?.imageFocals?.length === images.length
+        ? initial.imageFocals.map((f) => ({ x: f.x ?? 50, y: f.y ?? 50 }))
+        : images.map((_, i) =>
+            i === 0 ? { x: initial?.imageFocal?.x ?? 50, y: initial?.imageFocal?.y ?? 50 } : { x: 50, y: 50 },
+          );
+    return {
+      ...empty,
+      ...initial,
+      priceEUR: parseMoneyValue(initial?.priceEUR),
+      compareAtEUR:
+        initial?.compareAtEUR != null && initial.compareAtEUR !== ""
+          ? parseMoneyValue(initial.compareAtEUR)
+          : undefined,
+      variants: variantsFromProduct(initial),
+      images,
+      imageFocals,
+      imageFocal: imageFocals[0] ?? { x: 50, y: 50 },
+      collectionSlugs: (initial?.collectionSlugs ?? []).filter(
+        (slug) => slug && slug !== (initial?.collectionSlug ?? ""),
+      ),
+      videoUrl: initial?.videoUrl ?? "",
+      seoTitle: initial?.seoTitle ?? "",
+      metaDescription: initial?.metaDescription ?? "",
+    };
+  });
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -159,7 +188,7 @@ export function ProductForm({
   };
 
   const handleCollectionPick = (slug: string) => {
-    const col = collections.find((c) => c.slug === slug);
+    const col = getCollectionBySlug(slug) ?? collections.find((c) => c.slug === slug);
     if (!col) return;
     setValues((prev) => ({
       ...prev,
@@ -168,6 +197,33 @@ export function ProductForm({
       collectionSlugs: prev.collectionSlugs.filter((s) => s !== col.slug),
     }));
   };
+
+  const handleShopCategoryPick = (slug: string) => {
+    const applied = applyShopCategoryToProduct(slug);
+    setValues((prev) => ({
+      ...prev,
+      subcategory: applied.subcategory,
+      category: applied.category,
+      featured: applied.featured ?? prev.featured,
+    }));
+  };
+
+  const shopCategorySlug =
+    shopCategoryFromSubcategory(values.subcategory) || values.subcategory || "";
+  const collectionOptions = useMemo(() => {
+    const map = new Map<string, { slug: string; name: string }>();
+    for (const c of collections) {
+      if (c.slug) map.set(c.slug, { slug: c.slug, name: c.name || c.slug });
+    }
+    if (values.collectionSlug && !map.has(values.collectionSlug)) {
+      map.set(values.collectionSlug, {
+        slug: values.collectionSlug,
+        name: values.collection || values.collectionSlug,
+      });
+    }
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, "fr"));
+  }, [collections, values.collectionSlug, values.collection]);
+  const extraCollections = collectionOptions.filter((c) => c.slug !== values.collectionSlug);
 
   const toggleExtraCollection = (slug: string) => {
     setValues((prev) => {
@@ -182,12 +238,24 @@ export function ProductForm({
   };
 
   const moveImage = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
     setValues((prev) => {
       const next = [...prev.images];
-      const target = index + direction;
+      const focals = [...prev.imageFocals];
       if (target < 0 || target >= next.length) return prev;
       [next[index], next[target]] = [next[target], next[index]];
-      return { ...prev, images: next };
+      [focals[index], focals[target]] = [focals[target], focals[index]];
+      return {
+        ...prev,
+        images: next,
+        imageFocals: focals,
+        imageFocal: focals[0] ?? prev.imageFocal,
+      };
+    });
+    setFocalEditIndex((i) => {
+      if (i === index) return target;
+      if (i === target) return index;
+      return i;
     });
   };
 
@@ -203,7 +271,12 @@ export function ProductForm({
     setError(null);
     try {
       const { urls } = await uploadProductImages(slug, files, setUploadProgress);
-      set("images", [...values.images, ...urls]);
+      const newFocals = urls.map(() => ({ x: 50, y: 50 }));
+      setValues((prev) => ({
+        ...prev,
+        images: [...prev.images, ...urls],
+        imageFocals: [...prev.imageFocals, ...newFocals],
+      }));
       if (!values.slug) set("slug", slug);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed");
@@ -232,12 +305,33 @@ export function ProductForm({
         return;
       }
 
+      const priceEUR = parseMoneyValue(values.priceEUR);
+      if (priceEUR <= 0) {
+        setError("Indiquez un prix catalogue valide (ex. 69 ou 69,50).");
+        setSaving(false);
+        return;
+      }
+
+      const compareAtEUR =
+        values.compareAtEUR != null && values.compareAtEUR !== undefined
+          ? parseMoneyValue(values.compareAtEUR)
+          : undefined;
+      if (compareAtEUR != null && compareAtEUR <= 0) {
+        setError("Le prix soldé doit être supérieur à 0, ou laissez le champ vide.");
+        setSaving(false);
+        return;
+      }
+
       await onSubmit({
         ...values,
         slug,
+        priceEUR,
+        compareAtEUR,
         variants,
         collectionSlug: values.collectionSlug || slugify(values.collection),
         image: values.images[0] || "",
+        imageFocal: values.imageFocals[0] ?? values.imageFocal,
+        imageFocals: values.imageFocals,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
@@ -250,86 +344,89 @@ export function ProductForm({
   const multiSize = values.variants.length > 1 || values.variants.some((v) => v.title && v.title !== "Default");
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 max-w-3xl">
+    <form onSubmit={handleSubmit} noValidate className="space-y-8 max-w-3xl">
       {error && <p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 p-3">{error}</p>}
 
-      <div className="grid md:grid-cols-2 gap-5">
-        <div className="space-y-2">
-          <Label htmlFor="name">Product name *</Label>
-          <Input
-            id="name"
-            value={values.name}
-            onChange={(e) => {
-              set("name", e.target.value);
-              if (!initial?.slug) set("slug", slugify(e.target.value));
-            }}
-            required
-          />
-        </div>
+      {!hideLocalizedFields && (
+        <>
+          <div className="grid md:grid-cols-2 gap-5">
+            <div className="space-y-2">
+              <Label htmlFor="name">Product name *</Label>
+              <Input
+                id="name"
+                value={values.name}
+                onChange={(e) => {
+                  set("name", e.target.value);
+                  if (!initial?.slug) set("slug", slugify(e.target.value));
+                }}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="slug">URL slug</Label>
+              <Input id="slug" value={values.slug} onChange={(e) => set("slug", slugify(e.target.value))} />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="story">Description</Label>
+            <Textarea id="story" rows={5} value={values.story} onChange={(e) => set("story", e.target.value)} />
+          </div>
+
+          <div className="space-y-4 border border-border p-5">
+            <div>
+              <Label className="text-base">SEO (Google)</Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Titre et description affichés dans les résultats de recherche. Laissez vide pour utiliser le nom du produit.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="seo-title">Meta titre</Label>
+              <Input
+                id="seo-title"
+                value={values.seoTitle}
+                onChange={(e) => set("seoTitle", e.target.value)}
+                placeholder={values.name ? `${values.name} — Bingin Diaries` : "Nom du produit — Bingin Diaries"}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="seo-desc">Meta description</Label>
+              <Textarea
+                id="seo-desc"
+                rows={3}
+                value={values.metaDescription}
+                onChange={(e) => set("metaDescription", e.target.value)}
+                placeholder="Courte description pour Google (150–160 caractères idéal)"
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      {hideLocalizedFields && (
         <div className="space-y-2">
           <Label htmlFor="slug">URL slug</Label>
           <Input id="slug" value={values.slug} onChange={(e) => set("slug", slugify(e.target.value))} />
         </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="story">Description</Label>
-        <Textarea id="story" rows={5} value={values.story} onChange={(e) => set("story", e.target.value)} />
-      </div>
-
-      <div className="space-y-4 border border-border p-5">
-        <div>
-          <Label className="text-base">SEO (Google)</Label>
-          <p className="text-xs text-muted-foreground mt-1">
-            Titre et description affichés dans les résultats de recherche. Laissez vide pour utiliser le nom du produit.
-          </p>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="seo-title">Meta titre</Label>
-          <Input
-            id="seo-title"
-            value={values.seoTitle}
-            onChange={(e) => set("seoTitle", e.target.value)}
-            placeholder={values.name ? `${values.name} — Bingin Diaries` : "Nom du produit — Bingin Diaries"}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="seo-desc">Meta description</Label>
-          <Textarea
-            id="seo-desc"
-            rows={3}
-            value={values.metaDescription}
-            onChange={(e) => set("metaDescription", e.target.value)}
-            placeholder="Courte description pour Google (150–160 caractères idéal)"
-          />
-        </div>
-      </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-5">
         <div className="space-y-2">
           <Label htmlFor="price">Price (EUR) *</Label>
-          <Input
+          <MoneyInput
             id="price"
-            type="number"
-            min={0}
-            step={1}
-            value={values.priceEUR || ""}
-            onChange={(e) => set("priceEUR", Number(e.target.value))}
-            required
+            value={values.priceEUR > 0 ? values.priceEUR : undefined}
+            onChange={(n) => set("priceEUR", n ?? 0)}
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="compare">Sale price (EUR)</Label>
-          <Input
+          <MoneyInput
             id="compare"
-            type="number"
-            min={0}
-            step={1}
-            value={values.compareAtEUR ?? ""}
-            onChange={(e) =>
-              set("compareAtEUR", e.target.value === "" ? undefined : Number(e.target.value))
-            }
-            placeholder="Optional — lower than list price"
+            value={values.compareAtEUR}
+            allowEmpty
+            onChange={(n) => set("compareAtEUR", n)}
+            placeholder="Optionnel — inférieur au prix catalogue"
           />
           <p className="text-xs text-muted-foreground">
             If set below the list price, the piece appears under <strong>Sales</strong> in the menu with a
@@ -392,13 +489,13 @@ export function ProductForm({
 
       <div className="grid md:grid-cols-2 gap-5">
         <div className="space-y-2">
-          <Label>Category (collection)</Label>
+          <Label>Collection</Label>
           <Select value={values.collectionSlug} onValueChange={handleCollectionPick}>
             <SelectTrigger>
-              <SelectValue placeholder="Choose collection" />
+              <SelectValue placeholder="Choisir une collection" />
             </SelectTrigger>
             <SelectContent>
-              {collections.map((c) => (
+              {collectionOptions.map((c) => (
                 <SelectItem key={c.slug} value={c.slug}>
                   {c.name}
                 </SelectItem>
@@ -407,56 +504,50 @@ export function ProductForm({
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="subcategory">Subcategory</Label>
-          <Input
-            id="subcategory"
-            value={values.subcategory}
-            onChange={(e) => set("subcategory", e.target.value)}
-            placeholder="e.g. Wide brim, Kids…"
-          />
+          <Label>Shop by category</Label>
+          <Select value={shopCategorySlug || undefined} onValueChange={handleShopCategoryPick}>
+            <SelectTrigger>
+              <SelectValue placeholder="Choisir une catégorie boutique" />
+            </SelectTrigger>
+            <SelectContent>
+              {SHOP_CATEGORIES.map((c) => (
+                <SelectItem key={c.slug} value={c.slug}>
+                  {c.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Détermine l&apos;affichage dans le menu Shop → Shop by category.
+          </p>
         </div>
       </div>
 
-      {collections.filter((c) => c.slug !== values.collectionSlug).length > 0 && (
+      {extraCollections.length > 0 && (
         <div className="space-y-3 border border-border p-5">
           <div>
-            <Label>Also appears in</Label>
+            <Label>Aussi dans (collections secondaires)</Label>
             <p className="text-xs text-muted-foreground mt-1">
-              Extra collections for navigation (e.g. Special Occasions). Primary collection above stays unchanged.
+              Optionnel — le produit apparaît aussi dans ces collections.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            {collections
-              .filter((c) => c.slug !== values.collectionSlug)
-              .map((col) => (
-                <label key={col.slug} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={values.collectionSlugs.includes(col.slug)}
-                    onChange={() => toggleExtraCollection(col.slug)}
-                    className="size-4"
-                  />
-                  {col.name}
-                </label>
-              ))}
+            {extraCollections.map((col) => (
+              <label key={col.slug} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={values.collectionSlugs.includes(col.slug)}
+                  onChange={() => toggleExtraCollection(col.slug)}
+                  className="size-4"
+                />
+                {col.name}
+              </label>
+            ))}
           </div>
         </div>
       )}
 
-      <div className="grid md:grid-cols-3 gap-5">
-        <div className="space-y-2">
-          <Label>Shop category</Label>
-          <Select value={values.category} onValueChange={(v) => set("category", v as ProductCategory)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="hats">Hats</SelectItem>
-              <SelectItem value="accessories">Accessories</SelectItem>
-              <SelectItem value="bags">Bags</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="grid md:grid-cols-2 gap-5">
         <div className="space-y-2">
           <Label>Status</Label>
           <Select value={values.status} onValueChange={(v) => set("status", v as ProductStatus)}>
@@ -535,16 +626,21 @@ export function ProductForm({
         {values.images.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-3">
             {values.images.map((src, index) => (
-              <div key={src} className="relative group aspect-square bg-sand overflow-hidden">
+              <button
+                key={`${src}-${index}`}
+                type="button"
+                onClick={() => setFocalEditIndex(index)}
+                className={`relative group aspect-square bg-sand overflow-hidden border-2 transition-colors ${
+                  focalEditIndex === index ? "border-foreground" : "border-transparent"
+                }`}
+              >
                 <AdminImagePreview
                   src={src}
                   alt=""
-                  className="size-full object-cover"
-                  style={
-                    index === 0
-                      ? { objectPosition: `${values.imageFocal.x}% ${values.imageFocal.y}%` }
-                      : undefined
-                  }
+                  className="size-full object-cover pointer-events-none"
+                  style={{
+                    objectPosition: `${values.imageFocals[index]?.x ?? 50}% ${values.imageFocals[index]?.y ?? 50}%`,
+                  }}
                 />
                 {index === 0 && (
                   <span className="absolute top-2 left-2 bg-ink/80 text-bone text-[0.65rem] uppercase tracking-wider px-2 py-0.5">
@@ -552,44 +648,77 @@ export function ProductForm({
                   </span>
                 )}
                 <div className="absolute inset-x-0 bottom-0 flex bg-ink/80 text-bone text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    type="button"
+                  <span
+                    role="button"
+                    tabIndex={0}
                     className="flex-1 py-1.5 flex items-center justify-center disabled:opacity-40"
-                    onClick={() => moveImage(index, -1)}
-                    disabled={index === 0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      moveImage(index, -1);
+                    }}
+                    onKeyDown={(e) => e.key === "Enter" && moveImage(index, -1)}
                     aria-label="Move image earlier"
                   >
                     <ChevronLeft className="size-4" />
-                  </button>
-                  <button
-                    type="button"
-                    className="flex-1 py-1.5 border-x border-surface/20"
-                    onClick={() => set("images", values.images.filter((i) => i !== src))}
+                  </span>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    className="flex-1 py-1.5 border-x border-surface/20 text-center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setValues((prev) => ({
+                        ...prev,
+                        images: prev.images.filter((_, i) => i !== index),
+                        imageFocals: prev.imageFocals.filter((_, i) => i !== index),
+                        imageFocal: prev.imageFocals[0] ?? prev.imageFocal,
+                      }));
+                      setFocalEditIndex((i) => Math.max(0, Math.min(i, values.images.length - 2)));
+                    }}
                   >
                     Remove
-                  </button>
-                  <button
-                    type="button"
+                  </span>
+                  <span
+                    role="button"
+                    tabIndex={0}
                     className="flex-1 py-1.5 flex items-center justify-center disabled:opacity-40"
-                    onClick={() => moveImage(index, 1)}
-                    disabled={index === values.images.length - 1}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      moveImage(index, 1);
+                    }}
+                    onKeyDown={(e) => e.key === "Enter" && moveImage(index, 1)}
                     aria-label="Move image later"
                   >
                     <ChevronRight className="size-4" />
-                  </button>
+                  </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
-        {values.images[0] && (
+        {values.images[focalEditIndex] && (
           <ImageFocalPicker
-            imageUrl={values.images[0]}
-            focalX={values.imageFocal.x}
-            focalY={values.imageFocal.y}
-            onChange={(focal) => set("imageFocal", focal)}
+            imageUrl={values.images[focalEditIndex]}
+            focalX={values.imageFocals[focalEditIndex]?.x ?? 50}
+            focalY={values.imageFocals[focalEditIndex]?.y ?? 50}
+            onChange={(focal) => {
+              setValues((prev) => {
+                const imageFocals = [...prev.imageFocals];
+                imageFocals[focalEditIndex] = focal;
+                return {
+                  ...prev,
+                  imageFocals,
+                  imageFocal: focalEditIndex === 0 ? focal : prev.imageFocal,
+                };
+              });
+            }}
             aspect={4 / 5}
           />
+        )}
+        {values.images.length > 1 && (
+          <p className="text-xs text-muted-foreground">
+            Cliquez une vignette pour cadrer cette photo (image {focalEditIndex + 1}/{values.images.length}).
+          </p>
         )}
       </div>
 

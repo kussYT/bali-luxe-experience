@@ -1,6 +1,7 @@
 import { query, isDatabaseConfigured } from "./pool.mjs";
 import { DEFAULT_POSTS } from "../content-defaults.mjs";
 import { resolvePostLocaleBlock } from "../i18n-locales.mjs";
+import { resolvePostBlocks, bodyFromBlocks } from "../journal-blocks.mjs";
 
 function parseLocales(row) {
   const raw = row.locales && typeof row.locales === "object" ? row.locales : {};
@@ -33,6 +34,9 @@ function flattenPost(row, { locale, includeLocales = false } = {}) {
     body: Array.isArray(row.body) ? row.body : [],
   };
 
+  const blocks = resolvePostBlocks(block);
+  const body = bodyFromBlocks(blocks);
+
   const post = {
     slug: row.slug,
     title: block.title || row.title,
@@ -41,7 +45,8 @@ function flattenPost(row, { locale, includeLocales = false } = {}) {
     imageFocal: parseImageFocal(row.image_focal),
     category: block.category || "",
     readMinutes: row.read_minutes,
-    body: Array.isArray(block.body) ? block.body : [],
+    body,
+    blocks,
     status: row.status,
     publishedAt: row.published_at,
     createdAt: row.created_at,
@@ -239,7 +244,7 @@ export async function upsertPost(data) {
     throw err;
   }
 
-  const body = Array.isArray(primary.body) ? primary.body : [];
+  const body = Array.isArray(primary.body) ? primary.body : bodyFromBlocks(resolvePostBlocks(primary));
   const status = normalized.status;
   const publishedAt = status === "published" ? data.publishedAt || new Date().toISOString() : null;
 

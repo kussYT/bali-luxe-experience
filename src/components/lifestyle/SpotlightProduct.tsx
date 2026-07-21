@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useCatalog } from "@/lib/catalog-context";
+import { useRegionalCatalog } from "@/lib/use-regional-catalog";
 import { useSiteContent } from "@/lib/content-context";
 import { useCurrency } from "@/lib/currency";
 import { Reveal } from "@/components/lifestyle/Reveal";
@@ -7,7 +7,7 @@ import { focalObjectPosition } from "@/lib/image-focal";
 
 export function SpotlightProduct() {
   const { homepage, loading: contentLoading } = useSiteContent();
-  const { publishedProducts, loading: catalogLoading } = useCatalog();
+  const { publishedProducts, isRegionallyAvailable, loading: catalogLoading } = useRegionalCatalog();
   const { format } = useCurrency();
   const spotlight = homepage.spotlightProduct;
 
@@ -15,7 +15,7 @@ export function SpotlightProduct() {
   if (!spotlight?.enabled || !spotlight.productSlug) return null;
 
   const product = publishedProducts.find((p) => p.slug === spotlight.productSlug);
-  if (!product) return null;
+  if (!product || !isRegionallyAvailable(product)) return null;
 
   const image = spotlight.image || product.image;
   const imageFocal = spotlight.image ? spotlight.imageFocal : product.imageFocal;

@@ -1,4 +1,5 @@
 import { getCatalogResponse } from "./catalog.mjs";
+import { invalidateCache } from "../db/request-cache.mjs";
 import {
   createProductInDb,
   updateProductInDb,
@@ -9,6 +10,10 @@ import {
 } from "../db/products-admin.mjs";
 import { fetchCatalogFromDb } from "../db/catalog.mjs";
 
+function flushCatalogCache() {
+  invalidateCache("catalog:");
+}
+
 async function productFromCatalog(slug) {
   const catalog = await fetchCatalogFromDb({ includeDrafts: true });
   return catalog.products.find((p) => p.slug === slug) ?? null;
@@ -17,6 +22,7 @@ async function productFromCatalog(slug) {
 export async function createAdminProduct(body) {
   const normalized = normalizeAdminProductBody(body);
   await createProductInDb(body);
+  flushCatalogCache();
   const product = await productFromCatalog(normalized.slug);
   const catalog = await getCatalogResponse({ includeDrafts: true });
   return { product, catalog };
@@ -25,6 +31,7 @@ export async function createAdminProduct(body) {
 export async function updateAdminProduct(currentSlug, body) {
   const normalized = normalizeAdminProductBody({ ...body, slug: body.slug || currentSlug });
   await updateProductInDb(currentSlug, body);
+  flushCatalogCache();
   const product = await productFromCatalog(normalized.slug);
   const catalog = await getCatalogResponse({ includeDrafts: true });
   return { product, catalog };
@@ -32,6 +39,7 @@ export async function updateAdminProduct(currentSlug, body) {
 
 export async function deleteAdminProduct(slug) {
   await deleteProductInDb(slug);
+  flushCatalogCache();
   const catalog = await getCatalogResponse({ includeDrafts: true });
   return { ok: true, catalog };
 }
@@ -39,6 +47,7 @@ export async function deleteAdminProduct(slug) {
 export async function reorderAdminProducts(body) {
   const orders = Array.isArray(body.orders) ? body.orders : [];
   await reorderProducts(orders);
+  flushCatalogCache();
   const catalog = await getCatalogResponse({ includeDrafts: true });
   return { catalog, source: "postgres" };
 }
@@ -46,6 +55,7 @@ export async function reorderAdminProducts(body) {
 export async function patchAdminProductStatus(slug, body) {
   const status = body.status === "draft" ? "draft" : "published";
   await patchProductStatus(slug, status);
+  flushCatalogCache();
   const product = await productFromCatalog(slug);
   const catalog = await getCatalogResponse({ includeDrafts: true });
   return { product, catalog, source: "postgres" };

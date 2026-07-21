@@ -90,6 +90,7 @@ async function runUnitTests() {
   const care = mergeCare({ intro: "Custom intro" });
   assert(care.intro === "Custom intro", "mergeCare patch");
   assert(care.sections.length >= 1, "mergeCare sections", String(care.sections.length));
+  assert(care.images?.length >= 2, "mergeCare images", String(care.images?.length));
 
   const sizing = mergeSizing(null);
   assert(Boolean(sizing.image), "mergeSizing image");
@@ -106,6 +107,7 @@ async function runUnitTests() {
   }
   assert(publicSite.contact.title === DEFAULT_CONTACT.title, "public contact title");
   assert(publicSite.care.sections.length > 0, "public care sections");
+  assert(publicSite.care.images?.length >= 2, "public care images");
   assert(publicSite.sizing.image.length > 0, "public sizing image");
 
   console.log("\n--- Unit: DEFAULT_PAGES shape ---\n");

@@ -19,6 +19,7 @@ import { applyTrackingConsent } from "@/lib/tracking";
 
 type CookieConsentContextValue = {
   consent: CookieConsent | null;
+  hydrated: boolean;
   bannerOpen: boolean;
   preferencesOpen: boolean;
   setPreferencesOpen: (open: boolean) => void;
@@ -80,6 +81,7 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       consent: hydrated ? consent : null,
+      hydrated,
       bannerOpen: hydrated && bannerOpen,
       preferencesOpen,
       setPreferencesOpen,

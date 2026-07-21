@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Product } from "@/lib/catalog-types";
 import { useCatalog } from "@/lib/catalog-context";
+import { useFulfillment } from "@/lib/fulfillment-context";
 import { useCurrency } from "@/lib/currency";
 import { useAccount } from "@/lib/account-context";
 import { maxCartQty } from "@/lib/warehouse-allocation";
@@ -11,6 +12,7 @@ import {
   normalizeCartItem,
   resolveCartLine,
 } from "@/lib/cart-lines";
+import { trackProductEvent } from "@/lib/track-product-analytics";
 
 const CART_STORAGE_KEY = "bingin-cart";
 const WISHLIST_STORAGE_KEY = "bingin-wishlist";
@@ -63,6 +65,7 @@ function sameLine(a: CartItem, slug: string, variantId?: string) {
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { products } = useCatalog();
+  const { zones } = useFulfillment();
   const { shipping } = useCurrency();
   const { email, wishlist: accountWishlist, loading: accountLoading, syncWishlist } = useAccount();
   const [items, setItems] = useState<CartItem[]>(readStoredCart);
@@ -100,7 +103,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const add = (slug: string, qty = 1, variantId?: string) => {
     const product = products.find((p) => p.slug === slug);
     const line = normalizeCartItem({ slug, qty, variantId }, product);
-    const max = product ? maxCartQty(product, shipping.code, line.variantId) : qty;
+    const max = product ? maxCartQty(product, shipping.code, line.variantId, zones) : qty;
     if (max < 1) {
       setOpen(true);
       return;
@@ -115,6 +118,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { ...line, qty: Math.max(1, Math.min(line.qty, max)) }];
     });
+    trackProductEvent(slug, "cart");
     setOpen(true);
   };
 
@@ -123,7 +127,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const updateQty = (slug: string, qty: number, variantId?: string) => {
     const product = products.find((p) => p.slug === slug);
-    const max = product ? maxCartQty(product, shipping.code, variantId) : qty;
+    const max = product ? maxCartQty(product, shipping.code, variantId, zones) : qty;
     if (qty < 1) {
       remove(slug, variantId);
       return;
@@ -139,7 +143,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const toggleWish = (slug: string) => {
     setWishlist((prev) => {
-      const next = prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug];
+      const adding = !prev.includes(slug);
+      const next = adding ? [...prev, slug] : prev.filter((s) => s !== slug);
+      if (adding) trackProductEvent(slug, "wishlist");
       if (email) {
         void syncWishlist(next).catch(() => {});
       }

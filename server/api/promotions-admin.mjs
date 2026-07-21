@@ -40,7 +40,7 @@ export async function postValidatePromo(body) {
 
   const promo = await validatePromoCode(code);
   const catalog = await readCatalog();
-  const resolved = items.length ? validateCartItems(catalog, items, countryCode) : [];
+  const resolved = items.length ? await validateCartItems(catalog, items, countryCode) : [];
 
   const shippingDisplay = await shippingAmountForCountry(countryCode, currency);
   const shippingSmallest = toStripeAmount(shippingDisplay, currency);

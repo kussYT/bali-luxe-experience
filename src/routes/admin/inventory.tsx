@@ -34,6 +34,9 @@ function AdminInventoryPage() {
   const [statusSaving, setStatusSaving] = useState<string | null>(null);
   const [draft, setDraft] = useState<Record<string, { france: string; bali: string }>>({});
 
+  const [saved, setSaved] = useState<Record<string, true>>({});
+  const [message, setMessage] = useState<string | null>(null);
+
   const load = useCallback(async () => {
     try {
       const inv = await fetchAdminInventory();
@@ -44,6 +47,7 @@ function AdminInventoryPage() {
         next[row.variantId] = { france: String(row.france), bali: String(row.bali) };
       }
       setDraft(next);
+      setSaved({});
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load inventory");
     }
@@ -80,6 +84,14 @@ function AdminInventoryPage() {
     );
   }, [data, filter, collectionFilter]);
 
+  const isDirty = (row: InventoryRow, warehouseId: "france" | "bali") => {
+    const raw = draft[row.variantId]?.[warehouseId];
+    const quantity = Number(raw);
+    if (!Number.isFinite(quantity) || quantity < 0) return false;
+    const current = warehouseId === "france" ? row.france : row.bali;
+    return quantity !== current;
+  };
+
   const saveCell = async (row: InventoryRow, warehouseId: "france" | "bali") => {
     const key = row.variantId;
     const raw = draft[key]?.[warehouseId];
@@ -95,6 +107,8 @@ function AdminInventoryPage() {
     setError(null);
     try {
       await updateInventoryQuantity({ variantId: key, warehouseId, quantity });
+      setSaved((s) => ({ ...s, [`${key}-${warehouseId}`]: true }));
+      setMessage(`Stock enregistré (${warehouseId === "france" ? "Paris" : "Bali"} · ${row.productName}).`);
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed");
@@ -124,8 +138,9 @@ function AdminInventoryPage() {
         <p className="text-eyebrow text-muted-foreground">Sprint S2</p>
         <h2 className="font-display text-4xl mt-2">France / Bali inventory</h2>
         <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
-          Quantités Paris / Bali par variante. Basculez <strong>Visible / Brouillon</strong> pour masquer un article
-          de la boutique sans le supprimer.
+          Quantités Paris / Bali par variante. Modifiez le chiffre puis cliquez <strong>Enregistrer</strong> (ou
+          cliquez en dehors du champ). Basculez <strong>Visible / Brouillon</strong> pour masquer un article de la
+          boutique.
         </p>
       </div>
 
@@ -193,6 +208,11 @@ function AdminInventoryPage() {
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
+      {message && !error && (
+        <p className="text-sm text-muted-foreground bg-muted border border-border px-4 py-3" role="status">
+          {message}
+        </p>
+      )}
 
       {!data && !error && <p className="text-muted-foreground">Loading inventory…</p>}
 
@@ -225,39 +245,77 @@ function AdminInventoryPage() {
                     )}
                   </td>
                   <td className="p-3">
-                    <Input
-                      type="number"
-                      min={0}
-                      className="h-9"
-                      value={draft[row.variantId]?.france ?? ""}
-                      disabled={saving === `${row.variantId}-france`}
-                      onChange={(e) =>
-                        setDraft((d) => ({
-                          ...d,
-                          [row.variantId]: { ...d[row.variantId], france: e.target.value },
-                        }))
-                      }
-                      onBlur={() => saveCell(row, "france")}
-                    />
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min={0}
+                        className="h-9 w-20"
+                        value={draft[row.variantId]?.france ?? ""}
+                        disabled={saving === `${row.variantId}-france`}
+                        onChange={(e) => {
+                          setSaved((s) => {
+                            const next = { ...s };
+                            delete next[`${row.variantId}-france`];
+                            return next;
+                          });
+                          setDraft((d) => ({
+                            ...d,
+                            [row.variantId]: { ...d[row.variantId], france: e.target.value },
+                          }));
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") saveCell(row, "france");
+                        }}
+                        onBlur={() => saveCell(row, "france")}
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={isDirty(row, "france") ? "default" : "outline"}
+                        disabled={saving === `${row.variantId}-france` || !isDirty(row, "france")}
+                        onClick={() => saveCell(row, "france")}
+                      >
+                        {saved[`${row.variantId}-france`] ? "OK" : "Save"}
+                      </Button>
+                    </div>
                     {row.franceReserved > 0 && (
                       <p className="text-xs text-muted-foreground mt-1">reserved {row.franceReserved}</p>
                     )}
                   </td>
                   <td className="p-3">
-                    <Input
-                      type="number"
-                      min={0}
-                      className="h-9"
-                      value={draft[row.variantId]?.bali ?? ""}
-                      disabled={saving === `${row.variantId}-bali`}
-                      onChange={(e) =>
-                        setDraft((d) => ({
-                          ...d,
-                          [row.variantId]: { ...d[row.variantId], bali: e.target.value },
-                        }))
-                      }
-                      onBlur={() => saveCell(row, "bali")}
-                    />
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min={0}
+                        className="h-9 w-20"
+                        value={draft[row.variantId]?.bali ?? ""}
+                        disabled={saving === `${row.variantId}-bali`}
+                        onChange={(e) => {
+                          setSaved((s) => {
+                            const next = { ...s };
+                            delete next[`${row.variantId}-bali`];
+                            return next;
+                          });
+                          setDraft((d) => ({
+                            ...d,
+                            [row.variantId]: { ...d[row.variantId], bali: e.target.value },
+                          }));
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") saveCell(row, "bali");
+                        }}
+                        onBlur={() => saveCell(row, "bali")}
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={isDirty(row, "bali") ? "default" : "outline"}
+                        disabled={saving === `${row.variantId}-bali` || !isDirty(row, "bali")}
+                        onClick={() => saveCell(row, "bali")}
+                      >
+                        {saved[`${row.variantId}-bali`] ? "OK" : "Save"}
+                      </Button>
+                    </div>
                     {row.baliReserved > 0 && (
                       <p className="text-xs text-muted-foreground mt-1">reserved {row.baliReserved}</p>
                     )}

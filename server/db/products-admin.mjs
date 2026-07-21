@@ -1,5 +1,12 @@
 import { withTransaction, query, isDatabaseConfigured } from "./pool.mjs";
 import { mapOriginToWarehouse, buildVariantSlug } from "./catalog.mjs";
+import { ensureCollectionsCatalog, KNOWN_COLLECTIONS } from "../collections-catalog.mjs";
+
+const collectionNameBySlug = new Map(KNOWN_COLLECTIONS.map((c) => [c.slug, c.name]));
+
+function collectionNameForSlug(slug) {
+  return collectionNameBySlug.get(slug) ?? String(slug).replace(/-/g, " ");
+}
 
 function slugify(value) {
   return String(value || "")
@@ -10,10 +17,12 @@ function slugify(value) {
     .replace(/^-+|-+$/g, "");
 }
 
+import { parseMoneyValue } from "../parse-money.mjs";
+
 export function normalizeAdminProductBody(body) {
-  const priceEUR = Number(body.priceEUR) || 0;
+  const priceEUR = parseMoneyValue(body.priceEUR);
   const compareRaw =
-    body.compareAtEUR != null && body.compareAtEUR !== "" ? Number(body.compareAtEUR) : null;
+    body.compareAtEUR != null && body.compareAtEUR !== "" ? parseMoneyValue(body.compareAtEUR) : null;
   const onSale = compareRaw != null && compareRaw < priceEUR;
   const images =
     Array.isArray(body.images) && body.images.length > 0
@@ -51,8 +60,27 @@ export function normalizeAdminProductBody(body) {
       x: Number(body.imageFocal?.x ?? body.imageFocalX) || 50,
       y: Number(body.imageFocal?.y ?? body.imageFocalY) || 50,
     },
+    imageFocals: Array.isArray(body.imageFocals)
+      ? body.imageFocals.map((f) => ({
+          x: Number(f?.x) || 50,
+          y: Number(f?.y) || 50,
+        }))
+      : undefined,
     sortOrder: body.sortOrder != null ? Number(body.sortOrder) : undefined,
     variants: parseAdminVariants(body),
+    locales: normalizeProductLocales(body),
+  };
+}
+
+function normalizeProductLocales(body) {
+  if (body.locales && typeof body.locales === "object") return body.locales;
+  return {
+    en: {
+      name: body.name || "Untitled",
+      story: body.story || "",
+      seoTitle: typeof body.seoTitle === "string" ? body.seoTitle.trim() : "",
+      metaDescription: typeof body.metaDescription === "string" ? body.metaDescription.trim() : "",
+    },
   };
 }
 
@@ -84,10 +112,13 @@ async function upsertCollection(client, { slug, name, season = "" }) {
 
 async function replaceExtraCollections(client, productId, primaryCollectionId, extraSlugs) {
   await client.query(`DELETE FROM product_collection_memberships WHERE product_id = $1`, [productId]);
-  for (const slug of extraSlugs) {
-    const { rows } = await client.query(`SELECT id FROM collections WHERE slug = $1`, [slug]);
-    if (!rows.length) continue;
-    const collectionId = rows[0].id;
+  for (const rawSlug of extraSlugs) {
+    const slug = slugify(rawSlug);
+    if (!slug) continue;
+    const collectionId = await upsertCollection(client, {
+      slug,
+      name: collectionNameForSlug(slug),
+    });
     if (collectionId === primaryCollectionId) continue;
     await client.query(
       `INSERT INTO product_collection_memberships (product_id, collection_id) VALUES ($1, $2)
@@ -97,14 +128,17 @@ async function replaceExtraCollections(client, productId, primaryCollectionId, e
   }
 }
 
-async function replaceImages(client, productId, images, imageFocal) {
+async function replaceImages(client, productId, images, imageFocal, imageFocals) {
   await client.query(`DELETE FROM product_images WHERE product_id = $1`, [productId]);
-  const focalX = Number(imageFocal?.x) || 50;
-  const focalY = Number(imageFocal?.y) || 50;
+  const coverFocalX = Number(imageFocal?.x) || 50;
+  const coverFocalY = Number(imageFocal?.y) || 50;
   for (let i = 0; i < images.length; i++) {
+    const focal = imageFocals?.[i] || (i === 0 ? imageFocal : null) || { x: 50, y: 50 };
+    const focalX = Number(focal.x) || (i === 0 ? coverFocalX : 50);
+    const focalY = Number(focal.y) || (i === 0 ? coverFocalY : 50);
     await client.query(
       `INSERT INTO product_images (product_id, url, position, focal_x, focal_y) VALUES ($1, $2, $3, $4, $5)`,
-      [productId, images[i], i, i === 0 ? focalX : 50, i === 0 ? focalY : 50],
+      [productId, images[i], i, focalX, focalY],
     );
   }
 }
@@ -174,7 +208,7 @@ async function setVariantPrimaryStock(client, variantId, warehouseId, nextQty, p
   );
 }
 
-async function syncProductVariants(client, productId, p) {
+async function syncProductVariants(client, productId, p, { syncStock = true } = {}) {
   const defaultWarehouse = mapOriginToWarehouse(p.origin);
   const { rows: existing } = await client.query(
     `SELECT id FROM product_variants WHERE product_id = $1 ORDER BY position ASC`,
@@ -213,7 +247,9 @@ async function syncProductVariants(client, productId, p) {
           isDefault,
         ],
       );
-      await setVariantPrimaryStock(client, variant.id, defaultWarehouse, variant.stock, p.slug);
+      if (syncStock) {
+        await setVariantPrimaryStock(client, variant.id, defaultWarehouse, variant.stock, p.slug);
+      }
     } else {
       const newId = await createVariantWithInventory(client, productId, p, variant, position, isDefault);
       keepIds.add(newId);
@@ -249,6 +285,7 @@ export async function createProductInDb(rawBody) {
   }
 
   return withTransaction(async (client) => {
+    await ensureCollectionsCatalog((sql, params) => client.query(sql, params));
     const collectionId = await upsertCollection(client, {
       slug: p.collectionSlug,
       name: p.collection,
@@ -259,8 +296,8 @@ export async function createProductInDb(rawBody) {
       `INSERT INTO products (
          slug, name, story, collection_id, subcategory, category, product_type,
          price_eur, compare_at_eur, price_usd, price_idr, status, featured, origin, default_warehouse, video_url,
-         seo_title, meta_description
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+         seo_title, meta_description, locales
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
        RETURNING id`,
       [
         p.slug,
@@ -281,11 +318,12 @@ export async function createProductInDb(rawBody) {
         p.videoUrl || "",
         p.seoTitle || "",
         p.metaDescription || "",
+        JSON.stringify(p.locales || {}),
       ],
     );
 
     const productId = rows[0].id;
-    await replaceImages(client, productId, p.images, p.imageFocal);
+    await replaceImages(client, productId, p.images, p.imageFocal, p.imageFocals);
     await replaceExtraCollections(client, productId, collectionId, p.collectionSlugs);
     for (let i = 0; i < p.variants.length; i++) {
       await createVariantWithInventory(client, productId, p, p.variants[i], i, i === 0);
@@ -305,6 +343,7 @@ export async function updateProductInDb(currentSlug, rawBody) {
   const p = normalizeAdminProductBody({ ...rawBody, slug: rawBody.slug || currentSlug });
 
   return withTransaction(async (client) => {
+    await ensureCollectionsCatalog((sql, params) => client.query(sql, params));
     const { rows: existingRows } = await client.query(
       `SELECT id, slug FROM products WHERE slug = $1`,
       [currentSlug],
@@ -356,6 +395,7 @@ export async function updateProductInDb(currentSlug, rawBody) {
          video_url = $17,
          seo_title = $18,
          meta_description = $19,
+         locales = $20,
          updated_at = now()
        WHERE id = $1`,
       [
@@ -378,12 +418,13 @@ export async function updateProductInDb(currentSlug, rawBody) {
         p.videoUrl || "",
         p.seoTitle || "",
         p.metaDescription || "",
+        JSON.stringify(p.locales || {}),
       ],
     );
 
-    await replaceImages(client, productId, p.images, p.imageFocal);
+    await replaceImages(client, productId, p.images, p.imageFocal, p.imageFocals);
     await replaceExtraCollections(client, productId, collectionId, p.collectionSlugs);
-    await syncProductVariants(client, productId, p);
+    await syncProductVariants(client, productId, p, { syncStock: false });
 
     return productId;
   });

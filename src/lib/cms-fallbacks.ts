@@ -7,6 +7,7 @@ import type {
   ContactContent,
   FindUsContent,
   FooterContent,
+  ProductMessagesContent,
   SizingContent,
 } from "@/lib/content-types";
 
@@ -76,6 +77,10 @@ export const FALLBACK_CARE: CareContent = {
   title: BRAND_CONTENT.care.title,
   metaDescription: BRAND_CONTENT.care.intro,
   intro: BRAND_CONTENT.care.intro,
+  images: [
+    { src: "/care/how-to-care.png", alt: "How to take care of your hat — Bingin Diaries" },
+    { src: "/care/care-by-material.png", alt: "Care guide by hat type — Bingin Diaries" },
+  ],
   sections: BRAND_CONTENT.care.sections.map((s) => ({
     title: s.title,
     tips: [...s.tips],
@@ -113,4 +118,13 @@ export const FALLBACK_FOOTER: FooterContent = {
   artisans: "Artisans & ethics",
   materials: "Materials & quality",
   copyright: "© 2026 Bingin Diaries",
+};
+
+export const FALLBACK_PRODUCT_MESSAGES: ProductMessagesContent = {
+  regionalUnavailable:
+    "Cette pièce n'est pas disponible pour une livraison en {country}. Le stock pour votre zone est expédié depuis notre atelier {warehouse}. Changez le pays de livraison dans le menu pour voir les pièces proposées dans votre zone.",
+  soldOut: "Rupture de stock",
+  unavailableInRegion: "Indisponible dans votre région",
+  addToBag: "Ajouter au panier",
+  inStock: "{count} en stock{variant} — expédié depuis {warehouse}",
 };

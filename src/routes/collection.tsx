@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { useCatalog } from "@/lib/catalog-context";
+import { useRegionalCatalog } from "@/lib/use-regional-catalog";
 import { productInCollection, productMatchesQuery } from "@/lib/search";
+import { getShopCategoryBySlug, productMatchesShopCategory } from "@/lib/catalog-taxonomy";
 import { sortProductsForDisplay } from "@/lib/sort-products";
 import { ProductCard } from "@/components/site/ProductCard";
 import { SALE_PAGE_SUBTITLE, SALE_PAGE_TITLE } from "@/data/sale-copy";
@@ -18,6 +19,7 @@ type CollectionSearch = {
   c?: string;
   cat?: string;
   sub?: string;
+  shop?: string;
   sale?: string;
   q?: string;
 };
@@ -27,6 +29,7 @@ export const Route = createFileRoute("/collection")({
     c: typeof search.c === "string" ? search.c : undefined,
     cat: typeof search.cat === "string" ? search.cat : undefined,
     sub: typeof search.sub === "string" ? search.sub : undefined,
+    shop: typeof search.shop === "string" ? search.shop : undefined,
     sale: search.sale === "true" || search.sale === true ? "true" : undefined,
     q: typeof search.q === "string" ? search.q : undefined,
   }),
@@ -40,13 +43,15 @@ export const Route = createFileRoute("/collection")({
 });
 
 function Collection() {
-  const { c, cat, sub, sale, q } = Route.useSearch();
-  const { publishedProducts, collections } = useCatalog();
+  const { c, cat, sub, shop, sale, q } = Route.useSearch();
+  const { regionalProducts, publishedProducts, collections } = useRegionalCatalog();
+
+  const catalogPool = sale === "true" || q ? publishedProducts : regionalProducts;
 
   const collectionProducts = useMemo(() => {
     if (!c) return [];
-    return sortProductsForDisplay(publishedProducts.filter((p) => productInCollection(p, c)));
-  }, [c, publishedProducts]);
+    return sortProductsForDisplay(regionalProducts.filter((p) => productInCollection(p, c)));
+  }, [c, regionalProducts]);
 
   const scopedCategoryFilters = useMemo(() => {
     const cats = new Set<string>();
@@ -73,14 +78,15 @@ function Collection() {
   }, [c, collectionProducts, collections]);
 
   const filtered = useMemo(() => {
-    let list = publishedProducts;
+    let list = catalogPool;
     if (c) list = list.filter((p) => productInCollection(p, c));
     if (sub) list = list.filter((p) => productInCollection(p, sub));
     if (cat) list = list.filter((p) => p.category === cat);
+    if (shop) list = list.filter((p) => productMatchesShopCategory(p, shop));
     if (sale === "true") list = list.filter((p) => p.onSale);
-    if (q) list = list.filter((p) => productMatchesQuery(p, q));
+    if (q) list = list.filter((p) => productMatchesQuery(p, q, collections));
     return sortProductsForDisplay(list);
-  }, [publishedProducts, c, sub, cat, sale, q]);
+  }, [catalogPool, c, sub, cat, shop, sale, q]);
 
   const activeCollection = c ? collections.find((col) => col.slug === c) : undefined;
   const inCollectionView = Boolean(c) && sale !== "true" && !q;
@@ -91,6 +97,7 @@ function Collection() {
     c ? (activeCollection?.name ?? "Collection") :
     cat === "accessories" ? "Accessories" :
     cat === "bags" ? "Bags" :
+    shop ? (getShopCategoryBySlug(shop)?.label ?? "Shop") :
     "The Collection";
 
   const subtitle =
@@ -103,19 +110,6 @@ function Collection() {
       <section className="page-wrap section-pad pt-20 md:pt-28 pb-12 md:pb-16 border-b border-border">
         <h1 className="font-display text-3xl sm:text-5xl md:text-7xl lg:text-[5.5rem] leading-[0.94] break-words">{title}</h1>
         <p className="text-caption mt-6 max-w-lg">{subtitle}</p>
-        {sale === "true" && (
-          <div
-            id="sale-info"
-            className="mt-8 max-w-2xl border border-accent/30 bg-accent/5 px-5 py-4 text-sm text-foreground/90 leading-relaxed"
-          >
-            <p className="text-eyebrow !text-accent mb-2">How Sales works</p>
-            <p>
-              Pieces here have a <strong>promo price</strong> (shown on the card) and the usual list price
-              crossed out. To add or change a promo, open the product in Admin and set{" "}
-              <strong>Sale price</strong> below the list price.
-            </p>
-          </div>
-        )}
       </section>
 
       <div className="page-wrap section-pad py-6 flex items-center gap-6 md:gap-8 text-eyebrow border-b border-border overflow-x-auto">

@@ -24,3 +24,47 @@ export function resolvePageLocaleBlock(locales, locale) {
 export function resolvePostLocaleBlock(locales, locale) {
   return resolvePageLocaleBlock(locales, locale);
 }
+
+/** Product blocks use name, story, seoTitle, metaDescription. */
+export function resolveProductLocaleBlock(locales, locale) {
+  const map = locales && typeof locales === "object" ? locales : {};
+  const order = locale ? [locale, ...FALLBACK_CHAIN.filter((c) => c !== locale)] : FALLBACK_CHAIN;
+  for (const code of order) {
+    const block = map[code];
+    if (block?.name?.trim()) return { code, block };
+  }
+  return null;
+}
+
+/** Collection blocks use name, description. */
+export function resolveCollectionLocaleBlock(locales, locale) {
+  const map = locales && typeof locales === "object" ? locales : {};
+  const order = locale ? [locale, ...FALLBACK_CHAIN.filter((c) => c !== locale)] : FALLBACK_CHAIN;
+  for (const code of order) {
+    const block = map[code];
+    if (block?.name?.trim()) return { code, block };
+  }
+  return null;
+}
+
+/** Top nav labels — valid when shop or newCollection is set. */
+export function resolveNavigationLocaleBlock(locales, locale) {
+  const map = locales && typeof locales === "object" ? locales : {};
+  const order = locale ? [locale, ...FALLBACK_CHAIN.filter((c) => c !== locale)] : FALLBACK_CHAIN;
+  for (const code of order) {
+    const block = map[code];
+    if (block?.shop?.trim() || block?.newCollection?.trim()) return { code, block };
+  }
+  return null;
+}
+
+/** Product page CMS strings — block is valid when addToBag is set. */
+export function resolveProductMessagesLocaleBlock(locales, locale) {
+  const map = locales && typeof locales === "object" ? locales : {};
+  const order = locale ? [locale, ...FALLBACK_CHAIN.filter((c) => c !== locale)] : FALLBACK_CHAIN;
+  for (const code of order) {
+    const block = map[code];
+    if (block?.addToBag?.trim()) return { code, block };
+  }
+  return null;
+}

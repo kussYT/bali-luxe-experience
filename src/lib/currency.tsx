@@ -15,6 +15,8 @@ import {
 } from "@/lib/market";
 import { LOCALE_CHANGED_EVENT, LOCALE_DEFAULT_COUNTRY } from "@/lib/locale-market";
 import type { Locale } from "@/lib/i18n/messages";
+import { useLocale } from "@/lib/i18n/locale-context";
+import { formatMoneyAmount } from "@/lib/format-money";
 
 export type Currency = "EUR" | "USD" | "IDR";
 export type Country = { code: string; name: string; currency: Currency; flag: string };
@@ -27,6 +29,8 @@ type Ctx = {
   setMarketId: (code: string) => void;
   setCountry: (c: Country) => void;
   format: (p: Product) => string;
+  /** Format a EUR list amount in the shopper's currency (commas, locale). */
+  formatEur: (eur: number) => string;
   shippingLabel: string;
 };
 
@@ -39,6 +43,7 @@ function initialShipping(): ShippingCountry {
 }
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {
+  const { locale } = useLocale();
   const [shipping, setShipping] = useState<ShippingCountry>(initialShipping);
   const [country, setCountry] = useState<Country>(() => shippingToCountry(initialShipping()));
 
@@ -95,10 +100,22 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
           : country.currency === "USD"
             ? Math.round(eur * 1.1)
             : Math.round(eur * 17_000);
-      const symbol = country.currency === "EUR" ? "€" : country.currency === "USD" ? "$" : "Rp ";
-      return `${symbol}${value.toLocaleString("en-US")}`;
+      return formatMoneyAmount(value, country.currency, locale);
     },
-    [country.currency],
+    [country.currency, locale],
+  );
+
+  const formatEur = useCallback(
+    (eur: number) => {
+      const value =
+        country.currency === "EUR"
+          ? eur
+          : country.currency === "USD"
+            ? Math.round(eur * 1.1)
+            : Math.round(eur * 17_000);
+      return formatMoneyAmount(value, country.currency, locale);
+    },
+    [country.currency, locale],
   );
 
   const shippingLabel = formatShippingLabel(shipping);
@@ -112,8 +129,9 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       setMarketId: setShippingCountryCode,
       setCountry: setCountryLegacy,
       format,
+      formatEur,
     }),
-    [country, shipping, shippingLabel, setShippingCountryCode, setCountryLegacy, format],
+    [country, shipping, shippingLabel, setShippingCountryCode, setCountryLegacy, format, formatEur],
   );
 
   return <CurrencyContext.Provider value={value}>{children}</CurrencyContext.Provider>;

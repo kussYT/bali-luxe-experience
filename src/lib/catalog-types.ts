@@ -23,6 +23,11 @@ export type ProductVariant = {
   available: boolean;
 };
 
+export type CollectionLocaleFields = {
+  name: string;
+  description: string;
+};
+
 export type Collection = {
   slug: string;
   name: string;
@@ -30,6 +35,14 @@ export type Collection = {
   description?: string;
   sortOrder?: number;
   hidden?: boolean;
+  locales?: Partial<Record<import("@/lib/i18n/messages").Locale, CollectionLocaleFields>>;
+};
+
+export type ProductLocaleFields = {
+  name: string;
+  story: string;
+  seoTitle: string;
+  metaDescription: string;
 };
 
 export type Product = {
@@ -49,9 +62,10 @@ export type Product = {
   compareAtEUR?: number;
   priceUSD: number;
   priceIDR: number;
-  image: string;
   images: string[];
-  /** Cover image focal point (0–100), for object-position in grids */
+  /** Per-image focal points (same order as images) */
+  imageFocals?: { x: number; y: number }[];
+  /** Cover focal — kept for grids; mirrors imageFocals[0] */
   imageFocal?: { x: number; y: number };
   videoUrl?: string;
   details: string[];
@@ -73,6 +87,8 @@ export type Product = {
   /** SEO — empty uses product name for title */
   seoTitle?: string;
   metaDescription?: string;
+  /** Translations — admin API; resolved on storefront per locale */
+  locales?: Partial<Record<import("@/lib/i18n/messages").Locale, ProductLocaleFields>>;
 };
 
 export type Catalog = {

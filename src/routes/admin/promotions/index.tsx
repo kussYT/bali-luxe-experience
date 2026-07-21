@@ -14,6 +14,7 @@ import {
 import type { Product } from "@/lib/catalog-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/admin/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +25,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  PROMO_CATEGORIES,
+  formatPromoDate,
+  promoCategoryLabel,
+  promoStatus,
+  promoStatusLabel,
+} from "@/lib/promo-admin";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/admin/promotions/")({
   head: () => ({ meta: [{ title: "Promotions — Bingin Diaries Admin" }] }),
@@ -33,6 +42,7 @@ export const Route = createFileRoute("/admin/promotions/")({
 const EMPTY: Partial<AdminPromoCode> = {
   code: "",
   label: "",
+  category: "other",
   discountType: "percent",
   discountValue: 10,
   freeShipping: false,
@@ -63,6 +73,15 @@ function fromDatetimeLocal(value: string) {
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
+type PromoListFilter = "all" | "active" | "inactive" | "expired";
+
+function statusBadgeClass(status: ReturnType<typeof promoStatus>) {
+  if (status === "active") return "bg-emerald-100 text-emerald-950 border-emerald-200";
+  if (status === "scheduled") return "bg-sky-100 text-sky-950 border-sky-200";
+  if (status === "expired" || status === "exhausted") return "bg-amber-100 text-amber-950 border-amber-200";
+  return "bg-muted text-muted-foreground border-border";
+}
+
 function AdminPromotionsPage() {
   const [promos, setPromos] = useState<AdminPromoCode[]>([]);
   const [collections, setCollections] = useState<{ slug: string; name: string }[]>([]);
@@ -70,10 +89,32 @@ function AdminPromotionsPage() {
   const [draft, setDraft] = useState<Partial<AdminPromoCode>>(EMPTY);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [productQuery, setProductQuery] = useState("");
+  const [listFilter, setListFilter] = useState<PromoListFilter>("all");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   const rules = draft.rules || DEFAULT_PROMO_RULES;
+
+  const summary = useMemo(() => {
+    const statuses = promos.map((p) => promoStatus(p));
+    return {
+      total: promos.length,
+      active: statuses.filter((s) => s === "active").length,
+      scheduled: statuses.filter((s) => s === "scheduled").length,
+      expired: statuses.filter((s) => s === "expired" || s === "exhausted").length,
+      inactive: statuses.filter((s) => s === "inactive").length,
+    };
+  }, [promos]);
+
+  const visiblePromos = useMemo(() => {
+    return promos.filter((promo) => {
+      const status = promoStatus(promo);
+      if (listFilter === "active") return status === "active" || status === "scheduled";
+      if (listFilter === "inactive") return status === "inactive";
+      if (listFilter === "expired") return status === "expired" || status === "exhausted";
+      return true;
+    });
+  }, [promos, listFilter]);
 
   const filteredProducts = useMemo(() => {
     const q = productQuery.trim().toLowerCase();
@@ -104,13 +145,38 @@ function AdminPromotionsPage() {
     setProductQuery("");
   }
 
-  function applyPreset(preset: "collection" | "influencer" | "product") {
+  function applyPreset(preset: "collection" | "influencer" | "product" | "newsletter" | "loyalty" | "friends") {
     if (preset === "influencer") {
       setDraft({
         ...EMPTY,
+        category: "influencer",
         discountType: "free",
         discountValue: 100,
         freeShipping: true,
+        rules: { ...DEFAULT_PROMO_RULES, scope: "all" },
+      });
+    } else if (preset === "newsletter") {
+      setDraft({
+        ...EMPTY,
+        category: "newsletter",
+        discountType: "percent",
+        discountValue: 10,
+        rules: { ...DEFAULT_PROMO_RULES, scope: "all" },
+      });
+    } else if (preset === "loyalty") {
+      setDraft({
+        ...EMPTY,
+        category: "loyalty",
+        discountType: "percent",
+        discountValue: 10,
+        rules: { ...DEFAULT_PROMO_RULES, scope: "all" },
+      });
+    } else if (preset === "friends") {
+      setDraft({
+        ...EMPTY,
+        category: "friends",
+        discountType: "percent",
+        discountValue: 15,
         rules: { ...DEFAULT_PROMO_RULES, scope: "all" },
       });
     } else if (preset === "collection") {
@@ -215,7 +281,56 @@ function AdminPromotionsPage() {
       {error && <p className="text-destructive text-sm">{error}</p>}
       {message && <p className="text-sm text-muted-foreground">{message}</p>}
 
+      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {[
+          { label: "Total", value: summary.total },
+          { label: "Actifs", value: summary.active },
+          { label: "Programmés", value: summary.scheduled },
+          { label: "Expirés / limite", value: summary.expired },
+          { label: "Inactifs", value: summary.inactive },
+        ].map((stat) => (
+          <Card key={stat.label}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-normal text-muted-foreground">{stat.label}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="font-display text-3xl">{stat.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       <div className="flex flex-wrap gap-2">
+        {(
+          [
+            ["all", "Tous"],
+            ["active", "Actifs / programmés"],
+            ["expired", "Expirés"],
+            ["inactive", "Inactifs"],
+          ] as const
+        ).map(([value, label]) => (
+          <Button
+            key={value}
+            type="button"
+            size="sm"
+            variant={listFilter === value ? "default" : "outline"}
+            onClick={() => setListFilter(value)}
+          >
+            {label}
+          </Button>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" size="sm" onClick={() => applyPreset("newsletter")}>
+          Preset · Newsletter
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => applyPreset("loyalty")}>
+          Preset · 2e commande
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => applyPreset("friends")}>
+          Preset · Amis proches
+        </Button>
         <Button type="button" variant="outline" size="sm" onClick={() => applyPreset("collection")}>
           Preset · Soldes collection
         </Button>
@@ -251,6 +366,24 @@ function AdminPromotionsPage() {
                 />
               </div>
               <div className="space-y-2">
+                <Label>Catégorie</Label>
+                <Select
+                  value={draft.category || "other"}
+                  onValueChange={(v) => setDraft({ ...draft, category: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PROMO_CATEGORIES.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label>Type</Label>
                 <Select
                   value={draft.discountType || "percent"}
@@ -275,10 +408,9 @@ function AdminPromotionsPage() {
               </div>
               <div className="space-y-2">
                 <Label>Valeur (% ou €)</Label>
-                <Input
-                  type="number"
+                <MoneyInput
                   value={draft.discountValue ?? 0}
-                  onChange={(e) => setDraft({ ...draft, discountValue: Number(e.target.value) })}
+                  onChange={(n) => setDraft({ ...draft, discountValue: n ?? 0 })}
                   disabled={draft.discountType === "free"}
                 />
               </div>
@@ -401,15 +533,10 @@ function AdminPromotionsPage() {
               <div className="grid gap-4 sm:grid-cols-2 mt-4">
                 <div className="space-y-2">
                   <Label>Panier éligible min. (€)</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={rules.minSubtotalEur ?? ""}
-                    onChange={(e) =>
-                      patchRules({
-                        minSubtotalEur: e.target.value ? Number(e.target.value) : null,
-                      })
-                    }
+                  <MoneyInput
+                    allowEmpty
+                    value={rules.minSubtotalEur ?? undefined}
+                    onChange={(n) => patchRules({ minSubtotalEur: n ?? null })}
                     placeholder="Ex. 80"
                   />
                 </div>
@@ -445,11 +572,23 @@ function AdminPromotionsPage() {
       </Card>
 
       <div className="space-y-3">
-        {promos.map((promo) => (
+        {visiblePromos.length === 0 && (
+          <p className="text-sm text-muted-foreground">Aucun code dans ce filtre.</p>
+        )}
+        {visiblePromos.map((promo) => {
+          const status = promoStatus(promo);
+          return (
           <Card key={promo.id}>
-            <CardContent className="pt-6 flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="font-mono font-medium">{promo.code}</p>
+            <CardContent className="pt-6 flex flex-wrap items-start justify-between gap-4">
+              <div className="space-y-2 min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-mono font-medium">{promo.code}</p>
+                  <Badge variant="outline" className={statusBadgeClass(status)}>
+                    {promoStatusLabel(status)}
+                  </Badge>
+                  <Badge variant="outline">{promoCategoryLabel(promo.category)}</Badge>
+                </div>
+                {promo.label && <p className="text-sm text-foreground/90">{promo.label}</p>}
                 <p className="text-sm text-muted-foreground">
                   {promo.discountType === "free"
                     ? "Cadeau 100 %"
@@ -461,13 +600,14 @@ function AdminPromotionsPage() {
                   {scopeSummary(promo.rules)}
                   {promo.influencerName ? ` · ${promo.influencerName}` : ""}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground">
                   {promo.usedCount} utilisation{promo.usedCount !== 1 ? "s" : ""}
                   {promo.maxUses != null ? ` / ${promo.maxUses}` : ""}
-                  {!promo.active ? " · inactif" : ""}
+                  {" · "}Début : {formatPromoDate(promo.rules?.startsAt ?? null)}
+                  {" · "}Fin : {formatPromoDate(promo.expiresAt)}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 shrink-0">
                 <Button type="button" variant="outline" size="sm" onClick={() => startEdit(promo)}>
                   Modifier
                 </Button>
@@ -480,7 +620,8 @@ function AdminPromotionsPage() {
               </div>
             </CardContent>
           </Card>
-        ))}
+        );
+        })}
       </div>
     </div>
   );

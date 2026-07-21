@@ -6,15 +6,24 @@ import {
   sendAbandonedCheckoutRecovery,
   adminOrdersExportUrl,
   fetchAdminAnalytics,
+  fetchAbandonedRecoverySettings,
+  updateAbandonedRecoverySettings,
+  runAbandonedRecoveryNow,
   type AdminOrder,
   type AdminAnalytics,
   type AbandonedCheckout,
+  type AbandonedRecoverySettings,
 } from "@/lib/admin-api";
 import { orderStatusLabel } from "@/lib/order-status";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ChannelBadge } from "@/components/admin/ChannelBadge";
 import { MarketplaceOrderForm } from "@/components/admin/MarketplaceOrderForm";
+import { ManualInvoiceOrderForm } from "@/components/admin/ManualInvoiceOrderForm";
 import { OrdersAnalyticsPanel } from "@/components/admin/OrdersAnalyticsPanel";
 
 export const Route = createFileRoute("/admin/orders/")({
@@ -64,6 +73,10 @@ function AdminOrdersPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [sendingRecovery, setSendingRecovery] = useState<string | null>(null);
+  const [recoverySettings, setRecoverySettings] = useState<AbandonedRecoverySettings | null>(null);
+  const [recoveryDraft, setRecoveryDraft] = useState<AbandonedRecoverySettings | null>(null);
+  const [savingRecovery, setSavingRecovery] = useState(false);
+  const [runningRecovery, setRunningRecovery] = useState(false);
 
   const loadOrders = useCallback(() => {
     fetchAdminOrders(channelFilter || undefined)
@@ -98,7 +111,15 @@ function AdminOrdersPage() {
 
   useEffect(() => {
     if (tab === "orders") loadOrders();
-    else loadAbandoned();
+    else {
+      loadAbandoned();
+      fetchAbandonedRecoverySettings()
+        .then((res) => {
+          setRecoverySettings(res.settings);
+          setRecoveryDraft(res.settings);
+        })
+        .catch(() => {});
+    }
     fetchAdminAnalytics()
       .then((res) => setAnalytics(res.analytics))
       .catch(() => {});
@@ -125,6 +146,47 @@ function AdminOrdersPage() {
     }
   }
 
+  async function handleSaveRecoverySettings() {
+    if (!recoveryDraft) return;
+    setSavingRecovery(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await updateAbandonedRecoverySettings(recoveryDraft);
+      setRecoverySettings(res.settings);
+      setRecoveryDraft(res.settings);
+      setMessage("Réglages de récupération automatique enregistrés.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Échec d'enregistrement");
+    } finally {
+      setSavingRecovery(false);
+    }
+  }
+
+  async function handleRunRecoveryNow() {
+    setRunningRecovery(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await runAbandonedRecoveryNow();
+      if (res.reason === "disabled") {
+        setMessage("Récupération automatique désactivée — activez-la ci-dessous ou utilisez l'envoi manuel.");
+      } else {
+        setMessage(`${res.sent} relance(s) envoyée(s) · ${res.skipped} ignorée(s) sur ${res.processed} panier(s).`);
+      }
+      loadAbandoned();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Échec de l'exécution");
+    } finally {
+      setRunningRecovery(false);
+    }
+  }
+
+  const recoveryDirty =
+    recoveryDraft &&
+    recoverySettings &&
+    JSON.stringify(recoveryDraft) !== JSON.stringify(recoverySettings);
+
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -136,6 +198,7 @@ function AdminOrdersPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <ManualInvoiceOrderForm onCreated={loadOrders} />
           <MarketplaceOrderForm onCreated={loadOrders} />
           <Button variant="outline" asChild>
             <a href={adminOrdersExportUrl()} download>
@@ -249,7 +312,14 @@ function AdminOrdersPage() {
                       {new Date(order.createdAt).toLocaleString()}
                     </td>
                     <td className="p-3">
-                      <ChannelBadge channel={order.channel || "website"} />
+                      <div className="flex flex-col gap-1">
+                        <ChannelBadge channel={order.channel || "website"} />
+                        {order.externalRef === "manual_invoice" && (
+                          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                            Facture
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-3">{orderStatusLabel(order.status)}</td>
                     <td className="p-3">{order.customerEmail || "—"}</td>
@@ -299,6 +369,171 @@ function AdminOrdersPage() {
                 </CardContent>
               </Card>
             </div>
+          )}
+
+          {recoveryDraft && (
+            <Card className="max-w-2xl">
+              <CardHeader>
+                <CardTitle className="text-base font-medium">Récupération automatique</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Envoie des e-mails de relance via un cron quotidien (<code className="text-xs">POST /api/cron/abandoned-recovery</code>).
+                  L&apos;envoi manuel reste disponible dans le tableau.
+                </p>
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="recovery-enabled"
+                    checked={recoveryDraft.enabled}
+                    onCheckedChange={(v) =>
+                      setRecoveryDraft((s) => s && { ...s, enabled: v === true })
+                    }
+                  />
+                  <Label htmlFor="recovery-enabled">Activer la récupération automatique</Label>
+                </div>
+                <div className="grid sm:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="recovery-min-age">Délai min. (heures)</Label>
+                    <Input
+                      id="recovery-min-age"
+                      type="number"
+                      min={1}
+                      value={recoveryDraft.minAgeHours}
+                      onChange={(e) =>
+                        setRecoveryDraft((s) =>
+                          s ? { ...s, minAgeHours: Math.max(1, Number(e.target.value) || 1) } : s,
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recovery-max">Max e-mails / panier</Label>
+                    <Input
+                      id="recovery-max"
+                      type="number"
+                      min={1}
+                      value={recoveryDraft.maxEmailsPerCart}
+                      onChange={(e) =>
+                        setRecoveryDraft((s) =>
+                          s
+                            ? { ...s, maxEmailsPerCart: Math.max(1, Number(e.target.value) || 1) }
+                            : s,
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recovery-gap">Entre deux relances (h)</Label>
+                    <Input
+                      id="recovery-gap"
+                      type="number"
+                      min={1}
+                      value={recoveryDraft.minHoursBetweenEmails}
+                      onChange={(e) =>
+                        setRecoveryDraft((s) =>
+                          s
+                            ? {
+                                ...s,
+                                minHoursBetweenEmails: Math.max(1, Number(e.target.value) || 1),
+                              }
+                            : s,
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2 max-w-sm">
+                  <Label htmlFor="recovery-promo">Code promo (optionnel)</Label>
+                  <Input
+                    id="recovery-promo"
+                    placeholder="ex. WELCOME10"
+                    value={recoveryDraft.promoCode}
+                    onChange={(e) =>
+                      setRecoveryDraft((s) => (s ? { ...s, promoCode: e.target.value } : s))
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Affiché dans l&apos;e-mail de relance si renseigné.
+                  </p>
+                </div>
+
+                <div className="space-y-4 border-t border-border pt-4">
+                  <p className="text-sm font-medium">Texte de l&apos;e-mail de relance</p>
+                  <p className="text-xs text-muted-foreground">
+                    Les produits du panier et le lien de paiement sont ajoutés automatiquement.
+                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="recovery-email-subject">Objet de l&apos;e-mail</Label>
+                    <Input
+                      id="recovery-email-subject"
+                      value={recoveryDraft.emailSubject}
+                      onChange={(e) =>
+                        setRecoveryDraft((s) => (s ? { ...s, emailSubject: e.target.value } : s))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recovery-email-title">Titre dans l&apos;e-mail</Label>
+                    <Input
+                      id="recovery-email-title"
+                      value={recoveryDraft.emailTitle}
+                      onChange={(e) =>
+                        setRecoveryDraft((s) => (s ? { ...s, emailTitle: e.target.value } : s))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recovery-email-intro">Message principal</Label>
+                    <Textarea
+                      id="recovery-email-intro"
+                      rows={4}
+                      value={recoveryDraft.emailIntro}
+                      onChange={(e) =>
+                        setRecoveryDraft((s) => (s ? { ...s, emailIntro: e.target.value } : s))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2 max-w-sm">
+                    <Label htmlFor="recovery-email-button">Texte du bouton</Label>
+                    <Input
+                      id="recovery-email-button"
+                      value={recoveryDraft.emailButtonLabel}
+                      onChange={(e) =>
+                        setRecoveryDraft((s) =>
+                          s ? { ...s, emailButtonLabel: e.target.value } : s,
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recovery-email-closing">Message de fin</Label>
+                    <Textarea
+                      id="recovery-email-closing"
+                      rows={3}
+                      value={recoveryDraft.emailClosing}
+                      onChange={(e) =>
+                        setRecoveryDraft((s) => (s ? { ...s, emailClosing: e.target.value } : s))
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={handleSaveRecoverySettings}
+                    disabled={savingRecovery || !recoveryDirty}
+                  >
+                    {savingRecovery ? "Enregistrement…" : "Enregistrer"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleRunRecoveryNow}
+                    disabled={runningRecovery}
+                  >
+                    {runningRecovery ? "Exécution…" : "Lancer maintenant"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           <p className="text-sm text-muted-foreground max-w-2xl">

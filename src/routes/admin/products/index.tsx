@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Search } from "lucide-react";
 import { deleteProduct, fetchAdminCatalog } from "@/lib/admin-api";
 import type { Catalog, Product } from "@/lib/catalog-types";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,22 +18,48 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useCatalog } from "@/lib/catalog-context";
+import { formatMoneyAmount } from "@/lib/format-money";
 
 export const Route = createFileRoute("/admin/products/")({
   head: () => ({ meta: [{ title: "Products — Admin" }] }),
   component: AdminProductsPage,
 });
 
+type StockFilter = "all" | "onSale" | "fullPrice";
+
 function AdminProductsPage() {
   const { refresh: refreshPublic } = useCatalog();
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [saleFilter, setSaleFilter] = useState<StockFilter>("all");
 
   const load = () => fetchAdminCatalog().then(setCatalog);
 
   useEffect(() => {
     load();
   }, []);
+
+  const onSaleCount = useMemo(
+    () => (catalog?.products ?? []).filter((p) => p.onSale).length,
+    [catalog?.products],
+  );
+
+  const filteredProducts = useMemo(() => {
+    let products = catalog?.products ?? [];
+    if (saleFilter === "onSale") products = products.filter((p) => p.onSale);
+    if (saleFilter === "fullPrice") products = products.filter((p) => !p.onSale);
+
+    const needle = query.trim().toLowerCase();
+    if (!needle) return products;
+    return products.filter((p) => {
+      const haystack = [p.name, p.slug, p.collection, p.subcategory, p.category, p.productType]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(needle);
+    });
+  }, [catalog?.products, query, saleFilter]);
 
   const remove = async (product: Product) => {
     await deleteProduct(product.slug);
@@ -62,6 +91,52 @@ function AdminProductsPage() {
         </p>
       )}
 
+      <Card className="border-accent/30 bg-accent/5">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-normal text-muted-foreground">Produits en solde</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="font-display text-3xl">{onSaleCount}</p>
+          <p className="text-xs text-muted-foreground mt-2 max-w-xl">
+            Un produit est en solde quand le champ <strong>Sale price</strong> est renseigné en admin (pas via une
+            collection). Utilisez le filtre ci-dessous pour auditer la liste.
+          </p>
+        </CardContent>
+      </Card>
+
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Rechercher par nom, slug, collection…"
+            className="pl-9"
+            aria-label="Rechercher des produits"
+          />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              ["all", "Tous"],
+              ["onSale", `En solde (${onSaleCount})`],
+              ["fullPrice", "Prix normal"],
+            ] as const
+          ).map(([value, label]) => (
+            <Button
+              key={value}
+              type="button"
+              size="sm"
+              variant={saleFilter === value ? "default" : "outline"}
+              onClick={() => setSaleFilter(value)}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
+      </div>
+
       <div className="border border-border overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left">
@@ -75,7 +150,7 @@ function AdminProductsPage() {
             </tr>
           </thead>
           <tbody>
-            {catalog?.products.map((p) => (
+            {filteredProducts.map((p) => (
               <tr key={p.slug} className="border-t border-border">
                 <td className="p-3">
                   <div className="flex items-center gap-3">
@@ -83,14 +158,23 @@ function AdminProductsPage() {
                     <div>
                       <p className="font-medium">{p.name}</p>
                       <p className="text-xs text-muted-foreground">{p.slug}</p>
+                      {p.onSale && (
+                        <span className="text-[0.625rem] uppercase tracking-wider text-amber-800">Sale</span>
+                      )}
                     </div>
                   </div>
                 </td>
                 <td className="p-3">{p.collection}</td>
                 <td className="p-3 font-mono">
-                  €{p.priceEUR}
-                  {p.onSale && p.compareAtEUR != null && (
-                    <span className="text-muted-foreground line-through ml-2">€{p.compareAtEUR}</span>
+                  {p.onSale && p.compareAtEUR != null ? (
+                    <>
+                      <span className="text-foreground">{formatMoneyAmount(p.compareAtEUR, "EUR", "fr")}</span>
+                      <span className="text-muted-foreground line-through ml-2">
+                        {formatMoneyAmount(p.priceEUR, "EUR", "fr")}
+                      </span>
+                    </>
+                  ) : (
+                    formatMoneyAmount(p.priceEUR, "EUR", "fr")
                   )}
                 </td>
                 <td className="p-3">{p.stock}</td>
@@ -128,9 +212,10 @@ function AdminProductsPage() {
             ))}
           </tbody>
         </table>
+        {filteredProducts.length === 0 && (
+          <p className="p-6 text-sm text-muted-foreground">Aucun produit ne correspond à cette recherche.</p>
+        )}
       </div>
     </div>
   );
 }
-
-

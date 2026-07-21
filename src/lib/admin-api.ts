@@ -1,5 +1,6 @@
 import type { UploadProgress } from "@/lib/upload-admin-files";
 import { uploadAdminFiles } from "@/lib/upload-admin-files";
+import type { CountryShippingRow } from "@/lib/country-shipping-types";
 import type { Catalog, Product } from "@/lib/catalog-types";
 import type {
   AboutContent,
@@ -11,6 +12,9 @@ import type {
   FooterContent,
   HomepageContent,
   JournalPost,
+  JournalPostBlock,
+  ProductMessagesContent,
+  ProductMessagesStored,
   SizingContent,
   AdminCollectionMeta,
 } from "@/lib/content-types";
@@ -29,8 +33,9 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
   return data as T;
 }
 
-export async function fetchPublicCatalog() {
-  return request<Catalog>("/api/catalog");
+export async function fetchPublicCatalog(locale?: string) {
+  const qs = locale ? `?locale=${encodeURIComponent(locale)}` : "";
+  return request<Catalog>(`/api/catalog${qs}`);
 }
 
 export async function fetchAdminCatalog() {
@@ -262,6 +267,70 @@ export async function fetchAdminAnalytics() {
   return request<{ analytics: AdminAnalytics; source: string }>("/api/admin/analytics");
 }
 
+export type AbandonedRecoverySettings = {
+  enabled: boolean;
+  minAgeHours: number;
+  maxEmailsPerCart: number;
+  minHoursBetweenEmails: number;
+  promoCode: string;
+  emailSubject: string;
+  emailTitle: string;
+  emailIntro: string;
+  emailButtonLabel: string;
+  emailClosing: string;
+};
+
+export async function fetchAbandonedRecoverySettings() {
+  return request<{ settings: AbandonedRecoverySettings }>("/api/admin/abandoned-recovery/settings");
+}
+
+export async function updateAbandonedRecoverySettings(patch: Partial<AbandonedRecoverySettings>) {
+  return request<{ settings: AbandonedRecoverySettings }>("/api/admin/abandoned-recovery/settings", {
+    method: "PATCH",
+    body: JSON.stringify(patch),
+  });
+}
+
+export async function runAbandonedRecoveryNow() {
+  return request<{
+    processed: number;
+    sent: number;
+    skipped: number;
+    reason?: string;
+    settings?: AbandonedRecoverySettings;
+  }>("/api/admin/abandoned-recovery/run", { method: "POST" });
+}
+
+export type ProductAnalyticsRow = {
+  slug: string;
+  views: number;
+  cartAdds: number;
+  wishlistAdds: number;
+};
+
+export async function fetchProductAnalytics(days = 30, limit = 50) {
+  return request<{
+    analytics: { days: number; products: ProductAnalyticsRow[] };
+    source: string;
+  }>(`/api/admin/analytics/products?days=${encodeURIComponent(String(days))}&limit=${encodeURIComponent(String(limit))}`);
+}
+
+export type SiteTrafficAnalytics = {
+  days: number;
+  summary: { pageviews: number; visitors: number };
+  realtime: { pageviews: number; visitors: number };
+  byDay: { day: string; pageviews: number; visitors: number }[];
+  topPages: { path: string; pageviews: number; visitors: number }[];
+  bySource: { source: string; pageviews: number; visitors: number }[];
+  byDevice: { device: string; pageviews: number; visitors: number }[];
+};
+
+export async function fetchSiteTraffic(days = 30) {
+  return request<{ analytics: SiteTrafficAnalytics; source: string }>(
+    `/api/admin/analytics/traffic?days=${encodeURIComponent(String(days))}`,
+  );
+}
+
 export async function fetchAdminNewsletter() {
   return request<{
     settings: AdminNewsletterSettings;
@@ -306,6 +375,81 @@ export async function createMarketplaceOrder(payload: {
   });
 }
 
+export async function createManualInvoiceOrder(payload: {
+  customerEmail: string;
+  shippingCountryCode: string;
+  currency?: string;
+  items: { productSlug: string; variantSlug?: string; qty: number; unitPrice: number }[];
+  notes?: string;
+  sendEmail?: boolean;
+  discountType?: "percent" | "fixed" | null;
+  discountValue?: number;
+}) {
+  return request<{
+    order: AdminOrder;
+    emailSent: boolean;
+    email: string | null;
+    paymentUrl: string | null;
+    source: string;
+  }>("/api/admin/orders/invoice", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export type ManualInvoicePreview = {
+  customerEmail: string;
+  shippingCountryCode: string;
+  currency: string;
+  discountType: "percent" | "fixed" | null;
+  discountValue: number;
+  discountCents: number;
+  grossSubtotal: number;
+  amountSubtotal: number;
+  amountShipping: number;
+  amountTotal: number;
+  shippingLabel: string;
+  lines: {
+    productSlug: string;
+    name: string;
+    variantSlug: string | null;
+    variantTitle: string | null;
+    qty: number;
+    unitPrice: number;
+    lineTotal: number;
+  }[];
+};
+
+export async function previewManualInvoiceOrder(payload: {
+  customerEmail: string;
+  shippingCountryCode: string;
+  currency?: string;
+  items: { productSlug: string; variantSlug?: string; qty: number; unitPrice: number }[];
+  notes?: string;
+  discountType?: "percent" | "fixed" | null;
+  discountValue?: number;
+}) {
+  return request<{ preview: ManualInvoicePreview; source: string }>(
+    "/api/admin/orders/invoice/preview",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function sendOrderPaymentLink(orderId: string) {
+  return request<{
+    ok: boolean;
+    order: AdminOrder;
+    email: string;
+    paymentUrl: string;
+    provider: string;
+  }>(`/api/admin/orders/${encodeURIComponent(orderId)}/send-payment-link`, {
+    method: "POST",
+  });
+}
+
 export async function updateInventoryQuantity(payload: {
   variantId: string;
   warehouseId: "france" | "bali";
@@ -345,6 +489,7 @@ export async function fetchAdminSiteContent() {
     care: CareContent;
     sizing: SizingContent;
     footer: FooterContent;
+    productMessages: ProductMessagesStored;
     stored: {
       announcement: Partial<AnnouncementContent>;
       homepage: Partial<HomepageContent>;
@@ -354,6 +499,7 @@ export async function fetchAdminSiteContent() {
       care: Partial<CareContent>;
       sizing: Partial<SizingContent>;
       footer: Partial<FooterContent>;
+      productMessages: Partial<ProductMessagesStored>;
     };
     source: string;
   }>("/api/admin/content/site");
@@ -368,6 +514,7 @@ export async function updateAdminSiteContent(payload: {
   care?: CareContent;
   sizing?: SizingContent;
   footer?: FooterContent;
+  productMessages?: ProductMessagesStored;
 }) {
   return request<{
     announcement: AnnouncementContent;
@@ -378,6 +525,7 @@ export async function updateAdminSiteContent(payload: {
     care: CareContent;
     sizing: SizingContent;
     footer: FooterContent;
+    productMessages: ProductMessagesStored;
     stored: {
       announcement: Partial<AnnouncementContent>;
       homepage: Partial<HomepageContent>;
@@ -387,6 +535,7 @@ export async function updateAdminSiteContent(payload: {
       care: Partial<CareContent>;
       sizing: Partial<SizingContent>;
       footer: Partial<FooterContent>;
+      productMessages: Partial<ProductMessagesStored>;
     };
     source: string;
   }>("/api/admin/content/site", { method: "PATCH", body: JSON.stringify(payload) });
@@ -572,15 +721,83 @@ export async function autoTranslatePage(payload: {
 export async function autoTranslatePost(payload: {
   sourceLocale: string;
   targetLocales: string[];
-  fields: { title: string; excerpt: string; category: string; body: string[] };
+  fields: {
+    title: string;
+    excerpt: string;
+    category: string;
+    body: string[];
+    blocks?: JournalPostBlock[];
+  };
 }) {
   return request<{
-    locales: Record<string, { title: string; excerpt: string; category: string; body: string[] }>;
+    locales: Record<
+      string,
+      { title: string; excerpt: string; category: string; body: string[]; blocks?: JournalPostBlock[] }
+    >;
     provider: string;
   }>("/api/admin/translate-post", {
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+export async function autoTranslateProduct(payload: {
+  sourceLocale: string;
+  targetLocales: string[];
+  fields: { name: string; story: string; seoTitle: string; metaDescription: string };
+}) {
+  return request<{
+    locales: Record<string, { name: string; story: string; seoTitle: string; metaDescription: string }>;
+    provider: string;
+  }>("/api/admin/translate-product", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function autoTranslateProductMessages(payload: {
+  sourceLocale: string;
+  targetLocales: string[];
+  fields: {
+    regionalUnavailable: string;
+    soldOut: string;
+    unavailableInRegion: string;
+    addToBag: string;
+    inStock: string;
+  };
+}) {
+  return request<{
+    locales: Record<
+      string,
+      {
+        regionalUnavailable: string;
+        soldOut: string;
+        unavailableInRegion: string;
+        addToBag: string;
+        inStock: string;
+      }
+    >;
+    provider: string;
+  }>("/api/admin/translate-product-messages", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function fetchCollectionProducts(slug: string) {
+  return request<{ products: { slug: string; name: string; isPrimary: boolean }[] }>(
+    `/api/admin/collections/${encodeURIComponent(slug)}/products`,
+  );
+}
+
+export async function patchCollectionProducts(
+  slug: string,
+  payload: { add?: string[]; remove?: string[] },
+) {
+  return request<{ products: { slug: string; name: string; isPrimary: boolean }[] }>(
+    `/api/admin/collections/${encodeURIComponent(slug)}/products`,
+    { method: "PATCH", body: JSON.stringify(payload) },
+  );
 }
 
 export type PromoRules = {
@@ -603,6 +820,7 @@ export type AdminPromoCode = {
   id: string;
   code: string;
   label: string;
+  category: string;
   discountType: "percent" | "fixed" | "free";
   discountValue: number;
   freeShipping: boolean;
@@ -683,6 +901,22 @@ export async function fetchAdminReadiness() {
   }>("/api/admin/readiness");
 }
 
+export async function fetchAdminCountryShipping() {
+  return request<{ rows: CountryShippingRow[]; source: string }>("/api/admin/country-shipping");
+}
+
+export async function updateAdminCountryShipping(config: {
+  countries: Record<
+    string,
+    { enabled: boolean; warehouse: "france" | "bali"; shippingPrice: number }
+  >;
+}) {
+  return request<{ rows: CountryShippingRow[]; source: string }>("/api/admin/country-shipping", {
+    method: "PATCH",
+    body: JSON.stringify(config),
+  });
+}
+
 export type ShippingZone = {
   id: string;
   name: string;
@@ -698,5 +932,22 @@ export async function updateAdminShipping(zones: ShippingZone[]) {
   return request<{ settings: { zones: ShippingZone[] } }>("/api/admin/shipping", {
     method: "PATCH",
     body: JSON.stringify({ zones }),
+  });
+}
+
+export type FulfillmentZonesSettings = {
+  franceWarehouseCountries: string[];
+  baliWarehouseCountries: string[];
+  restOfWorldWarehouse: "france" | "bali";
+};
+
+export async function fetchAdminFulfillmentZones() {
+  return request<{ zones: FulfillmentZonesSettings; source: string }>("/api/admin/fulfillment-zones");
+}
+
+export async function updateAdminFulfillmentZones(zones: FulfillmentZonesSettings) {
+  return request<{ zones: FulfillmentZonesSettings; source: string }>("/api/admin/fulfillment-zones", {
+    method: "PATCH",
+    body: JSON.stringify(zones),
   });
 }

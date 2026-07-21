@@ -43,9 +43,19 @@ function itemsHtml(items, currency) {
     .join("");
 }
 
-export async function sendAbandonedCheckoutEmail(order, { resumeUrl }) {
+export async function sendAbandonedCheckoutEmail(order, { resumeUrl, promoCode, copy = {} }) {
   const email = order.customerEmail?.trim();
   if (!email) return { skipped: true, reason: "no customer email" };
+
+  const subject = copy.emailSubject || "Votre panier vous attend — Bingin Diaries";
+  const title = copy.emailTitle || "Votre panier vous attend";
+  const intro =
+    copy.emailIntro ||
+    "Vous aviez commencé une commande sur Bingin Diaries — votre sélection vous attend encore.";
+  const buttonLabel = copy.emailButtonLabel || "Finaliser ma commande";
+  const closing =
+    copy.emailClosing ||
+    "Ce lien est valable 30 jours. Si vous avez des questions, répondez simplement à cet e-mail.";
 
   const currency = order.currency || "EUR";
   const totalCents =
@@ -55,25 +65,33 @@ export async function sendAbandonedCheckoutEmail(order, { resumeUrl }) {
       : order.items.reduce((s, i) => s + i.unitPrice * i.qty, 0) * 100);
   const total = formatMoneyEmail(totalCents, currency);
 
+  const promoBlock = promoCode?.trim()
+    ? `<p style="margin:20px 0;padding:14px 18px;background:#f5f0e8;border:1px solid #e8e0d4;text-align:center;">
+        <span style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#8a8278;">Offre exclusive</span><br/>
+        <strong style="font-size:18px;letter-spacing:0.08em;">${promoCode.trim()}</strong>
+      </p>`
+    : "";
+
   const body = `
-    <p>Vous aviez commencé une commande sur Bingin Diaries — votre sélection vous attend encore.</p>
+    <p>${intro.replace(/\n/g, "<br/>")}</p>
+    ${promoBlock}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;font-size:14px;">
       ${itemsHtml(order.items, currency)}
     </table>
     <p style="text-align:right;font-size:16px;margin-top:8px;"><strong>Total estimé : ${total}</strong></p>
     <p style="text-align:center;margin:28px 0;">
       <a href="${resumeUrl}" style="display:inline-block;background:#1a1a1a;color:#f5f0e8;text-decoration:none;padding:14px 28px;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;">
-        Finaliser ma commande
+        ${buttonLabel}
       </a>
     </p>
     <p style="font-size:13px;color:#8a8278;margin-top:24px;">
-      Ce lien est valable 30 jours. Si vous avez des questions, répondez simplement à cet e-mail.
+      ${closing.replace(/\n/g, "<br/>")}
     </p>
   `;
 
   return sendEmail({
     to: email,
-    subject: "Votre panier vous attend — Bingin Diaries",
-    html: layout({ title: "Votre panier vous attend", body }),
+    subject,
+    html: layout({ title, body }),
   });
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { parseMoneyInput } from "@/lib/parse-money";
 import { createMarketplaceOrder } from "@/lib/admin-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,7 +71,7 @@ export function MarketplaceOrderForm({ onCreated }: MarketplaceOrderFormProps) {
         productSlug: line.productSlug.trim(),
         variantSlug: line.variantSlug.trim() || undefined,
         qty: Number(line.qty),
-        unitPrice: Math.round(Number(line.unitPriceEur.replace(",", ".")) * 100),
+        unitPrice: Math.round((parseMoneyInput(line.unitPriceEur) ?? 0) * 100),
       }));
 
       await createMarketplaceOrder({
@@ -204,7 +205,7 @@ export function MarketplaceOrderForm({ onCreated }: MarketplaceOrderFormProps) {
                     required
                     value={line.unitPriceEur}
                     onChange={(e) => updateLine(index, { unitPriceEur: e.target.value })}
-                    placeholder="89.00"
+                    placeholder="89,00"
                   />
                 </div>
                 {lines.length > 1 && (

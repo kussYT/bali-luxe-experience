@@ -212,6 +212,86 @@ export async function findOrderBySessionId(stripeSessionId) {
   return mapOrderRow(rows[0], itemsMap.get(rows[0].id) || []);
 }
 
+const CHECKOUT_BLOCKED_NOTE = "[checkout_blocked]";
+
+/**
+ * Payment received but checkout validation failed — hold for manual review, no stock movement.
+ */
+export async function holdOrderAfterPaymentBlocked(
+  orderId,
+  {
+    reason,
+    shippingCountryCode,
+    stripeSessionId,
+    stripePaymentIntentId,
+    stripeEventId,
+    customerEmail,
+    amountTotal,
+    amountSubtotal,
+    amountShipping,
+    currency,
+  },
+) {
+  if (!isDatabaseConfigured()) {
+    const err = new Error("Database not configured");
+    err.status = 503;
+    throw err;
+  }
+
+  return withTransaction(async (client) => {
+    const { rows } = await client.query(`SELECT * FROM orders WHERE id = $1 FOR UPDATE`, [orderId]);
+    if (rows.length === 0) {
+      const err = new Error(`Order not found: ${orderId}`);
+      err.status = 404;
+      throw err;
+    }
+
+    const order = rows[0];
+    if (order.status === "paid" || order.status === "on_hold") {
+      const itemsMap = await loadItemsForOrders([orderId], client);
+      return mapOrderRow(order, itemsMap.get(orderId) || []);
+    }
+
+    const note = `${CHECKOUT_BLOCKED_NOTE} ${reason}`.trim();
+    const mergedNotes = order.notes ? `${order.notes}\n${note}` : note;
+
+    await client.query(
+      `UPDATE orders SET
+         status = 'on_hold',
+         stripe_session_id = COALESCE($2, stripe_session_id),
+         stripe_payment_intent_id = COALESCE($3, stripe_payment_intent_id),
+         stripe_event_id = COALESCE($4, stripe_event_id),
+         customer_email = COALESCE($5, customer_email),
+         amount_total = COALESCE($6, amount_total),
+         amount_subtotal = COALESCE($7, amount_subtotal),
+         amount_shipping = COALESCE($8, amount_shipping),
+         currency = COALESCE($9, currency),
+         shipping_country_code = COALESCE($10, shipping_country_code),
+         notes = $11,
+         paid_at = now(),
+         updated_at = now()
+       WHERE id = $1`,
+      [
+        orderId,
+        stripeSessionId,
+        stripePaymentIntentId,
+        stripeEventId,
+        customerEmail,
+        amountTotal,
+        amountSubtotal,
+        amountShipping,
+        currency,
+        shippingCountryCode,
+        mergedNotes,
+      ],
+    );
+
+    const { rows: updated } = await client.query(`SELECT * FROM orders WHERE id = $1`, [orderId]);
+    const itemsMap = await loadItemsForOrders([orderId], client);
+    return mapOrderRow(updated[0], itemsMap.get(orderId) || []);
+  });
+}
+
 /**
  * Mark order paid + decrement inventory (idempotent).
  */
@@ -239,7 +319,7 @@ export async function fulfillOrderPayment({
     const order = rows[0];
     if (order.status === "paid") {
       const itemsMap = await loadItemsForOrders([orderId], client);
-      return mapOrderRow(order, itemsMap.get(orderId) || []);
+      return { order: mapOrderRow(order, itemsMap.get(orderId) || []), newlyPaid: false };
     }
 
     if (stripeEventId) {
@@ -248,7 +328,7 @@ export async function fulfillOrderPayment({
         const dupId = dup.rows[0].id;
         const itemsMap = await loadItemsForOrders([dupId], client);
         const existing = await client.query(`SELECT * FROM orders WHERE id = $1`, [dupId]);
-        return mapOrderRow(existing.rows[0], itemsMap.get(dupId) || []);
+        return { order: mapOrderRow(existing.rows[0], itemsMap.get(dupId) || []), newlyPaid: false };
       }
     }
 
@@ -309,7 +389,7 @@ export async function fulfillOrderPayment({
 
     const { rows: updated } = await client.query(`SELECT * FROM orders WHERE id = $1`, [orderId]);
     const items = itemRows.map(mapItemRow);
-    return mapOrderRow(updated[0], items);
+    return { order: mapOrderRow(updated[0], items), newlyPaid: true };
   });
 }
 
@@ -335,6 +415,12 @@ export async function listOrdersAdmin({ channel } = {}) {
   return rows.map((r) => mapOrderRow(r, itemsMap.get(r.id) || []));
 }
 
+export const MANUAL_INVOICE_REF = "manual_invoice";
+
+export function isManualInvoiceOrder(order) {
+  return order?.externalRef === MANUAL_INVOICE_REF || (order?.notes || "").includes("[manual_invoice]");
+}
+
 /** Pending website checkouts older than minAgeHours (default 1h). */
 export async function listAbandonedCheckouts({ minAgeHours = 1, limit = 200 } = {}) {
   const hours = Math.max(1, Number(minAgeHours) || 1);
@@ -342,10 +428,11 @@ export async function listAbandonedCheckouts({ minAgeHours = 1, limit = 200 } = 
     `SELECT * FROM orders
      WHERE status = 'pending'
        AND channel = 'website'
+       AND (external_ref IS NULL OR external_ref <> $3)
        AND created_at < now() - ($1::text || ' hours')::interval
      ORDER BY created_at DESC
      LIMIT $2`,
-    [String(hours), limit],
+    [String(hours), limit, MANUAL_INVOICE_REF],
   );
   const ids = rows.map((r) => r.id);
   const itemsMap = await loadItemsForOrders(ids);
@@ -376,6 +463,122 @@ export function estimateOrderTotalCents(order) {
   if (!sub) return null;
   if (order.currency === "IDR") return sub;
   return sub * 100;
+}
+
+/**
+ * Draft order awaiting customer payment (Shopify-style invoice).
+ * Does not decrement stock until Stripe marks the order paid.
+ */
+export async function createManualInvoiceOrder({
+  customerEmail,
+  shippingCountryCode,
+  currency = "EUR",
+  items,
+  notes,
+  amountShipping = 0,
+  amountSubtotal,
+  amountTotal,
+}) {
+  if (!isDatabaseConfigured()) {
+    const err = new Error("Database not configured");
+    err.status = 503;
+    throw err;
+  }
+
+  const email = typeof customerEmail === "string" ? customerEmail.trim() : "";
+  if (!email || !email.includes("@")) {
+    const err = new Error("Email client requis");
+    err.status = 400;
+    throw err;
+  }
+
+  if (!Array.isArray(items) || items.length === 0) {
+    const err = new Error("At least one line item is required");
+    err.status = 400;
+    throw err;
+  }
+
+  const orderId = randomUUID();
+  const shipCountry = (shippingCountryCode || "FR").toUpperCase();
+  const noteParts = ["[manual_invoice]"];
+  if (notes?.trim()) noteParts.push(notes.trim());
+  const mergedNotes = noteParts.join("\n");
+
+  return withTransaction(async (client) => {
+    const resolvedItems = [];
+    for (const item of items) {
+      if (!item.productSlug || !item.qty || item.qty < 1) {
+        const err = new Error("Each item needs productSlug and qty");
+        err.status = 400;
+        throw err;
+      }
+      if (item.unitPrice == null || Number(item.unitPrice) < 0) {
+        const err = new Error(`Prix manquant pour ${item.productSlug}`);
+        err.status = 400;
+        throw err;
+      }
+      resolvedItems.push(
+        await resolveOrderLine(client, {
+          productSlug: item.productSlug,
+          variantSlug: item.variantSlug || null,
+          qty: item.qty,
+          unitPrice: Number(item.unitPrice),
+          shippingCountryCode: shipCountry,
+        }),
+      );
+    }
+
+    const subtotal =
+      amountSubtotal != null
+        ? Number(amountSubtotal)
+        : resolvedItems.reduce((sum, i) => sum + i.unitPrice * i.qty, 0);
+    const shipping = Math.max(0, Number(amountShipping) || 0);
+    const total = amountTotal != null ? Number(amountTotal) : subtotal + shipping;
+    const fulfillmentWarehouse = resolvedItems[0]?.warehouseId || null;
+
+    await client.query(
+      `INSERT INTO orders (
+         id, status, channel, external_ref, notes, currency,
+         country_code, shipping_country_code, fulfillment_warehouse,
+         customer_email, amount_subtotal, amount_shipping, amount_total
+       ) VALUES ($1, 'pending', 'website', $2, $3, $4, $5, $5, $6, $7, $8, $9, $10)`,
+      [
+        orderId,
+        MANUAL_INVOICE_REF,
+        mergedNotes,
+        currency,
+        shipCountry,
+        fulfillmentWarehouse,
+        email,
+        subtotal,
+        shipping,
+        total,
+      ],
+    );
+
+    for (const item of resolvedItems) {
+      await client.query(
+        `INSERT INTO order_items (
+           order_id, product_id, variant_id, product_slug, product_name, variant_title,
+           qty, unit_price, warehouse_id, image_url
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+        [
+          orderId,
+          item.productId,
+          item.variantId,
+          item.slug,
+          item.name,
+          item.variantTitle,
+          item.qty,
+          item.unitPrice,
+          item.warehouseId,
+          item.image,
+        ],
+      );
+    }
+
+    return findOrderById(orderId, client);
+  });
 }
 
 export async function createMarketplaceOrder({

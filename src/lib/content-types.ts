@@ -1,4 +1,5 @@
 import type { ImageFocal } from "@/lib/image-focal";
+import type { CollectionLocaleFields } from "@/lib/catalog-types";
 
 export type AnnouncementContent = {
   enabled: boolean;
@@ -78,6 +79,12 @@ export type SiteNavigationContent = {
   popularSearches: string[];
 };
 
+export type SiteNavigationLocaleFields = SiteNavigationContent;
+
+export type SiteNavigationStored = {
+  locales?: Partial<Record<import("@/lib/i18n/messages").Locale, SiteNavigationLocaleFields>>;
+} & Partial<SiteNavigationContent>;
+
 /** Right-hand images in desktop mega-menu (À propos, Boutique, etc.). */
 export type MegaMenuFeaturedTile = {
   label: string;
@@ -103,6 +110,8 @@ export type HomepageContent = {
   photoStrip: PhotoStripContent;
   spotlightProduct: SpotlightProductContent;
   navigation: SiteNavigationContent;
+  /** Full stored navigation (locales) — admin API only */
+  navigationStored?: SiteNavigationStored;
   megaMenuFeatured?: MegaMenuFeaturedContent;
   editorial: EditorialContent;
   featuredSection: { eyebrow: string; title: string };
@@ -229,11 +238,17 @@ export type CareSectionContent = {
   tips: string[];
 };
 
+export type CareImageContent = {
+  src: string;
+  alt: string;
+};
+
 export type CareContent = {
   eyebrow: string;
   title: string;
   metaDescription: string;
   intro: string;
+  images: CareImageContent[];
   sections: CareSectionContent[];
   backLink: string;
 };
@@ -271,6 +286,22 @@ export type FooterContent = {
   copyright: string;
 };
 
+export type ProductMessagesLocaleFields = {
+  regionalUnavailable: string;
+  soldOut: string;
+  unavailableInRegion: string;
+  addToBag: string;
+  inStock: string;
+};
+
+/** Resolved copy for one locale (storefront). */
+export type ProductMessagesContent = ProductMessagesLocaleFields;
+
+/** All locales as stored in CMS settings. */
+export type ProductMessagesStored = {
+  locales: Partial<Record<import("@/lib/i18n/messages").Locale, ProductMessagesLocaleFields>>;
+};
+
 export type SiteContent = {
   announcement: AnnouncementContent;
   homepage: HomepageContent;
@@ -280,6 +311,7 @@ export type SiteContent = {
   care: CareContent;
   sizing: SizingContent;
   footer: FooterContent;
+  productMessages: ProductMessagesContent;
 };
 
 export type JournalPostLocaleFields = {
@@ -287,7 +319,20 @@ export type JournalPostLocaleFields = {
   excerpt: string;
   category: string;
   body: string[];
+  blocks?: JournalPostBlock[];
 };
+
+export type JournalPhotoSlot = {
+  image: string;
+  caption?: string;
+  alt?: string;
+  imageFocal?: ImageFocal;
+};
+
+export type JournalPostBlock =
+  | { type: "text"; paragraphs: string[] }
+  | ({ type: "photo" } & JournalPhotoSlot)
+  | { type: "photoPair"; left: JournalPhotoSlot; right: JournalPhotoSlot };
 
 export type JournalPost = {
   slug: string;
@@ -298,6 +343,7 @@ export type JournalPost = {
   category: string;
   readMinutes: number;
   body: string[];
+  blocks?: JournalPostBlock[];
   status?: string;
   /** All translations — present in admin API responses */
   locales?: Partial<Record<import("@/lib/i18n/messages").Locale, JournalPostLocaleFields>>;
@@ -331,4 +377,5 @@ export type AdminCollectionMeta = {
   hidden: boolean;
   productCount: number;
   updatedAt?: string;
+  locales?: Partial<Record<import("@/lib/i18n/messages").Locale, CollectionLocaleFields>>;
 };

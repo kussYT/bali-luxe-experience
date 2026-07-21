@@ -1,5 +1,5 @@
 import { NavMegaBand } from "@/components/site/NavMegaBand";
-import { useCatalog } from "@/lib/catalog-context";
+import { useRegionalCatalog } from "@/lib/use-regional-catalog";
 import { useSiteContent } from "@/lib/content-context";
 import { getMegaMenuContent, type MegaMenuId } from "@/lib/navigation";
 
@@ -10,12 +10,12 @@ type NavSectionMegaBandProps = {
 };
 
 export function NavSectionMegaBand({ mega, onNavigate, className = "" }: NavSectionMegaBandProps) {
-  const { collections, publishedProducts } = useCatalog();
+  const { collections, regionalProducts } = useRegionalCatalog();
   const { homepage } = useSiteContent();
   const { columns, featured } = getMegaMenuContent(
     mega,
     collections,
-    publishedProducts,
+    regionalProducts,
     homepage.megaMenuFeatured,
   );
 
