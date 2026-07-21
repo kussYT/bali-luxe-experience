@@ -45,14 +45,31 @@ async function writeFileSettings(all) {
 }
 
 export async function getSetting(key, defaultValue = null) {
-  if (isDatabaseConfigured()) {
-    const { rows } = await query(`SELECT value FROM site_settings WHERE key = $1`, [key]);
-    if (rows.length > 0) return rows[0].value;
-  } else {
-    const file = await readFileSettings();
-    if (file[key] != null) return file[key];
-  }
+  const batch = await getSettings([key]);
+  if (batch[key] != null) return batch[key];
   return defaultValue;
+}
+
+/** Load multiple CMS keys in one SQL round-trip. */
+export async function getSettings(keys) {
+  const unique = [...new Set(keys.filter(Boolean))];
+  if (!unique.length) return {};
+
+  if (isDatabaseConfigured()) {
+    const { rows } = await query(`SELECT key, value FROM site_settings WHERE key = ANY($1::text[])`, [
+      unique,
+    ]);
+    const out = {};
+    for (const row of rows) out[row.key] = row.value;
+    return out;
+  }
+
+  const file = await readFileSettings();
+  const out = {};
+  for (const key of unique) {
+    if (file[key] != null) out[key] = file[key];
+  }
+  return out;
 }
 
 export async function setSetting(key, value) {

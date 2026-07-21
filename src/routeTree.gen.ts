@@ -55,6 +55,7 @@ import { Route as AdminProductsSlugRouteImport } from './routes/admin/products/$
 import { Route as AdminPagesSlugRouteImport } from './routes/admin/pages/$slug'
 import { Route as AdminOrdersOrderIdRouteImport } from './routes/admin/orders/$orderId'
 import { Route as AdminContentSizingRouteImport } from './routes/admin/content/sizing'
+import { Route as AdminContentProductMessagesRouteImport } from './routes/admin/content/product-messages'
 import { Route as AdminContentNavigationRouteImport } from './routes/admin/content/navigation'
 import { Route as AdminContentFooterRouteImport } from './routes/admin/content/footer'
 import { Route as AdminContentFindUsRouteImport } from './routes/admin/content/find-us'
@@ -62,6 +63,7 @@ import { Route as AdminContentContactRouteImport } from './routes/admin/content/
 import { Route as AdminContentCareRouteImport } from './routes/admin/content/care'
 import { Route as AdminContentAboutRouteImport } from './routes/admin/content/about'
 import { Route as AdminBlogSlugRouteImport } from './routes/admin/blog/$slug'
+import { Route as AdminAnalyticsTrafficRouteImport } from './routes/admin/analytics/traffic'
 import { Route as AdminAnalyticsProductsRouteImport } from './routes/admin/analytics/products'
 
 const TravelDiariesRoute = TravelDiariesRouteImport.update({
@@ -294,6 +296,12 @@ const AdminContentSizingRoute = AdminContentSizingRouteImport.update({
   path: '/content/sizing',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminContentProductMessagesRoute =
+  AdminContentProductMessagesRouteImport.update({
+    id: '/content/product-messages',
+    path: '/content/product-messages',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminContentNavigationRoute = AdminContentNavigationRouteImport.update({
   id: '/content/navigation',
   path: '/content/navigation',
@@ -327,6 +335,11 @@ const AdminContentAboutRoute = AdminContentAboutRouteImport.update({
 const AdminBlogSlugRoute = AdminBlogSlugRouteImport.update({
   id: '/blog/$slug',
   path: '/blog/$slug',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnalyticsTrafficRoute = AdminAnalyticsTrafficRouteImport.update({
+  id: '/analytics/traffic',
+  path: '/analytics/traffic',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAnalyticsProductsRoute = AdminAnalyticsProductsRouteImport.update({
@@ -369,6 +382,7 @@ export interface FileRoutesByFullPath {
   '/wishlist/$token': typeof WishlistTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/analytics/products': typeof AdminAnalyticsProductsRoute
+  '/admin/analytics/traffic': typeof AdminAnalyticsTrafficRoute
   '/admin/blog/$slug': typeof AdminBlogSlugRoute
   '/admin/content/about': typeof AdminContentAboutRoute
   '/admin/content/care': typeof AdminContentCareRoute
@@ -376,6 +390,7 @@ export interface FileRoutesByFullPath {
   '/admin/content/find-us': typeof AdminContentFindUsRoute
   '/admin/content/footer': typeof AdminContentFooterRoute
   '/admin/content/navigation': typeof AdminContentNavigationRoute
+  '/admin/content/product-messages': typeof AdminContentProductMessagesRoute
   '/admin/content/sizing': typeof AdminContentSizingRoute
   '/admin/orders/$orderId': typeof AdminOrdersOrderIdRoute
   '/admin/pages/$slug': typeof AdminPagesSlugRoute
@@ -424,6 +439,7 @@ export interface FileRoutesByTo {
   '/wishlist/$token': typeof WishlistTokenRoute
   '/admin': typeof AdminIndexRoute
   '/admin/analytics/products': typeof AdminAnalyticsProductsRoute
+  '/admin/analytics/traffic': typeof AdminAnalyticsTrafficRoute
   '/admin/blog/$slug': typeof AdminBlogSlugRoute
   '/admin/content/about': typeof AdminContentAboutRoute
   '/admin/content/care': typeof AdminContentCareRoute
@@ -431,6 +447,7 @@ export interface FileRoutesByTo {
   '/admin/content/find-us': typeof AdminContentFindUsRoute
   '/admin/content/footer': typeof AdminContentFooterRoute
   '/admin/content/navigation': typeof AdminContentNavigationRoute
+  '/admin/content/product-messages': typeof AdminContentProductMessagesRoute
   '/admin/content/sizing': typeof AdminContentSizingRoute
   '/admin/orders/$orderId': typeof AdminOrdersOrderIdRoute
   '/admin/pages/$slug': typeof AdminPagesSlugRoute
@@ -481,6 +498,7 @@ export interface FileRoutesById {
   '/wishlist/$token': typeof WishlistTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/analytics/products': typeof AdminAnalyticsProductsRoute
+  '/admin/analytics/traffic': typeof AdminAnalyticsTrafficRoute
   '/admin/blog/$slug': typeof AdminBlogSlugRoute
   '/admin/content/about': typeof AdminContentAboutRoute
   '/admin/content/care': typeof AdminContentCareRoute
@@ -488,6 +506,7 @@ export interface FileRoutesById {
   '/admin/content/find-us': typeof AdminContentFindUsRoute
   '/admin/content/footer': typeof AdminContentFooterRoute
   '/admin/content/navigation': typeof AdminContentNavigationRoute
+  '/admin/content/product-messages': typeof AdminContentProductMessagesRoute
   '/admin/content/sizing': typeof AdminContentSizingRoute
   '/admin/orders/$orderId': typeof AdminOrdersOrderIdRoute
   '/admin/pages/$slug': typeof AdminPagesSlugRoute
@@ -539,6 +558,7 @@ export interface FileRouteTypes {
     | '/wishlist/$token'
     | '/admin/'
     | '/admin/analytics/products'
+    | '/admin/analytics/traffic'
     | '/admin/blog/$slug'
     | '/admin/content/about'
     | '/admin/content/care'
@@ -546,6 +566,7 @@ export interface FileRouteTypes {
     | '/admin/content/find-us'
     | '/admin/content/footer'
     | '/admin/content/navigation'
+    | '/admin/content/product-messages'
     | '/admin/content/sizing'
     | '/admin/orders/$orderId'
     | '/admin/pages/$slug'
@@ -594,6 +615,7 @@ export interface FileRouteTypes {
     | '/wishlist/$token'
     | '/admin'
     | '/admin/analytics/products'
+    | '/admin/analytics/traffic'
     | '/admin/blog/$slug'
     | '/admin/content/about'
     | '/admin/content/care'
@@ -601,6 +623,7 @@ export interface FileRouteTypes {
     | '/admin/content/find-us'
     | '/admin/content/footer'
     | '/admin/content/navigation'
+    | '/admin/content/product-messages'
     | '/admin/content/sizing'
     | '/admin/orders/$orderId'
     | '/admin/pages/$slug'
@@ -650,6 +673,7 @@ export interface FileRouteTypes {
     | '/wishlist/$token'
     | '/admin/'
     | '/admin/analytics/products'
+    | '/admin/analytics/traffic'
     | '/admin/blog/$slug'
     | '/admin/content/about'
     | '/admin/content/care'
@@ -657,6 +681,7 @@ export interface FileRouteTypes {
     | '/admin/content/find-us'
     | '/admin/content/footer'
     | '/admin/content/navigation'
+    | '/admin/content/product-messages'
     | '/admin/content/sizing'
     | '/admin/orders/$orderId'
     | '/admin/pages/$slug'
@@ -1024,6 +1049,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminContentSizingRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/content/product-messages': {
+      id: '/admin/content/product-messages'
+      path: '/content/product-messages'
+      fullPath: '/admin/content/product-messages'
+      preLoaderRoute: typeof AdminContentProductMessagesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/content/navigation': {
       id: '/admin/content/navigation'
       path: '/content/navigation'
@@ -1073,6 +1105,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBlogSlugRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/analytics/traffic': {
+      id: '/admin/analytics/traffic'
+      path: '/analytics/traffic'
+      fullPath: '/admin/analytics/traffic'
+      preLoaderRoute: typeof AdminAnalyticsTrafficRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/analytics/products': {
       id: '/admin/analytics/products'
       path: '/analytics/products'
@@ -1093,6 +1132,7 @@ interface AdminRouteChildren {
   AdminShippingRoute: typeof AdminShippingRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminAnalyticsProductsRoute: typeof AdminAnalyticsProductsRoute
+  AdminAnalyticsTrafficRoute: typeof AdminAnalyticsTrafficRoute
   AdminBlogSlugRoute: typeof AdminBlogSlugRoute
   AdminContentAboutRoute: typeof AdminContentAboutRoute
   AdminContentCareRoute: typeof AdminContentCareRoute
@@ -1100,6 +1140,7 @@ interface AdminRouteChildren {
   AdminContentFindUsRoute: typeof AdminContentFindUsRoute
   AdminContentFooterRoute: typeof AdminContentFooterRoute
   AdminContentNavigationRoute: typeof AdminContentNavigationRoute
+  AdminContentProductMessagesRoute: typeof AdminContentProductMessagesRoute
   AdminContentSizingRoute: typeof AdminContentSizingRoute
   AdminOrdersOrderIdRoute: typeof AdminOrdersOrderIdRoute
   AdminPagesSlugRoute: typeof AdminPagesSlugRoute
@@ -1126,6 +1167,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminShippingRoute: AdminShippingRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminAnalyticsProductsRoute: AdminAnalyticsProductsRoute,
+  AdminAnalyticsTrafficRoute: AdminAnalyticsTrafficRoute,
   AdminBlogSlugRoute: AdminBlogSlugRoute,
   AdminContentAboutRoute: AdminContentAboutRoute,
   AdminContentCareRoute: AdminContentCareRoute,
@@ -1133,6 +1175,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminContentFindUsRoute: AdminContentFindUsRoute,
   AdminContentFooterRoute: AdminContentFooterRoute,
   AdminContentNavigationRoute: AdminContentNavigationRoute,
+  AdminContentProductMessagesRoute: AdminContentProductMessagesRoute,
   AdminContentSizingRoute: AdminContentSizingRoute,
   AdminOrdersOrderIdRoute: AdminOrdersOrderIdRoute,
   AdminPagesSlugRoute: AdminPagesSlugRoute,

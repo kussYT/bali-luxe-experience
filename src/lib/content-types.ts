@@ -1,4 +1,5 @@
 import type { ImageFocal } from "@/lib/image-focal";
+import type { CollectionLocaleFields } from "@/lib/catalog-types";
 
 export type AnnouncementContent = {
   enabled: boolean;
@@ -78,6 +79,12 @@ export type SiteNavigationContent = {
   popularSearches: string[];
 };
 
+export type SiteNavigationLocaleFields = SiteNavigationContent;
+
+export type SiteNavigationStored = {
+  locales?: Partial<Record<import("@/lib/i18n/messages").Locale, SiteNavigationLocaleFields>>;
+} & Partial<SiteNavigationContent>;
+
 /** Right-hand images in desktop mega-menu (À propos, Boutique, etc.). */
 export type MegaMenuFeaturedTile = {
   label: string;
@@ -103,6 +110,8 @@ export type HomepageContent = {
   photoStrip: PhotoStripContent;
   spotlightProduct: SpotlightProductContent;
   navigation: SiteNavigationContent;
+  /** Full stored navigation (locales) — admin API only */
+  navigationStored?: SiteNavigationStored;
   megaMenuFeatured?: MegaMenuFeaturedContent;
   editorial: EditorialContent;
   featuredSection: { eyebrow: string; title: string };
@@ -368,4 +377,5 @@ export type AdminCollectionMeta = {
   hidden: boolean;
   productCount: number;
   updatedAt?: string;
+  locales?: Partial<Record<import("@/lib/i18n/messages").Locale, CollectionLocaleFields>>;
 };

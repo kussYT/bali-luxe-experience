@@ -23,6 +23,11 @@ export type ProductVariant = {
   available: boolean;
 };
 
+export type CollectionLocaleFields = {
+  name: string;
+  description: string;
+};
+
 export type Collection = {
   slug: string;
   name: string;
@@ -30,6 +35,7 @@ export type Collection = {
   description?: string;
   sortOrder?: number;
   hidden?: boolean;
+  locales?: Partial<Record<import("@/lib/i18n/messages").Locale, CollectionLocaleFields>>;
 };
 
 export type ProductLocaleFields = {

@@ -34,7 +34,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     try {
       setLoading(true);
-      const live = await fetchPublicCatalog();
+      const live = await fetchPublicCatalog(locale);
       setCatalog(live);
       setError(null);
     } catch (e) {
@@ -43,7 +43,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     refresh();

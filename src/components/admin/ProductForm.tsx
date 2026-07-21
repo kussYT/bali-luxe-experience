@@ -142,6 +142,11 @@ export function ProductForm({
     return {
       ...empty,
       ...initial,
+      priceEUR: parseMoneyValue(initial?.priceEUR),
+      compareAtEUR:
+        initial?.compareAtEUR != null && initial.compareAtEUR !== ""
+          ? parseMoneyValue(initial.compareAtEUR)
+          : undefined,
       variants: variantsFromProduct(initial),
       images,
       imageFocals,
@@ -410,7 +415,7 @@ export function ProductForm({
           <Label htmlFor="price">Price (EUR) *</Label>
           <MoneyInput
             id="price"
-            value={values.priceEUR || undefined}
+            value={values.priceEUR > 0 ? values.priceEUR : undefined}
             onChange={(n) => set("priceEUR", n ?? 0)}
           />
         </div>

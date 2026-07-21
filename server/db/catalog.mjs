@@ -1,6 +1,28 @@
-import { query, isDatabaseConfigured } from "./pool.mjs";
-import { resolveProductLocaleBlock } from "../i18n-locales.mjs";
-import { ensureCollectionsCatalog } from "../collections-catalog.mjs";
+import { queryTransaction, isDatabaseConfigured } from "./pool.mjs";
+import { resolveProductLocaleBlock, resolveCollectionLocaleBlock } from "../i18n-locales.mjs";
+import { collectionsCatalogInsertStatement } from "../collections-catalog.mjs";
+
+/** Postgres NUMERIC often arrives as string — normalize for JSON/API consumers. */
+function moneyFromDb(value) {
+  if (value == null || value === "") return undefined;
+  const n = Number(value);
+  if (!Number.isFinite(n)) return undefined;
+  return Math.round(n * 100) / 100;
+}
+
+function buildProductSearchTags({ name, slug, story, productType, subcategory, collection, collectionSlugs = [] }) {
+  const raw = [name, slug, story, productType, subcategory, collection, ...collectionSlugs]
+    .filter(Boolean)
+    .join(" ");
+  const words = raw
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .split(/[\s-]+/)
+    .filter((word) => word.length > 1);
+  return [...new Set(words)];
+}
 
 function parseProductLocales(raw) {
   if (!raw) return {};
@@ -13,6 +35,27 @@ function parseProductLocales(raw) {
     }
   }
   return typeof raw === "object" ? raw : {};
+}
+
+function parseCollectionLocales(raw) {
+  return parseProductLocales(raw);
+}
+
+function resolveCollectionFields(row, locale, { includeLocales = false } = {}) {
+  const locales = parseCollectionLocales(row.locales);
+  const resolved = locale ? resolveCollectionLocaleBlock(locales, locale) : null;
+  const name = resolved?.block?.name?.trim() || row.name;
+  const description = resolved?.block?.description?.trim() || row.description || "";
+  const out = {
+    slug: row.slug,
+    name: includeLocales ? row.name : name,
+    season: row.season || "",
+    description: includeLocales ? row.description || "" : description,
+    sortOrder: row.sort_order ?? 0,
+    hidden: Boolean(row.hidden),
+  };
+  if (includeLocales) out.locales = locales;
+  return out;
 }
 
 function mapOriginToWarehouse(origin) {
@@ -40,52 +83,108 @@ export async function fetchCatalogFromDb({ includeDrafts = false, locale, includ
     throw err;
   }
 
-  if (includeDrafts) {
-    await ensureCollectionsCatalog((sql, params) => query(sql, params));
-  }
-
   const statusFilter = includeDrafts ? "" : "WHERE p.status = 'published'";
+  const productScope = `
+    SELECT p.id FROM products p
+    LEFT JOIN collections c ON c.id = p.collection_id
+    ${statusFilter}
+  `;
 
-  const { rows: collectionRows } = await query(
-    `SELECT slug, name, season, description, sort_order, COALESCE(hidden, false) AS hidden
-     FROM collections
-     ORDER BY sort_order ASC, name ASC`,
+  const statements = [];
+  if (includeDrafts) {
+    statements.push(collectionsCatalogInsertStatement());
+  }
+  statements.push(
+    {
+      text: `SELECT slug, name, season, description, sort_order, COALESCE(hidden, false) AS hidden, locales
+             FROM collections
+             ORDER BY sort_order ASC, name ASC`,
+      params: [],
+    },
+    {
+      text: `
+      SELECT
+        p.id,
+        p.slug,
+        p.name,
+        p.story,
+        p.subcategory,
+        p.category,
+        p.product_type,
+        p.price_eur,
+        p.compare_at_eur,
+        p.price_usd,
+        p.price_idr,
+        p.status,
+        p.featured,
+        p.origin,
+        p.default_warehouse,
+        p.video_url,
+        p.seo_title,
+        p.meta_description,
+        p.sort_order,
+        p.locales,
+        c.slug AS collection_slug,
+        c.name AS collection_name
+      FROM products p
+      LEFT JOIN collections c ON c.id = p.collection_id
+      ${statusFilter}
+      ORDER BY p.sort_order ASC, p.name ASC
+      `,
+      params: [],
+    },
+    {
+      text: `SELECT product_id, url, position, focal_x, focal_y FROM product_images
+             WHERE product_id IN (${productScope})
+             ORDER BY position ASC`,
+      params: [],
+    },
+    {
+      text: `SELECT pcm.product_id, c.slug
+             FROM product_collection_memberships pcm
+             JOIN collections c ON c.id = pcm.collection_id
+             WHERE pcm.product_id IN (${productScope})`,
+      params: [],
+    },
+    {
+      text: `SELECT
+               v.id,
+               v.product_id,
+               v.slug,
+               v.sku,
+               v.title,
+               v.option1,
+               v.option2,
+               v.option3,
+               v.price_eur,
+               v.compare_at_eur,
+               v.is_default,
+               v.position,
+               vi.warehouse_id,
+               vi.quantity,
+               vi.reserved
+             FROM product_variants v
+             LEFT JOIN product_inventory vi ON vi.variant_id = v.id
+             WHERE v.product_id IN (${productScope})
+             ORDER BY v.position ASC, v.title ASC`,
+      params: [],
+    },
   );
+
+  const catalogBatch = await queryTransaction(statements);
+  const offset = includeDrafts ? 1 : 0;
+  const collectionRows = catalogBatch[offset].rows;
+  const productRows = catalogBatch[offset + 1].rows;
+  const imageRows = catalogBatch[offset + 2].rows;
+  const membershipRows = catalogBatch[offset + 3].rows;
+  const variantInvRows = catalogBatch[offset + 4].rows;
 
   const visibleCollections = includeDrafts
     ? collectionRows
     : collectionRows.filter((c) => !c.hidden);
 
-  const { rows: productRows } = await query(
-    `
-    SELECT
-      p.id,
-      p.slug,
-      p.name,
-      p.story,
-      p.subcategory,
-      p.category,
-      p.product_type,
-      p.price_eur,
-      p.compare_at_eur,
-      p.price_usd,
-      p.price_idr,
-      p.status,
-      p.featured,
-      p.origin,
-      p.default_warehouse,
-      p.video_url,
-      p.seo_title,
-      p.meta_description,
-      p.sort_order,
-      p.locales,
-      c.slug AS collection_slug,
-      c.name AS collection_name
-    FROM products p
-    LEFT JOIN collections c ON c.id = p.collection_id
-    ${statusFilter}
-    ORDER BY p.sort_order ASC, p.name ASC
-    `,
+  const collectionBySlug = new Map(
+    collectionRows.map((row) => [row.slug, resolveCollectionFields(row, locale, { includeLocales })]),
   );
 
   if (productRows.length === 0) {
@@ -93,66 +192,12 @@ export async function fetchCatalogFromDb({ includeDrafts = false, locale, includ
       generatedAt: new Date().toISOString(),
       store: "https://bingindiaries.com",
       productCount: 0,
-      collections: visibleCollections.map((c) => ({
-        slug: c.slug,
-        name: c.name,
-        season: c.season || "",
-        description: c.description || "",
-        sortOrder: c.sort_order ?? 0,
-        hidden: Boolean(c.hidden),
-      })),
+      collections: visibleCollections.map((c) =>
+        resolveCollectionFields(c, locale, { includeLocales }),
+      ),
       products: [],
       source: "postgres",
     };
-  }
-
-  const productIds = productRows.map((p) => p.id);
-
-  const { rows: imageRows } = await query(
-    `SELECT product_id, url, position, focal_x, focal_y FROM product_images
-     WHERE product_id = ANY($1::uuid[])
-     ORDER BY position ASC`,
-    [productIds],
-  );
-
-  const { rows: membershipRows } = await query(
-    `SELECT pcm.product_id, c.slug
-     FROM product_collection_memberships pcm
-     JOIN collections c ON c.id = pcm.collection_id
-     WHERE pcm.product_id = ANY($1::uuid[])`,
-    [productIds],
-  );
-
-  const { rows: variantRows } = await query(
-    `SELECT
-       v.id,
-       v.product_id,
-       v.slug,
-       v.sku,
-       v.title,
-       v.option1,
-       v.option2,
-       v.option3,
-       v.price_eur,
-       v.compare_at_eur,
-       v.is_default,
-       v.position
-     FROM product_variants v
-     WHERE v.product_id = ANY($1::uuid[])
-     ORDER BY v.position ASC, v.title ASC`,
-    [productIds],
-  );
-
-  const variantIds = variantRows.map((v) => v.id);
-  let inventoryRows = [];
-  if (variantIds.length > 0) {
-    const inv = await query(
-      `SELECT variant_id, warehouse_id, quantity, reserved
-       FROM product_inventory
-       WHERE variant_id = ANY($1::uuid[])`,
-      [variantIds],
-    );
-    inventoryRows = inv.rows;
   }
 
   const imagesByProduct = new Map();
@@ -185,30 +230,35 @@ export async function fetchCatalogFromDb({ includeDrafts = false, locale, includ
   }
 
   const inventoryByVariant = new Map();
-  for (const inv of inventoryRows) {
-    if (!inventoryByVariant.has(inv.variant_id)) {
-      inventoryByVariant.set(inv.variant_id, { france: 0, bali: 0 });
+  for (const row of variantInvRows) {
+    if (row.warehouse_id) {
+      if (!inventoryByVariant.has(row.id)) {
+        inventoryByVariant.set(row.id, { france: 0, bali: 0 });
+      }
+      const bucket = inventoryByVariant.get(row.id);
+      bucket[row.warehouse_id] = Math.max(0, (row.quantity ?? 0) - (row.reserved ?? 0));
     }
-    const bucket = inventoryByVariant.get(inv.variant_id);
-    bucket[inv.warehouse_id] = Math.max(0, inv.quantity - inv.reserved);
   }
 
   const variantsByProduct = new Map();
-  for (const v of variantRows) {
-    if (!variantsByProduct.has(v.product_id)) variantsByProduct.set(v.product_id, []);
-    const inv = inventoryByVariant.get(v.id) || { france: 0, bali: 0 };
+  const seenVariantIds = new Set();
+  for (const row of variantInvRows) {
+    if (seenVariantIds.has(row.id)) continue;
+    seenVariantIds.add(row.id);
+    if (!variantsByProduct.has(row.product_id)) variantsByProduct.set(row.product_id, []);
+    const inv = inventoryByVariant.get(row.id) || { france: 0, bali: 0 };
     const available = inv.france + inv.bali > 0;
-    variantsByProduct.get(v.product_id).push({
-      id: v.id,
-      slug: v.slug,
-      sku: v.sku || undefined,
-      title: v.title,
-      option1: v.option1 || undefined,
-      option2: v.option2 || undefined,
-      option3: v.option3 || undefined,
-      priceEUR: v.price_eur ?? undefined,
-      compareAtEUR: v.compare_at_eur ?? undefined,
-      isDefault: v.is_default,
+    variantsByProduct.get(row.product_id).push({
+      id: row.id,
+      slug: row.slug,
+      sku: row.sku || undefined,
+      title: row.title,
+      option1: row.option1 || undefined,
+      option2: row.option2 || undefined,
+      option3: row.option3 || undefined,
+      priceEUR: moneyFromDb(row.price_eur),
+      compareAtEUR: moneyFromDb(row.compare_at_eur),
+      isDefault: row.is_default,
       inventory: inv,
       available,
     });
@@ -222,11 +272,13 @@ export async function fetchCatalogFromDb({ includeDrafts = false, locale, includ
     const stockFrance = variants.reduce((s, v) => s + v.inventory.france, 0);
     const stockBali = variants.reduce((s, v) => s + v.inventory.bali, 0);
     const stock = stockFrance + stockBali;
-    const onSale = p.compare_at_eur != null && p.compare_at_eur < p.price_eur;
+    const priceEUR = moneyFromDb(p.price_eur) ?? 0;
+    const compareRaw = moneyFromDb(p.compare_at_eur);
+    const onSale = compareRaw != null && compareRaw < priceEUR;
     const available = stock > 0 && p.status === "published";
     const extraSlugs = extraCollectionsByProduct.get(p.id) ?? [];
     const primarySlug = p.collection_slug || "shop";
-    const allSlugs = [...new Set([primarySlug, ...extraSlugs])];
+    const primaryCollection = collectionBySlug.get(primarySlug);
     const locales = parseProductLocales(p.locales);
     const resolved = locale ? resolveProductLocaleBlock(locales, locale) : null;
     const name = resolved?.block?.name?.trim() || p.name;
@@ -239,14 +291,14 @@ export async function fetchCatalogFromDb({ includeDrafts = false, locale, includ
       slug: p.slug,
       name: includeLocales ? p.name : name,
       story: includeLocales ? p.story : story,
-      collection: p.collection_name || "Shop",
+      collection: primaryCollection?.name || p.collection_name || "Shop",
       collectionSlug: primarySlug,
-      collectionSlugs: allSlugs.length > 1 ? allSlugs : extraSlugs.length ? extraSlugs : undefined,
+      collectionSlugs: extraSlugs.length > 0 ? extraSlugs : undefined,
       subcategory: p.subcategory,
       category: p.category,
       productType: p.product_type,
-      priceEUR: p.price_eur,
-      compareAtEUR: onSale ? p.compare_at_eur : undefined,
+      priceEUR,
+      compareAtEUR: onSale ? compareRaw : undefined,
       priceUSD: p.price_usd,
       priceIDR: p.price_idr,
       image: images[0] || "/shopify-import/placeholder.jpg",
@@ -257,7 +309,15 @@ export async function fetchCatalogFromDb({ includeDrafts = false, locale, includ
       seoTitle: includeLocales ? p.seo_title?.trim() || undefined : seoTitle || undefined,
       metaDescription: includeLocales ? p.meta_description?.trim() || undefined : metaDescription || undefined,
       details: p.product_type ? [p.product_type] : [],
-      tags: [],
+      tags: buildProductSearchTags({
+        name: p.name,
+        slug: p.slug,
+        story: p.story,
+        productType: p.product_type,
+        subcategory: p.subcategory,
+        collection: primaryCollection?.name || p.collection_name || "Shop",
+        collectionSlugs: extraSlugs.length > 0 ? [primarySlug, ...extraSlugs] : [primarySlug],
+      }),
       stock,
       stockFrance,
       stockBali,
@@ -279,14 +339,7 @@ export async function fetchCatalogFromDb({ includeDrafts = false, locale, includ
     generatedAt: new Date().toISOString(),
     store: "https://bingindiaries.com",
     productCount: products.length,
-    collections: visibleCollections.map((c) => ({
-      slug: c.slug,
-      name: c.name,
-      season: c.season || "",
-      description: c.description || "",
-      sortOrder: c.sort_order ?? 0,
-      hidden: Boolean(c.hidden),
-    })),
+    collections: visibleCollections.map((c) => resolveCollectionFields(c, locale, { includeLocales })),
     products,
     source: "postgres",
   };

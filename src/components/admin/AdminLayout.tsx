@@ -3,8 +3,7 @@ import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { adminLogout, checkAdminSession } from "@/lib/admin-api";
 import { useAdminLocale } from "@/lib/admin-locale";
-import { UploadsUnavailableBanner } from "@/components/admin/UploadsUnavailableBanner";
-import { useUploadsAvailable } from "@/lib/use-uploads-available";
+import { publicSiteUrl } from "@/lib/public-site-url";
 import { Button } from "@/components/ui/button";
 
 const NAV_KEYS = [
@@ -13,6 +12,7 @@ const NAV_KEYS = [
   { to: "/admin/inventory", labelKey: "inventory" },
   { to: "/admin/readiness", labelKey: "readiness" },
   { to: "/admin/orders", labelKey: "orders" },
+  { to: "/admin/analytics/traffic", labelKey: "siteTraffic" },
   { to: "/admin/analytics/products", labelKey: "productAnalytics" },
   { to: "/admin/promotions", labelKey: "promotions" },
   { to: "/admin/customers", labelKey: "customers" },
@@ -45,13 +45,13 @@ function AdminNav({
           {t(link.labelKey)}
         </Link>
       ))}
-      <Link
-        to="/"
+      <a
+        href={publicSiteUrl("/")}
         onClick={onNavigate}
         className="py-2 px-2 text-muted-foreground hover:text-ink transition"
       >
         {t("viewSite")}
-      </Link>
+      </a>
     </nav>
   );
 }
@@ -75,16 +75,6 @@ function AdminLocaleToggle() {
       >
         EN
       </button>
-    </div>
-  );
-}
-
-function AdminUploadsNotice() {
-  const { available, loading } = useUploadsAvailable();
-  if (loading || available) return null;
-  return (
-    <div className="mb-6">
-      <UploadsUnavailableBanner hint="Collez une URL d'image dans le champ si l'upload fichier n'est pas disponible." />
     </div>
   );
 }
@@ -199,7 +189,6 @@ export function AdminLayout() {
       </aside>
 
       <main className="flex-1 p-4 sm:p-6 md:p-10 overflow-auto min-w-0">
-        <AdminUploadsNotice />
         <Outlet />
       </main>
     </div>

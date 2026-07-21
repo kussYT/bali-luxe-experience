@@ -1,7 +1,10 @@
 import { getFulfillmentZones, saveFulfillmentZones } from "../db/fulfillment-settings.mjs";
+import { logQueryStats, resetQueryStats } from "../db/query-stats.mjs";
 
 export async function getPublicFulfillmentZonesResponse() {
+  resetQueryStats();
   const zones = await getFulfillmentZones();
+  logQueryStats("GET /api/fulfillment-zones");
   return { zones };
 }
 

@@ -46,7 +46,11 @@ console.log(
 );
 
 if (githubOutput && process.env.GITHUB_OUTPUT) {
-  appendFileSync(process.env.GITHUB_OUTPUT, `access_token=${data.access_token}\n`);
+  // Delimiter form — tokens can contain chars that break single-line outputs.
+  appendFileSync(
+    process.env.GITHUB_OUTPUT,
+    `access_token<<IG_TOKEN_EOF\n${data.access_token}\nIG_TOKEN_EOF\n`,
+  );
   appendFileSync(process.env.GITHUB_OUTPUT, `expires_at=${expiresAt.toISOString()}\n`);
 }
 

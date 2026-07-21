@@ -4,6 +4,7 @@ import {
   fetchAdminOrder,
   updateAdminOrder,
   resendOrderConfirmation,
+  sendOrderPaymentLink,
   type AdminOrder,
 } from "@/lib/admin-api";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_OPTIONS } from "@/lib/order-status";
@@ -49,6 +50,7 @@ function AdminOrderDetailPage() {
   const [refundAmountCents, setRefundAmountCents] = useState("");
   const [notes, setNotes] = useState("");
   const [resending, setResending] = useState(false);
+  const [sendingPaymentLink, setSendingPaymentLink] = useState(false);
 
   useEffect(() => {
     fetchAdminOrder(orderId)
@@ -67,6 +69,9 @@ function AdminOrderDetailPage() {
     setRefundAmountCents(o.refundAmountCents != null ? String(o.refundAmountCents) : "");
     setNotes(o.notes || "");
   }
+
+  const isManualInvoice =
+    order?.externalRef === "manual_invoice" || (order?.notes || "").includes("[manual_invoice]");
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -141,6 +146,22 @@ function AdminOrderDetailPage() {
     }
   }
 
+  async function handleSendPaymentLink() {
+    if (!order) return;
+    setSendingPaymentLink(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await sendOrderPaymentLink(orderId);
+      setOrder(res.order);
+      setMessage(`Lien de paiement envoyé à ${res.email}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Échec d'envoi");
+    } finally {
+      setSendingPaymentLink(false);
+    }
+  }
+
   if (error && !order) {
     return (
       <div className="space-y-4">
@@ -179,6 +200,11 @@ function AdminOrderDetailPage() {
           <CardContent>
             <div className="flex items-center gap-2 mb-2">
               <ChannelBadge channel={order.channel || "website"} />
+              {isManualInvoice && (
+                <span className="text-xs border border-border px-2 py-0.5 rounded-sm">
+                  Facture manuelle
+                </span>
+              )}
             </div>
             <p className="font-display text-2xl">
               {ORDER_STATUS_LABELS[order.status] ?? order.status}
@@ -244,18 +270,43 @@ function AdminOrderDetailPage() {
             <p className="text-sm text-muted-foreground">
               Destinataire : <span className="text-foreground">{order.customerEmail}</span>
             </p>
-            <p className="text-sm text-muted-foreground">
-              « Marquer comme traitée » envoie l&apos;email d&apos;<strong>expédition</strong>, pas la
-              confirmation de commande.
-            </p>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={resending}
-              onClick={handleResendConfirmation}
-            >
-              {resending ? "Envoi…" : "Renvoyer l'email de confirmation"}
-            </Button>
+            {order.status === "pending" && (isManualInvoice || order.channel === "website") && (
+              <div className="space-y-2 border border-border rounded-sm p-3">
+                <p className="text-sm text-muted-foreground">
+                  Envoyez (ou renvoyez) l&apos;email avec le récapitulatif et le bouton de paiement
+                  Stripe.
+                </p>
+                {order.recoveryEmailSentAt && (
+                  <p className="text-xs text-muted-foreground">
+                    Dernier envoi : {new Date(order.recoveryEmailSentAt).toLocaleString()}
+                  </p>
+                )}
+                <Button
+                  type="button"
+                  variant="default"
+                  disabled={sendingPaymentLink}
+                  onClick={handleSendPaymentLink}
+                >
+                  {sendingPaymentLink ? "Envoi…" : "Envoyer le lien de paiement"}
+                </Button>
+              </div>
+            )}
+            {order.status !== "pending" && (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  « Marquer comme traitée » envoie l&apos;email d&apos;<strong>expédition</strong>, pas
+                  la confirmation de commande.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={resending}
+                  onClick={handleResendConfirmation}
+                >
+                  {resending ? "Envoi…" : "Renvoyer l'email de confirmation"}
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
       )}

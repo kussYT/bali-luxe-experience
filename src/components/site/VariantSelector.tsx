@@ -2,6 +2,7 @@ import type { Product, ProductVariant } from "@/lib/catalog-types";
 import type { FulfillmentZones } from "@/lib/fulfillment-zones-types";
 import { maxCartQty } from "@/lib/warehouse-allocation";
 import { DEFAULT_FULFILLMENT_ZONES } from "@/lib/fulfillment-zones-default";
+import { sortVariantsForDisplay } from "@/lib/sort-variants";
 
 type VariantSelectorProps = {
   product: Product;
@@ -18,7 +19,7 @@ export function VariantSelector({
   zones = DEFAULT_FULFILLMENT_ZONES,
   onSelect,
 }: VariantSelectorProps) {
-  const variants = product.variants ?? [];
+  const variants = sortVariantsForDisplay(product.variants ?? []);
   if (variants.length <= 1) return null;
 
   const optionLabel = variants.some((v) => v.option1) ? "Size" : "Variant";
@@ -30,7 +31,7 @@ export function VariantSelector({
         {variants.map((variant) => {
           const max = maxCartQty(product, countryCode, variant.id, zones);
           const disabled = max < 1;
-          const selected = selectedId === variant.id;
+          const selected = selectedId != null && String(selectedId) === String(variant.id);
 
           return (
             <button

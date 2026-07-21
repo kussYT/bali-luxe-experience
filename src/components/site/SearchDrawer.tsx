@@ -41,7 +41,7 @@ export function SearchDrawer({ open, onClose }: SearchDrawerProps) {
       },
       collections,
     );
-    return rankSearchResults(filtered, query).slice(0, 12);
+    return rankSearchResults(filtered, query, collections).slice(0, 12);
   }, [publishedProducts, collections, query, filters]);
 
   if (!open) return null;

@@ -30,6 +30,10 @@ import { BinginSounds } from "@/components/lifestyle/BinginSounds";
 
 import { CookieConsent } from "@/components/site/CookieConsent";
 
+import { NewsletterPopup } from "@/components/site/NewsletterPopup";
+
+import { SiteAnalyticsTracker } from "@/components/site/SiteAnalyticsTracker";
+
 import { Toaster } from "@/components/ui/sonner";
 
 
@@ -201,6 +205,10 @@ function RootComponent() {
               {!isAdmin && <SitePreferencesDock />}
 
               {!isAdmin && <CookieConsent />}
+
+              {!isAdmin && <NewsletterPopup />}
+
+              {!isAdmin && <SiteAnalyticsTracker />}
 
               <Toaster position="top-center" />
 

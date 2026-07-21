@@ -148,8 +148,10 @@ export async function markOrderPaid(orderId, paymentMeta) {
 
   const orders = await readAllJson();
   const idx = orders.findIndex((o) => o.id === orderId);
-  if (idx === -1) return null;
-  if (orders[idx].status === "paid") return orders[idx];
+  if (idx === -1) return { order: null, newlyPaid: false };
+  if (orders[idx].status === "paid") {
+    return { order: orders[idx], newlyPaid: false };
+  }
 
   orders[idx] = {
     ...orders[idx],
@@ -162,7 +164,7 @@ export async function markOrderPaid(orderId, paymentMeta) {
     paidAt: new Date().toISOString(),
   };
   await writeAllJson(orders);
-  return orders[idx];
+  return { order: orders[idx], newlyPaid: true };
 }
 
 export async function listOrders() {

@@ -37,13 +37,25 @@ const HIDDEN_NAV_COLLECTION_SLUGS = new Set(["archives", "all-products"]);
 export type MegaMenuId = "new-collection" | "shop" | "sales" | "about";
 
 /** New Collection mega-menu — Beatrice layout */
-export function buildNavNewCollectionColumns(): NavColumn[] {
+function collectionLabel(collections: Collection[], slug: string, fallback: string) {
+  return collections.find((c) => c.slug === slug)?.name?.trim() || fallback;
+}
+
+export function buildNavNewCollectionColumns(collections: Collection[] = []): NavColumn[] {
   return [
     {
-      title: "Mi Paradisio",
+      title: collectionLabel(collections, "mi-paradisio-collection", "Mi Paradisio"),
       items: [
-        { label: "Mi Paradisio", to: "/collection", search: { c: "mi-paradisio-collection" } },
-        { label: "Wedding Guest", to: "/collection", search: { c: "special-occasions" } },
+        {
+          label: collectionLabel(collections, "mi-paradisio-collection", "Mi Paradisio"),
+          to: "/collection",
+          search: { c: "mi-paradisio-collection" },
+        },
+        {
+          label: collectionLabel(collections, "special-occasions", "Wedding Guest"),
+          to: "/collection",
+          search: { c: "special-occasions" },
+        },
         {
           label: "New Accessories",
           to: "/collection",
@@ -74,8 +86,9 @@ export const NAV_NEW_COLLECTION_FEATURED: NavFeaturedImage[] = [
 ];
 
 /** Shop mega-menu — Shop · Collections · Shop by category */
-export function buildNavShopColumns(_collections: Collection[]): NavColumn[] {
+export function buildNavShopColumns(collections: Collection[]): NavColumn[] {
   const shopByCategory = SHOP_CATEGORIES.filter((c) => c.slug !== "best-seller");
+  const nameBySlug = new Map(collections.map((c) => [c.slug, c.name]));
   return [
     {
       title: "Shop",
@@ -87,7 +100,7 @@ export function buildNavShopColumns(_collections: Collection[]): NavColumn[] {
     {
       title: "Collections",
       items: PRODUCT_COLLECTIONS.map((c) => ({
-        label: c.name,
+        label: nameBySlug.get(c.slug) || c.name,
         to: "/collection",
         search: { c: c.slug },
       })),
@@ -233,7 +246,7 @@ export function getMegaMenuContent(
   const featured = resolveMegaFeatured(id, megaMenuFeatured);
   switch (id) {
     case "new-collection":
-      return { columns: buildNavNewCollectionColumns(), featured };
+      return { columns: buildNavNewCollectionColumns(collections), featured };
     case "shop":
       return { columns: buildNavShopColumns(collections), featured };
     case "sales":
@@ -249,7 +262,11 @@ export function buildNavMain(
   labels?: Partial<SiteNavigationContent>,
 ) {
   return [
-    { label: labels?.newCollection || "New Collection", mega: "new-collection" as const, items: NAV_NEW_COLLECTION },
+    {
+      label: labels?.newCollection || "New Collection",
+      mega: "new-collection" as const,
+      items: buildNavNewCollectionColumns(collections).flatMap((col) => col.items),
+    },
     { label: labels?.shop || "Shop", mega: "shop" as const, items: buildNavShop(collections) },
     { label: labels?.sales || "Sales", mega: "sales" as const, items: buildNavSales(products) },
     { label: labels?.aboutUs || "About us", mega: "about" as const, items: NAV_ABOUT },

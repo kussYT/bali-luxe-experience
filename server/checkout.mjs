@@ -9,14 +9,14 @@ import {
   holdOrderAfterPaymentBlocked,
 } from "./orders-store.mjs";
 import { isDatabaseConfigured } from "./db/pool.mjs";
-import { buildOrderItemFromCartLine } from "./db/orders.mjs";
+import { buildOrderItemFromCartLine, isManualInvoiceOrder } from "./db/orders.mjs";
 import { getStripe, getSiteUrl } from "./stripe-client.mjs";
 import {
   unitPrice,
   toStripeAmount,
   stripeCurrency,
 } from "./pricing.mjs";
-import { sendOrderConfirmationEmail } from "./emails/order-emails.mjs";
+import { sendOrderConfirmationEmail, notifyOrderPaid } from "./emails/order-emails.mjs";
 import { validatePromoCode, incrementPromoUsage } from "./db/promo-codes.mjs";
 import { computePromoAmounts, lineUnitAfterPromo } from "./promo-apply.mjs";
 import { shippingAmountForCountry } from "./shipping-rates.mjs";
@@ -208,13 +208,14 @@ function paymentMetaFromStripeSession(stripeSession, stripeEventId = null) {
 function buildOrderItems(resolved, currency) {
   return resolved.map(({ product, variant, qty, fulfillmentWarehouse }) => {
     const price = unitPrice(product, currency);
+    const unitPriceSmallest = toStripeAmount(price, currency);
     if (isDatabaseConfigured()) {
       return buildOrderItemFromCartLine({
         product,
         variant,
         qty,
         fulfillmentWarehouse,
-        unitPriceAmount: price,
+        unitPriceAmount: unitPriceSmallest,
       });
     }
     return {
@@ -222,7 +223,7 @@ function buildOrderItems(resolved, currency) {
       name: product.name,
       variantTitle: variant?.title || "Default",
       qty,
-      unitPrice: price,
+      unitPrice: unitPriceSmallest,
       image: product.image,
       warehouseId: fulfillmentWarehouse,
       variantId: variant?.id,
@@ -231,7 +232,7 @@ function buildOrderItems(resolved, currency) {
 }
 
 async function fulfillFreeOrder({ orderId, promo, customerEmail, countryCode, currency, amounts }) {
-  const paid = await markOrderPaid(orderId, {
+  const { order: paid, newlyPaid } = await markOrderPaid(orderId, {
     customerEmail,
     amountTotal: 0,
     amountSubtotal: amounts.subtotalSmallest - amounts.productDiscount,
@@ -240,12 +241,10 @@ async function fulfillFreeOrder({ orderId, promo, customerEmail, countryCode, cu
     shippingCountryCode: countryCode,
     promoCode: promo.code,
   });
-  if (isDatabaseConfigured()) {
+  if (isDatabaseConfigured() && newlyPaid) {
     await incrementPromoUsage(promo.code);
   }
-  sendOrderConfirmationEmail(paid).catch((e) => {
-    console.error("[email] order confirmation failed:", e.message);
-  });
+  if (newlyPaid && paid) notifyOrderPaid(paid);
   return paid;
 }
 
@@ -409,6 +408,7 @@ async function createStripeSessionForPendingOrder({
   currency,
   countryCode,
   customerEmail,
+  useStoredUnitPrices = false,
 }) {
   const checkoutCountry = normalizeCheckoutCountry(countryCode);
   const siteUrl = getSiteUrl();
@@ -417,16 +417,32 @@ async function createStripeSessionForPendingOrder({
 
   const line_items = resolved.map((line) => {
     const { product, variant, qty } = line;
-    const discounted =
-      promo && amounts.productDiscount > 0
-        ? lineUnitAfterPromo(line, currency, amounts)
-        : unitPrice(product, currency);
+    let unitAmount;
+    if (useStoredUnitPrices) {
+      const stored = (order.items || []).find(
+        (item) =>
+          item.slug === product.slug &&
+          (item.variantId == null || !variant?.id || item.variantId === variant.id),
+      );
+      if (stored?.unitPrice == null) {
+        const err = new Error(`Prix stocké introuvable pour ${product.slug}`);
+        err.status = 400;
+        throw err;
+      }
+      unitAmount = Number(stored.unitPrice);
+    } else {
+      const discounted =
+        promo && amounts.productDiscount > 0
+          ? lineUnitAfterPromo(line, currency, amounts)
+          : unitPrice(product, currency);
+      unitAmount = toStripeAmount(discounted, currency);
+    }
     const displayName = lineDisplayName(product, variant);
     return {
       quantity: qty,
       price_data: {
         currency: stripeCurrency(currency),
-        unit_amount: toStripeAmount(discounted, currency),
+        unit_amount: unitAmount,
         product_data: {
           name: displayName,
           description: product.collection,
@@ -516,9 +532,12 @@ export async function resumeCheckoutSession(orderId) {
     qty: item.qty,
   }));
   const resolved = await validateCartItems(catalog, cartLines, checkoutCountry);
+  const manualInvoice = isManualInvoiceOrder(order);
 
   const shippingAmount = await shippingAmountForCountry(checkoutCountry, currency);
-  const shippingSmallest = toStripeAmount(shippingAmount, currency);
+  const shippingSmallest = manualInvoice && order.amountShipping != null
+    ? Number(order.amountShipping)
+    : toStripeAmount(shippingAmount, currency);
 
   let promo = null;
   let amounts = {
@@ -534,15 +553,26 @@ export async function resumeCheckoutSession(orderId) {
     isFullyFree: false,
   };
 
-  const promoCode = order.promoCode?.trim();
-  if (promoCode) {
-    promo = await validatePromoCode(promoCode);
-    amounts = { ...computePromoAmounts({ promo, resolved, currency, shippingSmallest }), shippingSmallest };
+  if (manualInvoice) {
+    amounts.subtotalSmallest =
+      order.amountSubtotal != null
+        ? Number(order.amountSubtotal)
+        : (order.items || []).reduce((s, i) => s + Number(i.unitPrice) * i.qty, 0);
+    amounts.totalSmallest =
+      order.amountTotal != null
+        ? Number(order.amountTotal)
+        : amounts.subtotalSmallest + shippingSmallest;
   } else {
-    amounts.totalSmallest = amounts.subtotalSmallest + shippingSmallest;
+    const promoCode = order.promoCode?.trim();
+    if (promoCode) {
+      promo = await validatePromoCode(promoCode);
+      amounts = { ...computePromoAmounts({ promo, resolved, currency, shippingSmallest }), shippingSmallest };
+    } else {
+      amounts.totalSmallest = amounts.subtotalSmallest + shippingSmallest;
+    }
   }
 
-  if (amounts.isFullyFree) {
+  if (amounts.isFullyFree || amounts.totalSmallest <= 0) {
     const err = new Error("Commande gratuite — contactez-nous pour finaliser");
     err.status = 400;
     throw err;
@@ -556,6 +586,7 @@ export async function resumeCheckoutSession(orderId) {
     currency,
     countryCode: checkoutCountry,
     customerEmail: order.customerEmail,
+    useStoredUnitPrices: manualInvoice,
   });
 
   return { url: session.url, sessionId: session.id, orderId: order.id };
@@ -587,15 +618,16 @@ export async function fulfillPaidSession(stripeSession, stripeEventId = null) {
     promoCode: promoCode || undefined,
   });
 
-  if (promoCode && isDatabaseConfigured()) {
+  if (promoCode && isDatabaseConfigured() && paid.newlyPaid) {
     await incrementPromoUsage(promoCode);
   }
 
-  sendOrderConfirmationEmail(paid).catch((e) => {
-    console.error("[email] order confirmation failed:", e.message);
-  });
+  if (paid.newlyPaid && paid.order) {
+    notifyOrderPaid(paid.order);
+    return paid.order;
+  }
 
-  return paid;
+  return paid.order ?? existing;
 }
 
 export async function handleStripeWebhook(rawBody, signature) {

@@ -110,19 +110,6 @@ function Collection() {
       <section className="page-wrap section-pad pt-20 md:pt-28 pb-12 md:pb-16 border-b border-border">
         <h1 className="font-display text-3xl sm:text-5xl md:text-7xl lg:text-[5.5rem] leading-[0.94] break-words">{title}</h1>
         <p className="text-caption mt-6 max-w-lg">{subtitle}</p>
-        {sale === "true" && (
-          <div
-            id="sale-info"
-            className="mt-8 max-w-2xl border border-accent/30 bg-accent/5 px-5 py-4 text-sm text-foreground/90 leading-relaxed"
-          >
-            <p className="text-eyebrow !text-accent mb-2">How Sales works</p>
-            <p>
-              Pieces here have a <strong>promo price</strong> (shown on the card) and the usual list price
-              crossed out. To add or change a promo, open the product in Admin and set{" "}
-              <strong>Sale price</strong> below the list price.
-            </p>
-          </div>
-        )}
       </section>
 
       <div className="page-wrap section-pad py-6 flex items-center gap-6 md:gap-8 text-eyebrow border-b border-border overflow-x-auto">

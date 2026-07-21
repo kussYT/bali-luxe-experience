@@ -1,5 +1,19 @@
 import { query, isDatabaseConfigured, withTransaction } from "./pool.mjs";
 import { ensureCollectionsCatalog } from "../collections-catalog.mjs";
+import { invalidateCache } from "./request-cache.mjs";
+
+function parseLocales(raw) {
+  if (!raw) return {};
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return typeof raw === "object" ? raw : {};
+}
 
 function mapCollection(row) {
   return {
@@ -12,6 +26,7 @@ function mapCollection(row) {
     hidden: Boolean(row.hidden),
     productCount: Number(row.product_count) || 0,
     updatedAt: row.updated_at,
+    locales: parseLocales(row.locales),
   };
 }
 
@@ -24,7 +39,7 @@ export async function listCollectionsAdmin() {
   await ensureCollectionsCatalog((sql, params) => query(sql, params));
   const { rows } = await query(
     `
-    SELECT c.slug, c.name, c.season, c.description, c.hero_image, c.sort_order, c.hidden, c.updated_at,
+    SELECT c.slug, c.name, c.season, c.description, c.hero_image, c.sort_order, c.hidden, c.updated_at, c.locales,
            COUNT(p.id)::int AS product_count
     FROM collections c
     LEFT JOIN products p ON p.collection_id = c.id
@@ -41,6 +56,10 @@ export async function updateCollection(slug, patch) {
     err.status = 503;
     throw err;
   }
+  const localesJson =
+    patch.locales != null && typeof patch.locales === "object"
+      ? JSON.stringify(patch.locales)
+      : null;
   const { rows } = await query(
     `UPDATE collections SET
        name = COALESCE($2, name),
@@ -49,9 +68,10 @@ export async function updateCollection(slug, patch) {
        hero_image = COALESCE($5, hero_image),
        sort_order = COALESCE($6, sort_order),
        hidden = COALESCE($7, hidden),
+       locales = COALESCE($8::jsonb, locales),
        updated_at = now()
      WHERE slug = $1
-     RETURNING slug, name, season, description, hero_image, sort_order, hidden, updated_at`,
+     RETURNING slug, name, season, description, hero_image, sort_order, hidden, updated_at, locales`,
     [
       slug,
       patch.name ?? null,
@@ -60,6 +80,7 @@ export async function updateCollection(slug, patch) {
       patch.heroImage ?? null,
       patch.sortOrder != null ? Number(patch.sortOrder) : null,
       patch.hidden != null ? Boolean(patch.hidden) : null,
+      localesJson,
     ],
   );
   if (!rows.length) {
@@ -67,8 +88,9 @@ export async function updateCollection(slug, patch) {
     err.status = 404;
     throw err;
   }
+  invalidateCache("catalog:");
   const { rows: withCount } = await query(
-    `SELECT c.slug, c.name, c.season, c.description, c.hero_image, c.sort_order, c.hidden, c.updated_at,
+    `SELECT c.slug, c.name, c.season, c.description, c.hero_image, c.sort_order, c.hidden, c.updated_at, c.locales,
             COUNT(p.id)::int AS product_count
      FROM collections c
      LEFT JOIN products p ON p.collection_id = c.id

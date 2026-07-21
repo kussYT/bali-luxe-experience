@@ -273,6 +273,11 @@ export type AbandonedRecoverySettings = {
   maxEmailsPerCart: number;
   minHoursBetweenEmails: number;
   promoCode: string;
+  emailSubject: string;
+  emailTitle: string;
+  emailIntro: string;
+  emailButtonLabel: string;
+  emailClosing: string;
 };
 
 export async function fetchAbandonedRecoverySettings() {
@@ -308,6 +313,22 @@ export async function fetchProductAnalytics(days = 30, limit = 50) {
     analytics: { days: number; products: ProductAnalyticsRow[] };
     source: string;
   }>(`/api/admin/analytics/products?days=${encodeURIComponent(String(days))}&limit=${encodeURIComponent(String(limit))}`);
+}
+
+export type SiteTrafficAnalytics = {
+  days: number;
+  summary: { pageviews: number; visitors: number };
+  realtime: { pageviews: number; visitors: number };
+  byDay: { day: string; pageviews: number; visitors: number }[];
+  topPages: { path: string; pageviews: number; visitors: number }[];
+  bySource: { source: string; pageviews: number; visitors: number }[];
+  byDevice: { device: string; pageviews: number; visitors: number }[];
+};
+
+export async function fetchSiteTraffic(days = 30) {
+  return request<{ analytics: SiteTrafficAnalytics; source: string }>(
+    `/api/admin/analytics/traffic?days=${encodeURIComponent(String(days))}`,
+  );
 }
 
 export async function fetchAdminNewsletter() {
@@ -351,6 +372,81 @@ export async function createMarketplaceOrder(payload: {
   return request<{ order: AdminOrder; source: string }>("/api/admin/orders/marketplace", {
     method: "POST",
     body: JSON.stringify(payload),
+  });
+}
+
+export async function createManualInvoiceOrder(payload: {
+  customerEmail: string;
+  shippingCountryCode: string;
+  currency?: string;
+  items: { productSlug: string; variantSlug?: string; qty: number; unitPrice: number }[];
+  notes?: string;
+  sendEmail?: boolean;
+  discountType?: "percent" | "fixed" | null;
+  discountValue?: number;
+}) {
+  return request<{
+    order: AdminOrder;
+    emailSent: boolean;
+    email: string | null;
+    paymentUrl: string | null;
+    source: string;
+  }>("/api/admin/orders/invoice", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export type ManualInvoicePreview = {
+  customerEmail: string;
+  shippingCountryCode: string;
+  currency: string;
+  discountType: "percent" | "fixed" | null;
+  discountValue: number;
+  discountCents: number;
+  grossSubtotal: number;
+  amountSubtotal: number;
+  amountShipping: number;
+  amountTotal: number;
+  shippingLabel: string;
+  lines: {
+    productSlug: string;
+    name: string;
+    variantSlug: string | null;
+    variantTitle: string | null;
+    qty: number;
+    unitPrice: number;
+    lineTotal: number;
+  }[];
+};
+
+export async function previewManualInvoiceOrder(payload: {
+  customerEmail: string;
+  shippingCountryCode: string;
+  currency?: string;
+  items: { productSlug: string; variantSlug?: string; qty: number; unitPrice: number }[];
+  notes?: string;
+  discountType?: "percent" | "fixed" | null;
+  discountValue?: number;
+}) {
+  return request<{ preview: ManualInvoicePreview; source: string }>(
+    "/api/admin/orders/invoice/preview",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function sendOrderPaymentLink(orderId: string) {
+  return request<{
+    ok: boolean;
+    order: AdminOrder;
+    email: string;
+    paymentUrl: string;
+    provider: string;
+  }>(`/api/admin/orders/${encodeURIComponent(orderId)}/send-payment-link`, {
+    method: "POST",
   });
 }
 
@@ -724,6 +820,7 @@ export type AdminPromoCode = {
   id: string;
   code: string;
   label: string;
+  category: string;
   discountType: "percent" | "fixed" | "free";
   discountValue: number;
   freeShipping: boolean;

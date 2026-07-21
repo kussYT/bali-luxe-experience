@@ -15,18 +15,28 @@ function injectScript(id: string, src: string) {
   document.head.appendChild(script);
 }
 
+function gtagStub(this: void) {
+  // Must push `arguments`, not a rest array — GA4 ignores rest-array dataLayer entries.
+  window.dataLayer!.push(arguments);
+}
+
 export function loadAnalytics() {
   if (analyticsLoaded || typeof window === "undefined") return;
   const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined;
   if (!measurementId) return;
 
-  injectScript("bingin-gtag", `https://www.googletagmanager.com/gtag/js?id=${measurementId}`);
   window.dataLayer = window.dataLayer || [];
-  window.gtag = function gtag(...args: unknown[]) {
-    window.dataLayer!.push(args);
-  };
+  window.gtag = gtagStub;
+  window.gtag("consent", "default", {
+    analytics_storage: "granted",
+    ad_storage: "granted",
+    ad_user_data: "granted",
+    ad_personalization: "granted",
+  });
   window.gtag("js", new Date());
   window.gtag("config", measurementId, { anonymize_ip: true });
+
+  injectScript("bingin-gtag", `https://www.googletagmanager.com/gtag/js?id=${measurementId}`);
   analyticsLoaded = true;
 }
 

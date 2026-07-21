@@ -32,6 +32,9 @@ import {
   resendAdminOrderConfirmation,
   getAdminOrdersCsv,
   postMarketplaceOrder,
+  postManualInvoiceOrder,
+  previewManualInvoiceOrder,
+  sendPaymentInvoiceLink,
   getAdminAbandonedCheckoutsResponse,
   sendAbandonedCheckoutRecovery,
 } from "./api/orders.mjs";
@@ -40,6 +43,10 @@ import {
   postProductAnalyticsEvent,
   getAdminProductAnalyticsResponse,
 } from "./api/product-analytics.mjs";
+import {
+  postSitePageview,
+  getAdminSiteTrafficResponse,
+} from "./api/site-analytics.mjs";
 import {
   getAbandonedRecoverySettings,
   saveAbandonedRecoverySettings,
@@ -77,7 +84,7 @@ import {
   seedCmsContent,
 } from "./api/content-admin.mjs";
 import { getAdminCmsStatusResponse } from "./api/cms-status.mjs";
-import { mergeFeedWithLocalImages, sanitizeInstagramFeed } from "./instagram-utils.mjs";
+import { mergeFeedWithLocalImages, sanitizeInstagramFeed, LIFESTYLE_FALLBACK_IMAGES } from "./instagram-utils.mjs";
 import {
   createAdminProduct,
   updateAdminProduct,
@@ -150,12 +157,27 @@ async function parseMultipartRequest(request) {
   return files;
 }
 
+function hasLocalInstagramImages(feed) {
+  return feed?.posts?.some((p) => typeof p.image === "string" && p.image.startsWith("/instagram/"));
+}
+
+function usesLifestyleFallbacks(feed) {
+  return feed?.posts?.some((p) => LIFESTYLE_FALLBACK_IMAGES.includes(p.image));
+}
+
 async function instagramResponse(request) {
+  const staticFeed = sanitizeInstagramFeed(getStaticInstagramFeed());
   let liveError = null;
   try {
     const live = await fetchInstagramFeed();
     if (live) {
-      const merged = mergeFeedWithLocalImages(live, getStaticInstagramFeed());
+      const merged = sanitizeInstagramFeed(mergeFeedWithLocalImages(live, staticFeed));
+      if (usesLifestyleFallbacks(merged) && hasLocalInstagramImages(staticFeed)) {
+        return jsonResponse(200, {
+          ...staticFeed,
+          source: staticFeed.source || "static",
+        });
+      }
       return jsonResponse(200, merged);
     }
   } catch (e) {
@@ -164,11 +186,10 @@ async function instagramResponse(request) {
   }
 
   try {
-    const payload = sanitizeInstagramFeed(getStaticInstagramFeed());
-    if (payload?.posts?.length) {
+    if (staticFeed?.posts?.length) {
       return jsonResponse(200, {
-        ...payload,
-        source: payload.source || "static",
+        ...staticFeed,
+        source: staticFeed.source || "static",
         error: liveError ? "Instagram live feed unavailable. Using cached content." : undefined,
       });
     }
@@ -266,6 +287,11 @@ export async function handleApiRequest(request, context = {}) {
 
     if (pathname === "/api/analytics/product" && method === "POST") {
       const result = await postProductAnalyticsEvent(request);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/analytics/pageview" && method === "POST") {
+      const result = await postSitePageview(request);
       return jsonResponse(200, result);
     }
 
@@ -521,6 +547,11 @@ export async function handleApiRequest(request, context = {}) {
       return jsonResponse(200, result);
     }
 
+    if (pathname === "/api/admin/analytics/traffic" && method === "GET") {
+      const result = await getAdminSiteTrafficResponse(request);
+      return jsonResponse(200, result);
+    }
+
     if (pathname === "/api/admin/orders" && method === "GET") {
       const channel = url.searchParams.get("channel") || undefined;
       const orders = await getAdminOrdersResponse({ channel });
@@ -531,6 +562,18 @@ export async function handleApiRequest(request, context = {}) {
       const body = await readJsonBody(request);
       const result = await postMarketplaceOrder(body);
       return jsonResponse(201, result);
+    }
+
+    if (pathname === "/api/admin/orders/invoice" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await postManualInvoiceOrder(body);
+      return jsonResponse(201, result);
+    }
+
+    if (pathname === "/api/admin/orders/invoice/preview" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await previewManualInvoiceOrder(body);
+      return jsonResponse(200, result);
     }
 
     if (pathname === "/api/admin/orders/export.csv" && method === "GET") {
@@ -548,6 +591,13 @@ export async function handleApiRequest(request, context = {}) {
     if (orderResendMatch && method === "POST") {
       const orderId = decodeURIComponent(orderResendMatch[1]);
       const result = await resendAdminOrderConfirmation(orderId);
+      return jsonResponse(200, result);
+    }
+
+    const orderInvoiceMatch = pathname.match(/^\/api\/admin\/orders\/([^/]+)\/send-payment-link$/);
+    if (orderInvoiceMatch && method === "POST") {
+      const orderId = decodeURIComponent(orderInvoiceMatch[1]);
+      const result = await sendPaymentInvoiceLink(orderId);
       return jsonResponse(200, result);
     }
 

@@ -2,11 +2,19 @@ import { query, isDatabaseConfigured } from "./pool.mjs";
 
 import { normalizePromoRules, DEFAULT_PROMO_RULES } from "../promo-rules.mjs";
 
+const PROMO_CATEGORIES = new Set(["newsletter", "loyalty", "friends", "influencer", "seasonal", "other"]);
+
+function normalizeCategory(value) {
+  const cat = String(value || "other").trim().toLowerCase();
+  return PROMO_CATEGORIES.has(cat) ? cat : "other";
+}
+
 function mapRow(row) {
   return {
     id: row.id,
     code: row.code,
     label: row.label || "",
+    category: normalizeCategory(row.category),
     discountType: row.discount_type,
     discountValue: row.discount_value,
     freeShipping: Boolean(row.free_shipping),
@@ -99,13 +107,14 @@ export async function createPromoCode(payload) {
   }
   const { rows } = await query(
     `INSERT INTO promo_codes (
-       code, label, discount_type, discount_value, free_shipping,
+       code, label, category, discount_type, discount_value, free_shipping,
        max_uses, influencer_name, active, expires_at, rules
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb)
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb)
      RETURNING *`,
     [
       code,
       payload.label || "",
+      normalizeCategory(payload.category),
       discountType,
       Number(payload.discountValue) || 0,
       Boolean(payload.freeShipping),
@@ -123,20 +132,22 @@ export async function updatePromoCode(id, patch) {
   const { rows } = await query(
     `UPDATE promo_codes SET
        label = COALESCE($2, label),
-       discount_type = COALESCE($3, discount_type),
-       discount_value = COALESCE($4, discount_value),
-       free_shipping = COALESCE($5, free_shipping),
-       max_uses = COALESCE($6, max_uses),
-       influencer_name = COALESCE($7, influencer_name),
-       active = COALESCE($8, active),
-       expires_at = COALESCE($9, expires_at),
-       rules = COALESCE($10::jsonb, rules),
+       category = COALESCE($3, category),
+       discount_type = COALESCE($4, discount_type),
+       discount_value = COALESCE($5, discount_value),
+       free_shipping = COALESCE($6, free_shipping),
+       max_uses = COALESCE($7, max_uses),
+       influencer_name = COALESCE($8, influencer_name),
+       active = COALESCE($9, active),
+       expires_at = COALESCE($10, expires_at),
+       rules = COALESCE($11::jsonb, rules),
        updated_at = now()
      WHERE id = $1::uuid
      RETURNING *`,
     [
       id,
       patch.label ?? null,
+      patch.category != null ? normalizeCategory(patch.category) : null,
       patch.discountType ?? null,
       patch.discountValue != null ? Number(patch.discountValue) : null,
       patch.freeShipping != null ? Boolean(patch.freeShipping) : null,

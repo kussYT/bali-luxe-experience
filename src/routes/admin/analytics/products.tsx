@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { fetchProductAnalytics, type ProductAnalyticsRow } from "@/lib/admin-api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { GoogleAnalyticsHelpBanner } from "@/components/admin/GoogleAnalyticsHelpBanner";
 
 export const Route = createFileRoute("/admin/analytics/products")({
   head: () => ({ meta: [{ title: "Analytics produits — Bingin Diaries Admin" }] }),
@@ -52,6 +53,8 @@ function AdminProductAnalyticsPage() {
           Vues page produit (1× par session), ajouts au panier et wishlist sur la période choisie.
         </p>
       </div>
+
+      <GoogleAnalyticsHelpBanner />
 
       <div className="flex flex-wrap gap-2">
         {PERIODS.map((p) => (

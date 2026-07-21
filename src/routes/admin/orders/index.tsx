@@ -19,9 +19,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChannelBadge } from "@/components/admin/ChannelBadge";
 import { MarketplaceOrderForm } from "@/components/admin/MarketplaceOrderForm";
+import { ManualInvoiceOrderForm } from "@/components/admin/ManualInvoiceOrderForm";
 import { OrdersAnalyticsPanel } from "@/components/admin/OrdersAnalyticsPanel";
 
 export const Route = createFileRoute("/admin/orders/")({
@@ -196,6 +198,7 @@ function AdminOrdersPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <ManualInvoiceOrderForm onCreated={loadOrders} />
           <MarketplaceOrderForm onCreated={loadOrders} />
           <Button variant="outline" asChild>
             <a href={adminOrdersExportUrl()} download>
@@ -309,7 +312,14 @@ function AdminOrdersPage() {
                       {new Date(order.createdAt).toLocaleString()}
                     </td>
                     <td className="p-3">
-                      <ChannelBadge channel={order.channel || "website"} />
+                      <div className="flex flex-col gap-1">
+                        <ChannelBadge channel={order.channel || "website"} />
+                        {order.externalRef === "manual_invoice" && (
+                          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                            Facture
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-3">{orderStatusLabel(order.status)}</td>
                     <td className="p-3">{order.customerEmail || "—"}</td>
@@ -445,6 +455,67 @@ function AdminOrdersPage() {
                   <p className="text-xs text-muted-foreground">
                     Affiché dans l&apos;e-mail de relance si renseigné.
                   </p>
+                </div>
+
+                <div className="space-y-4 border-t border-border pt-4">
+                  <p className="text-sm font-medium">Texte de l&apos;e-mail de relance</p>
+                  <p className="text-xs text-muted-foreground">
+                    Les produits du panier et le lien de paiement sont ajoutés automatiquement.
+                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="recovery-email-subject">Objet de l&apos;e-mail</Label>
+                    <Input
+                      id="recovery-email-subject"
+                      value={recoveryDraft.emailSubject}
+                      onChange={(e) =>
+                        setRecoveryDraft((s) => (s ? { ...s, emailSubject: e.target.value } : s))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recovery-email-title">Titre dans l&apos;e-mail</Label>
+                    <Input
+                      id="recovery-email-title"
+                      value={recoveryDraft.emailTitle}
+                      onChange={(e) =>
+                        setRecoveryDraft((s) => (s ? { ...s, emailTitle: e.target.value } : s))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recovery-email-intro">Message principal</Label>
+                    <Textarea
+                      id="recovery-email-intro"
+                      rows={4}
+                      value={recoveryDraft.emailIntro}
+                      onChange={(e) =>
+                        setRecoveryDraft((s) => (s ? { ...s, emailIntro: e.target.value } : s))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2 max-w-sm">
+                    <Label htmlFor="recovery-email-button">Texte du bouton</Label>
+                    <Input
+                      id="recovery-email-button"
+                      value={recoveryDraft.emailButtonLabel}
+                      onChange={(e) =>
+                        setRecoveryDraft((s) =>
+                          s ? { ...s, emailButtonLabel: e.target.value } : s,
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recovery-email-closing">Message de fin</Label>
+                    <Textarea
+                      id="recovery-email-closing"
+                      rows={3}
+                      value={recoveryDraft.emailClosing}
+                      onChange={(e) =>
+                        setRecoveryDraft((s) => (s ? { ...s, emailClosing: e.target.value } : s))
+                      }
+                    />
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button

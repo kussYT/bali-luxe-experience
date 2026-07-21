@@ -24,13 +24,23 @@ export const KNOWN_COLLECTIONS = [
   { slug: "shop", name: "Shop", sortOrder: 999, hidden: true },
 ];
 
+/** Returns a single batched INSERT (1 subrequest instead of N). */
+export function collectionsCatalogInsertStatement() {
+  const params = [];
+  const values = KNOWN_COLLECTIONS.map((col, i) => {
+    const base = i * 4 + 1;
+    params.push(col.slug, col.name, col.sortOrder ?? 100, Boolean(col.hidden));
+    return `($${base}, $${base + 1}, '', '', $${base + 2}, $${base + 3})`;
+  });
+  return {
+    text: `INSERT INTO collections (slug, name, season, description, sort_order, hidden)
+           VALUES ${values.join(", ")}
+           ON CONFLICT (slug) DO NOTHING`,
+    params,
+  };
+}
+
 export async function ensureCollectionsCatalog(queryFn) {
-  for (const col of KNOWN_COLLECTIONS) {
-    await queryFn(
-      `INSERT INTO collections (slug, name, season, description, sort_order, hidden)
-       VALUES ($1, $2, '', '', $3, $4)
-       ON CONFLICT (slug) DO NOTHING`,
-      [col.slug, col.name, col.sortOrder ?? 100, Boolean(col.hidden)],
-    );
-  }
+  const { text, params } = collectionsCatalogInsertStatement();
+  await queryFn(text, params);
 }

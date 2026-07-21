@@ -1,5 +1,12 @@
 import { withTransaction, query, isDatabaseConfigured } from "./pool.mjs";
 import { mapOriginToWarehouse, buildVariantSlug } from "./catalog.mjs";
+import { ensureCollectionsCatalog, KNOWN_COLLECTIONS } from "../collections-catalog.mjs";
+
+const collectionNameBySlug = new Map(KNOWN_COLLECTIONS.map((c) => [c.slug, c.name]));
+
+function collectionNameForSlug(slug) {
+  return collectionNameBySlug.get(slug) ?? String(slug).replace(/-/g, " ");
+}
 
 function slugify(value) {
   return String(value || "")
@@ -105,10 +112,13 @@ async function upsertCollection(client, { slug, name, season = "" }) {
 
 async function replaceExtraCollections(client, productId, primaryCollectionId, extraSlugs) {
   await client.query(`DELETE FROM product_collection_memberships WHERE product_id = $1`, [productId]);
-  for (const slug of extraSlugs) {
-    const { rows } = await client.query(`SELECT id FROM collections WHERE slug = $1`, [slug]);
-    if (!rows.length) continue;
-    const collectionId = rows[0].id;
+  for (const rawSlug of extraSlugs) {
+    const slug = slugify(rawSlug);
+    if (!slug) continue;
+    const collectionId = await upsertCollection(client, {
+      slug,
+      name: collectionNameForSlug(slug),
+    });
     if (collectionId === primaryCollectionId) continue;
     await client.query(
       `INSERT INTO product_collection_memberships (product_id, collection_id) VALUES ($1, $2)
@@ -198,7 +208,7 @@ async function setVariantPrimaryStock(client, variantId, warehouseId, nextQty, p
   );
 }
 
-async function syncProductVariants(client, productId, p) {
+async function syncProductVariants(client, productId, p, { syncStock = true } = {}) {
   const defaultWarehouse = mapOriginToWarehouse(p.origin);
   const { rows: existing } = await client.query(
     `SELECT id FROM product_variants WHERE product_id = $1 ORDER BY position ASC`,
@@ -237,7 +247,9 @@ async function syncProductVariants(client, productId, p) {
           isDefault,
         ],
       );
-      await setVariantPrimaryStock(client, variant.id, defaultWarehouse, variant.stock, p.slug);
+      if (syncStock) {
+        await setVariantPrimaryStock(client, variant.id, defaultWarehouse, variant.stock, p.slug);
+      }
     } else {
       const newId = await createVariantWithInventory(client, productId, p, variant, position, isDefault);
       keepIds.add(newId);
@@ -273,6 +285,7 @@ export async function createProductInDb(rawBody) {
   }
 
   return withTransaction(async (client) => {
+    await ensureCollectionsCatalog((sql, params) => client.query(sql, params));
     const collectionId = await upsertCollection(client, {
       slug: p.collectionSlug,
       name: p.collection,
@@ -330,6 +343,7 @@ export async function updateProductInDb(currentSlug, rawBody) {
   const p = normalizeAdminProductBody({ ...rawBody, slug: rawBody.slug || currentSlug });
 
   return withTransaction(async (client) => {
+    await ensureCollectionsCatalog((sql, params) => client.query(sql, params));
     const { rows: existingRows } = await client.query(
       `SELECT id, slug FROM products WHERE slug = $1`,
       [currentSlug],
@@ -410,7 +424,7 @@ export async function updateProductInDb(currentSlug, rawBody) {
 
     await replaceImages(client, productId, p.images, p.imageFocal, p.imageFocals);
     await replaceExtraCollections(client, productId, collectionId, p.collectionSlugs);
-    await syncProductVariants(client, productId, p);
+    await syncProductVariants(client, productId, p, { syncStock: false });
 
     return productId;
   });

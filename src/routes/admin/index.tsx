@@ -12,6 +12,7 @@ import { DashboardCharts } from "@/components/admin/DashboardCharts";
 import { OrdersWorldMap } from "@/components/admin/OrdersWorldMap";
 import { CmsStatusCard } from "@/components/admin/CmsStatusCard";
 import { OrdersAnalyticsPanel } from "@/components/admin/OrdersAnalyticsPanel";
+import { GoogleAnalyticsHelpBanner } from "@/components/admin/GoogleAnalyticsHelpBanner";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Admin dashboard — Bingin Diaries" }] }),
@@ -51,6 +52,8 @@ function AdminDashboard() {
         <p className="text-eyebrow text-muted-foreground">Dashboard</p>
         <h2 className="font-display text-4xl mt-2">Store overview</h2>
       </div>
+
+      <GoogleAnalyticsHelpBanner compact />
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[

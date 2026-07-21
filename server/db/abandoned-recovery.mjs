@@ -9,13 +9,49 @@ const DEFAULT_SETTINGS = {
   maxEmailsPerCart: 2,
   minHoursBetweenEmails: 72,
   promoCode: "",
+  emailSubject: "Votre panier vous attend — Bingin Diaries",
+  emailTitle: "Votre panier vous attend",
+  emailIntro:
+    "Vous aviez commencé une commande sur Bingin Diaries — votre sélection vous attend encore.",
+  emailButtonLabel: "Finaliser ma commande",
+  emailClosing:
+    "Ce lien est valable 30 jours. Si vous avez des questions, répondez simplement à cet e-mail.",
 };
+
+function normalizeEmailCopy(stored) {
+  return {
+    emailSubject:
+      typeof stored.emailSubject === "string" && stored.emailSubject.trim()
+        ? stored.emailSubject.trim()
+        : DEFAULT_SETTINGS.emailSubject,
+    emailTitle:
+      typeof stored.emailTitle === "string" && stored.emailTitle.trim()
+        ? stored.emailTitle.trim()
+        : DEFAULT_SETTINGS.emailTitle,
+    emailIntro:
+      typeof stored.emailIntro === "string" && stored.emailIntro.trim()
+        ? stored.emailIntro.trim()
+        : DEFAULT_SETTINGS.emailIntro,
+    emailButtonLabel:
+      typeof stored.emailButtonLabel === "string" && stored.emailButtonLabel.trim()
+        ? stored.emailButtonLabel.trim()
+        : DEFAULT_SETTINGS.emailButtonLabel,
+    emailClosing:
+      typeof stored.emailClosing === "string" && stored.emailClosing.trim()
+        ? stored.emailClosing.trim()
+        : DEFAULT_SETTINGS.emailClosing,
+  };
+}
+
+export function abandonedRecoveryEmailCopy(settings) {
+  return normalizeEmailCopy(settings || {});
+}
 
 export async function getAbandonedRecoverySettings() {
   const stored = (await getSetting("abandonedRecovery", null)) || {};
   return {
     ...DEFAULT_SETTINGS,
-    ...stored,
+    ...normalizeEmailCopy(stored),
     enabled: Boolean(stored.enabled),
     minAgeHours: Math.max(1, Number(stored.minAgeHours) || DEFAULT_SETTINGS.minAgeHours),
     maxEmailsPerCart: Math.max(1, Number(stored.maxEmailsPerCart) || DEFAULT_SETTINGS.maxEmailsPerCart),
@@ -34,6 +70,16 @@ export async function saveAbandonedRecoverySettings(patch) {
     ...patch,
     enabled: patch.enabled != null ? Boolean(patch.enabled) : current.enabled,
     promoCode: patch.promoCode != null ? String(patch.promoCode).trim() : current.promoCode,
+    emailSubject:
+      patch.emailSubject != null ? String(patch.emailSubject).trim() : current.emailSubject,
+    emailTitle: patch.emailTitle != null ? String(patch.emailTitle).trim() : current.emailTitle,
+    emailIntro: patch.emailIntro != null ? String(patch.emailIntro).trim() : current.emailIntro,
+    emailButtonLabel:
+      patch.emailButtonLabel != null
+        ? String(patch.emailButtonLabel).trim()
+        : current.emailButtonLabel,
+    emailClosing:
+      patch.emailClosing != null ? String(patch.emailClosing).trim() : current.emailClosing,
   };
   await setSetting("abandonedRecovery", next);
   return next;
@@ -55,6 +101,10 @@ export async function processAbandonedRecoveries() {
   let skipped = 0;
 
   for (const order of candidates) {
+    if (order.externalRef === "manual_invoice" || (order.notes || "").includes("[manual_invoice]")) {
+      skipped++;
+      continue;
+    }
     if (!order.customerEmail?.trim()) {
       skipped++;
       continue;
@@ -76,6 +126,7 @@ export async function processAbandonedRecoveries() {
       const result = await sendAbandonedCheckoutEmail(order, {
         resumeUrl,
         promoCode: settings.promoCode || undefined,
+        copy: abandonedRecoveryEmailCopy(settings),
       });
       if (result?.skipped) {
         skipped++;

@@ -19,7 +19,9 @@ export function parseMoneyValue(value: unknown): number {
 
 /** Display amount in inputs with French-style decimals (49,50). */
 export function formatMoneyInput(amount: number | undefined | null): string {
-  if (amount == null || !Number.isFinite(amount)) return "";
-  if (Number.isInteger(amount)) return String(amount);
-  return amount.toFixed(2).replace(".", ",");
+  if (amount == null || amount === "") return "";
+  const n = typeof amount === "number" ? amount : parseMoneyValue(amount);
+  if (!Number.isFinite(n)) return "";
+  if (Number.isInteger(n)) return String(n);
+  return n.toFixed(2).replace(".", ",");
 }

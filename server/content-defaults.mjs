@@ -1,7 +1,7 @@
 /** Default editorial content — mirrors src/data/lifestyle-content.ts (fallback when DB empty). */
 
 import stockists from "../src/data/stockists.json" with { type: "json" };
-import { SITE_LOCALE_CODES, resolveProductMessagesLocaleBlock } from "./i18n-locales.mjs";
+import { SITE_LOCALE_CODES, resolveProductMessagesLocaleBlock, resolveNavigationLocaleBlock } from "./i18n-locales.mjs";
 
 export const DEFAULT_ANNOUNCEMENT = {
   enabled: true,
@@ -48,6 +48,7 @@ export const DEFAULT_HOMEPAGE = {
     sales: "",
     aboutUs: "",
     popularSearches: [],
+    locales: {},
   },
   megaMenuFeatured: {
     newCollection: [
@@ -480,6 +481,93 @@ export function resolveProductMessages(stored, locale) {
   };
 }
 
+const DEFAULT_NAVIGATION_BY_LOCALE = {
+  fr: {
+    newCollection: "Nouvelle collection",
+    shop: "Boutique",
+    sales: "Soldes",
+    aboutUs: "À propos",
+    popularSearches: [],
+  },
+  en: {
+    newCollection: "New Collection",
+    shop: "Shop",
+    sales: "Sales",
+    aboutUs: "About us",
+    popularSearches: [],
+  },
+  id: {
+    newCollection: "Koleksi baru",
+    shop: "Toko",
+    sales: "Obral",
+    aboutUs: "Tentang kami",
+    popularSearches: [],
+  },
+  es: {
+    newCollection: "Nueva colección",
+    shop: "Tienda",
+    sales: "Rebajas",
+    aboutUs: "Sobre nosotros",
+    popularSearches: [],
+  },
+};
+
+function emptyNavigationFields() {
+  return { newCollection: "", shop: "", sales: "", aboutUs: "", popularSearches: [] };
+}
+
+export function normalizeNavigationStored(stored) {
+  const locales = {};
+  for (const code of SITE_LOCALE_CODES) {
+    locales[code] = deepMerge(DEFAULT_NAVIGATION_BY_LOCALE[code], emptyNavigationFields());
+  }
+
+  if (stored?.locales && typeof stored.locales === "object") {
+    for (const code of SITE_LOCALE_CODES) {
+      if (stored.locales[code]) {
+        locales[code] = deepMerge(locales[code], stored.locales[code]);
+      }
+    }
+  }
+
+  const legacyFlat = {
+    newCollection: stored?.newCollection?.trim() || "",
+    shop: stored?.shop?.trim() || "",
+    sales: stored?.sales?.trim() || "",
+    aboutUs: stored?.aboutUs?.trim() || "",
+    popularSearches: Array.isArray(stored?.popularSearches) ? stored.popularSearches : [],
+  };
+  if (legacyFlat.newCollection || legacyFlat.shop || legacyFlat.sales || legacyFlat.aboutUs) {
+    locales.en = deepMerge(locales.en, legacyFlat);
+  }
+
+  return { locales, legacyFlat };
+}
+
+export function resolveNavigation(stored, locale) {
+  const { locales, legacyFlat } = normalizeNavigationStored(stored || {});
+  const resolved = resolveNavigationLocaleBlock(locales, locale);
+  const defaults = DEFAULT_NAVIGATION_BY_LOCALE[resolved?.code] || DEFAULT_NAVIGATION_BY_LOCALE.en;
+  const block = resolved?.block || locales.fr || defaults;
+  const pick = (key) => block[key]?.trim() || legacyFlat[key]?.trim() || defaults[key] || "";
+  return {
+    newCollection: pick("newCollection"),
+    shop: pick("shop"),
+    sales: pick("sales"),
+    aboutUs: pick("aboutUs"),
+    popularSearches:
+      Array.isArray(block.popularSearches) && block.popularSearches.length
+        ? block.popularSearches
+        : legacyFlat.popularSearches.length
+          ? legacyFlat.popularSearches
+          : defaults.popularSearches,
+  };
+}
+
+export function navigationStoredForAdmin(stored) {
+  return normalizeNavigationStored(stored || {});
+}
+
 export const DEFAULT_POSTS = [
   {
     slug: "a-day-in-bingin",
@@ -616,8 +704,78 @@ function deepMerge(base, patch) {
   return out;
 }
 
+const SHOPIFY_CDN_BASE = "https://cdn.shopify.com/s/files/1/0437/5992/7449/files";
+
+/** Rewrite dead bingindiaries.com/cdn/shop/... paths to Shopify CDN (still hosted by Shopify). */
+export function rewriteLegacyShopifyImageUrl(url) {
+  if (!url || typeof url !== "string") return url;
+  const trimmed = url.trim();
+  const match = trimmed.match(/\/cdn\/shop\/files\/(.+)$/i);
+  if (match) return `${SHOPIFY_CDN_BASE}/${match[1]}`;
+  return trimmed;
+}
+
+/** Legacy Shopify paths on our domain 404 after migration off Shopify. */
+export function isBrokenCmsImageUrl(url) {
+  if (!url || typeof url !== "string") return true;
+  return url.includes("/cdn/shop/");
+}
+
+function resolveCmsImageUrl(url, fallback) {
+  if (!url || typeof url !== "string") return fallback;
+  if (isBrokenCmsImageUrl(url)) return rewriteLegacyShopifyImageUrl(url) || fallback;
+  return url;
+}
+
+/** Accept bare ID, full Spotify URL, or ID with ?si= query params pasted by mistake. */
+export function extractSpotifyPlaylistId(idOrUrl) {
+  if (!idOrUrl || typeof idOrUrl !== "string") return "";
+  const trimmed = idOrUrl.trim();
+  const fromUrl = trimmed.match(/playlist\/([a-zA-Z0-9]+)/);
+  if (fromUrl) return fromUrl[1];
+  return trimmed.split("?")[0].split("&")[0];
+}
+
+function sanitizePhotoStrip(photoStrip) {
+  const defaults = DEFAULT_HOMEPAGE.photoStrip;
+  if (!photoStrip?.tiles?.length) return defaults;
+  return {
+    ...photoStrip,
+    tiles: photoStrip.tiles.map((tile, i) => ({
+      ...tile,
+      image: isBrokenCmsImageUrl(tile.image)
+        ? resolveCmsImageUrl(tile.image, defaults.tiles[i]?.image ?? defaults.tiles[0].image)
+        : tile.image,
+    })),
+  };
+}
+
+function sanitizeBinginSounds(binginSounds) {
+  const defaults = DEFAULT_HOMEPAGE.binginSounds;
+  const merged = { ...defaults, ...(binginSounds || {}) };
+  const id =
+    extractSpotifyPlaylistId(merged.spotifyPlaylistId) ||
+    extractSpotifyPlaylistId(merged.spotifyUrl) ||
+    defaults.spotifyPlaylistId;
+  return {
+    ...merged,
+    spotifyPlaylistId: id,
+    spotifyUrl: merged.spotifyUrl?.includes("open.spotify.com")
+      ? merged.spotifyUrl.split("?")[0]
+      : `https://open.spotify.com/playlist/${id}`,
+  };
+}
+
+export function sanitizeHomepage(homepage) {
+  return {
+    ...homepage,
+    photoStrip: sanitizePhotoStrip(homepage.photoStrip),
+    binginSounds: sanitizeBinginSounds(homepage.binginSounds),
+  };
+}
+
 export function mergeHomepage(stored) {
-  return deepMerge(DEFAULT_HOMEPAGE, stored || {});
+  return sanitizeHomepage(deepMerge(DEFAULT_HOMEPAGE, stored || {}));
 }
 
 export function mergeAnnouncement(stored) {

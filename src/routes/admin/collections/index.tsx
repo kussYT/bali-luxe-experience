@@ -9,6 +9,9 @@ import {
   updateAdminCollection,
 } from "@/lib/admin-api";
 import type { AdminCollectionMeta } from "@/lib/content-types";
+import type { Locale } from "@/lib/i18n/messages";
+import { CMS_LOCALES, emptyCollectionLocaleFields } from "@/lib/i18n/cms-locales";
+import type { CollectionLocaleFields } from "@/lib/catalog-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -129,6 +132,7 @@ export const Route = createFileRoute("/admin/collections/")({
 
 function AdminCollectionsPage() {
   const [collections, setCollections] = useState<AdminCollectionMeta[]>([]);
+  const [localeBySlug, setLocaleBySlug] = useState<Record<string, Locale>>({});
   const [error, setError] = useState<string | null>(null);
   const [savingSlug, setSavingSlug] = useState<string | null>(null);
   const [savingOrder, setSavingOrder] = useState(false);
@@ -178,12 +182,13 @@ function AdminCollectionsPage() {
     setError(null);
     try {
       const res = await updateAdminCollection(col.slug, {
-        name: col.name,
+        name: col.locales?.fr?.name?.trim() || col.name,
         season: col.season,
-        description: col.description,
+        description: col.locales?.fr?.description?.trim() || col.description,
         heroImage: col.heroImage,
         sortOrder: col.sortOrder,
         hidden: col.hidden,
+        locales: col.locales,
       });
       setCollections((prev) => sortList(prev.map((c) => (c.slug === col.slug ? res.collection : c))));
       setMessage(`Collection « ${col.name} » enregistrée.`);
@@ -196,6 +201,24 @@ function AdminCollectionsPage() {
 
   function patch(slug: string, patch: Partial<AdminCollectionMeta>) {
     setCollections((prev) => prev.map((c) => (c.slug === slug ? { ...c, ...patch } : c)));
+  }
+
+  function patchCollectionLocale(slug: string, code: Locale, fields: Partial<CollectionLocaleFields>) {
+    setCollections((prev) =>
+      prev.map((c) => {
+        if (c.slug !== slug) return c;
+        const current = c.locales?.[code] || emptyCollectionLocaleFields();
+        const nextLocales = { ...c.locales, [code]: { ...current, ...fields } };
+        const next = { ...c, locales: nextLocales };
+        if (code === "fr" && fields.name !== undefined) next.name = fields.name;
+        if (code === "fr" && fields.description !== undefined) next.description = fields.description;
+        return next;
+      }),
+    );
+  }
+
+  function activeLocale(slug: string): Locale {
+    return localeBySlug[slug] || "fr";
   }
 
   async function move(slug: string, direction: -1 | 1) {
@@ -271,9 +294,24 @@ function AdminCollectionsPage() {
                 <Switch checked={!col.hidden} onCheckedChange={(v) => patch(col.slug, { hidden: !v })} />
                 <Label>Visible dans la boutique</Label>
               </div>
+              <div className="sm:col-span-2 flex flex-wrap gap-2">
+                {CMS_LOCALES.map((l) => (
+                  <button
+                    key={l.code}
+                    type="button"
+                    onClick={() => setLocaleBySlug((prev) => ({ ...prev, [col.slug]: l.code }))}
+                    className={`px-3 py-1.5 text-xs border ${activeLocale(col.slug) === l.code ? "border-foreground bg-muted" : "border-border"}`}
+                  >
+                    {l.adminLabel}
+                  </button>
+                ))}
+              </div>
               <div className="space-y-2">
-                <Label>Nom</Label>
-                <Input value={col.name} onChange={(e) => patch(col.slug, { name: e.target.value })} />
+                <Label>Nom ({activeLocale(col.slug)})</Label>
+                <Input
+                  value={col.locales?.[activeLocale(col.slug)]?.name ?? (activeLocale(col.slug) === "fr" ? col.name : "")}
+                  onChange={(e) => patchCollectionLocale(col.slug, activeLocale(col.slug), { name: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Saison</Label>
@@ -292,10 +330,15 @@ function AdminCollectionsPage() {
                 <Input value={col.heroImage} onChange={(e) => patch(col.slug, { heroImage: e.target.value })} />
               </div>
               <div className="sm:col-span-2 space-y-2">
-                <Label>Description</Label>
+                <Label>Description ({activeLocale(col.slug)})</Label>
                 <Textarea
-                  value={col.description}
-                  onChange={(e) => patch(col.slug, { description: e.target.value })}
+                  value={
+                    col.locales?.[activeLocale(col.slug)]?.description ??
+                    (activeLocale(col.slug) === "fr" ? col.description : "")
+                  }
+                  onChange={(e) =>
+                    patchCollectionLocale(col.slug, activeLocale(col.slug), { description: e.target.value })
+                  }
                   rows={3}
                 />
               </div>

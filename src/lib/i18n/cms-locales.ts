@@ -15,6 +15,14 @@ export function emptyPostLocaleFields() {
   return { title: "", excerpt: "", category: "", body: [] as string[] };
 }
 
+export function emptyCollectionLocaleFields() {
+  return { name: "", description: "" };
+}
+
+export function emptyNavigationLocaleFields() {
+  return { newCollection: "", shop: "", sales: "", aboutUs: "", popularSearches: [] as string[] };
+}
+
 export function emptyProductMessagesLocaleFields() {
   return {
     regionalUnavailable: "",

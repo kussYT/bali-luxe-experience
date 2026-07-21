@@ -1,4 +1,5 @@
-import { getSetting, setSetting } from "./settings-store.mjs";
+import { getSetting, getSettings, setSetting } from "./settings-store.mjs";
+import { invalidateCache } from "./request-cache.mjs";
 import {
   DEFAULT_ANNOUNCEMENT,
   DEFAULT_HOMEPAGE,
@@ -12,6 +13,8 @@ import {
   mergeFooter,
   mergeProductMessages,
   resolveProductMessages,
+  resolveNavigation,
+  navigationStoredForAdmin,
 } from "../content-defaults.mjs";
 
 export async function getAnnouncement() {
@@ -74,44 +77,67 @@ export async function getProductMessagesContent(locale) {
 }
 
 export async function getPublicSiteContent({ locale } = {}) {
-  const storedProductMessages = await getSetting("productMessages", null);
-  const [announcement, homepage, about, findUs, contact, care, sizing, footer] = await Promise.all([
-    getAnnouncement(),
-    getHomepageContent(),
-    getAboutContent(),
-    getFindUsContent(),
-    getContactContent(),
-    getCareContent(),
-    getSizingContent(),
-    getFooterContent(),
+  const stored = await getSettings([
+    "announcement",
+    "homepage",
+    "about",
+    "findUs",
+    "contact",
+    "care",
+    "sizing",
+    "footer",
+    "productMessages",
   ]);
   return {
-    announcement,
-    homepage,
-    about,
-    findUs,
-    contact,
-    care,
-    sizing,
-    footer,
-    productMessages: resolveProductMessages(storedProductMessages, locale),
+    announcement: mergeAnnouncement(stored.announcement),
+    homepage: (() => {
+      const homepage = mergeHomepage(stored.homepage);
+      return {
+        ...homepage,
+        navigation: resolveNavigation(homepage.navigation, locale),
+      };
+    })(),
+    about: mergeAbout(stored.about),
+    findUs: mergeFindUs(stored.findUs),
+    contact: mergeContact(stored.contact),
+    care: mergeCare(stored.care),
+    sizing: mergeSizing(stored.sizing),
+    footer: mergeFooter(stored.footer),
+    productMessages: resolveProductMessages(stored.productMessages, locale),
     defaults: { homepage: DEFAULT_HOMEPAGE },
   };
 }
 
 export async function getAdminSiteContent() {
-  const storedHomepage = (await getSetting("homepage", null)) || {};
-  const storedAnnouncement = (await getSetting("announcement", null)) || {};
-  const storedAbout = (await getSetting("about", null)) || {};
-  const storedFindUs = (await getSetting("findUs", null)) || {};
-  const storedContact = (await getSetting("contact", null)) || {};
-  const storedCare = (await getSetting("care", null)) || {};
-  const storedSizing = (await getSetting("sizing", null)) || {};
-  const storedFooter = (await getSetting("footer", null)) || {};
-  const storedProductMessages = (await getSetting("productMessages", null)) || {};
+  const stored = await getSettings([
+    "homepage",
+    "announcement",
+    "about",
+    "findUs",
+    "contact",
+    "care",
+    "sizing",
+    "footer",
+    "productMessages",
+  ]);
+  const storedHomepage = stored.homepage || {};
+  const storedAnnouncement = stored.announcement || {};
+  const storedAbout = stored.about || {};
+  const storedFindUs = stored.findUs || {};
+  const storedContact = stored.contact || {};
+  const storedCare = stored.care || {};
+  const storedSizing = stored.sizing || {};
+  const storedFooter = stored.footer || {};
+  const storedProductMessages = stored.productMessages || {};
+  const homepageMerged = mergeHomepage(storedHomepage);
+  const navigationStored = navigationStoredForAdmin(storedHomepage?.navigation);
   return {
     announcement: mergeAnnouncement(storedAnnouncement),
-    homepage: mergeHomepage(storedHomepage),
+    homepage: {
+      ...homepageMerged,
+      navigation: resolveNavigation(storedHomepage?.navigation, "en"),
+      navigationStored: { locales: navigationStored.locales },
+    },
     about: mergeAbout(storedAbout),
     findUs: mergeFindUs(storedFindUs),
     contact: mergeContact(storedContact),
@@ -139,6 +165,7 @@ export async function patchAdminSiteContent(body) {
   }
   if (body.homepage) {
     await setSetting("homepage", { ...(await getSetting("homepage", {})), ...body.homepage });
+    invalidateCache("site-content:");
   }
   if (body.about) {
     await setSetting("about", body.about);

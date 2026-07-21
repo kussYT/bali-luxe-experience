@@ -44,7 +44,22 @@ function ProductPage() {
     setSelectedVariantId(initialVariantId);
     setQty(1);
     setActiveImage(0);
-  }, [slug, initialVariantId]);
+  }, [slug]);
+
+  useEffect(() => {
+    if (!product?.variants?.length) return;
+    const currentValid =
+      selectedVariantId != null &&
+      product.variants.some(
+        (variant) =>
+          variant.id === selectedVariantId &&
+          maxCartQty(product, countryCode, variant.id, zones) > 0,
+      );
+    if (!currentValid) {
+      setSelectedVariantId(initialVariantId);
+      setQty(1);
+    }
+  }, [product, countryCode, zones, initialVariantId, selectedVariantId]);
 
   useEffect(() => {
     if (product?.slug) trackProductEvent(product.slug, "view");

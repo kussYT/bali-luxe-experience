@@ -1,4 +1,4 @@
-import { getSetting, setSetting } from "./settings-store.mjs";
+import { getSettings, setSetting } from "./settings-store.mjs";
 import DEFAULT_RAW from "../../data/fulfillment-zones.default.json" with { type: "json" };
 
 export function normalizeFulfillmentZones(raw) {
@@ -17,12 +17,14 @@ export function normalizeFulfillmentZones(raw) {
 }
 
 export async function getFulfillmentZones() {
-  const countryShipping = await getSetting("countryShipping", null);
+  const { countryShipping, fulfillmentZones: stored } = await getSettings([
+    "countryShipping",
+    "fulfillmentZones",
+  ]);
   if (countryShipping?.countries && Object.keys(countryShipping.countries).length > 0) {
     const { fulfillmentZonesFromConfig } = await import("./country-shipping.mjs");
     return fulfillmentZonesFromConfig(countryShipping);
   }
-  const stored = await getSetting("fulfillmentZones", null);
   return normalizeFulfillmentZones(stored);
 }
 
