@@ -7,6 +7,13 @@
   },
   "posts": [
     {
+      "id": "18099433439252786",
+      "image": "/instagram/18099433439252786.jpg",
+      "alt": "The finishing touch that makes every summer outfit feel complete. Discover your favorite.\nDressed by @katsika_tinos ❤️",
+      "caption": "The finishing touch that makes every summer outfit feel complete. Discover your favorite.\nDressed by @katsika_tinos ❤️",
+      "permalink": "https://www.instagram.com/p/DbK5DP4tDHh/"
+    },
+    {
       "id": "18078631472326194",
       "image": "/instagram/18078631472326194.jpg",
       "alt": "At Bingin Diaries, choosing the right materials is important, so you know when you buy your product that is made to last",
@@ -40,19 +47,8 @@
       "alt": "Whatever the destination you can take a piece of Bingin Diaries with you :)\nAvailable in select stores and online with w",
       "caption": "Whatever the destination you can take a piece of Bingin Diaries with you :)\nAvailable in select stores and online with worldwide shipping.",
       "permalink": "https://www.instagram.com/reel/DazgwyVtIPK/"
-    },
-    {
-      "id": "18430636594132149",
-      "image": "/instagram/18430636594132149.webp",
-      "alt": "Meet The Gilda hat \n\nHand-crocheted from natural banana leaf fiber. Lightweight, timeless, and crafted by hand—it's the ",
-      "caption": "Meet The Gilda hat \n\nHand-crocheted from natural banana leaf fiber. Lightweight, timeless, and crafted by hand—it's the piece you'll reach for all season long.\n\n📸 : @saltysun.bijoux",
-      "permalink": "https://www.instagram.com/p/DaulznjtNQc/"
     }
   ],
-  "syncedAt": "2026-07-23T09:37:17.096Z",
-  "source": "graph-api-local",
-  "meta": {
-    "rawCount": 18,
-    "mappedCount": 18
-  }
+  "syncedAt": "2026-07-26T06:30:06.087Z",
+  "source": "graph-api-local"
 }
