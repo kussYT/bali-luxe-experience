@@ -24,9 +24,11 @@ import {
   getAbandonedRecoverySettings,
   abandonedRecoveryEmailCopy,
 } from "../db/abandoned-recovery.mjs";
-import { siteUrl } from "../email.mjs";
+import { paymentResumeUrl } from "../email.mjs";
 import { shippingAmountForCountry } from "../shipping-rates.mjs";
 import { toStripeAmount } from "../pricing.mjs";
+import { hasUsableShippingAddress } from "../shipping-address.mjs";
+import { enrichOrderShippingFromStripe } from "../checkout.mjs";
 
 export async function getAdminOrdersResponse({ channel } = {}) {
   if (!isDatabaseConfigured()) {
@@ -44,12 +46,21 @@ export async function getAdminOrderResponse(orderId) {
     err.status = 503;
     throw err;
   }
-  const order = await findOrderById(orderId);
+  let order = await findOrderById(orderId);
   if (!order) {
     const err = new Error("Order not found");
     err.status = 404;
     throw err;
   }
+
+  if (!hasUsableShippingAddress(order.shippingAddress) && order.stripeSessionId) {
+    try {
+      order = await enrichOrderShippingFromStripe(order);
+    } catch (e) {
+      console.warn("[orders] Stripe shipping backfill failed:", e.message);
+    }
+  }
+
   return { order, source: "postgres" };
 }
 
@@ -139,13 +150,16 @@ export async function patchAdminOrder(orderId, body) {
   return { order, source: "postgres" };
 }
 
-export async function getAdminOrdersCsv() {
+export async function getAdminOrdersCsv(searchParams = {}) {
   if (!isDatabaseConfigured()) {
     const err = new Error("DATABASE_URL required for orders export");
     err.status = 503;
     throw err;
   }
-  return exportOrdersCsv();
+  return exportOrdersCsv({
+    from: typeof searchParams.from === "string" ? searchParams.from : null,
+    to: typeof searchParams.to === "string" ? searchParams.to : null,
+  });
 }
 
 export async function postMarketplaceOrder(body) {
@@ -203,11 +217,13 @@ export async function postManualInvoiceOrder(body) {
     emailResult = await sendPaymentInvoiceLink(order.id);
   }
 
+  const paymentUrl = emailResult?.paymentUrl || paymentResumeUrl(order.id);
+
   return {
     order: emailResult?.order || order,
     emailSent: Boolean(emailResult?.ok),
-    email: emailResult?.email || null,
-    paymentUrl: emailResult?.paymentUrl || null,
+    email: emailResult?.email || order.customerEmail || null,
+    paymentUrl,
     preview,
     source: "postgres",
   };
@@ -291,8 +307,12 @@ async function buildManualInvoicePreview(body) {
     });
     const label =
       discountType === "percent"
-        ? `[discount] -${discountValue}% (−${(discountCents / 100).toFixed(2)} €)`
-        : `[discount] −${(discountCents / 100).toFixed(2)} €`;
+        ? `[discount] -${discountValue}%`
+        : currency === "IDR"
+          ? `[discount] −Rp ${discountCents.toLocaleString("en-US")}`
+          : currency === "USD"
+            ? `[discount] −$${(discountCents / 100).toFixed(2)}`
+            : `[discount] −€${(discountCents / 100).toFixed(2)}`;
     notes = notes ? `${notes}\n${label}` : label;
   }
 
@@ -396,7 +416,7 @@ export async function sendPaymentInvoiceLink(orderId) {
     throw err;
   }
 
-  const paymentUrl = `${siteUrl()}/checkout/resume?order=${encodeURIComponent(orderId)}`;
+  const paymentUrl = paymentResumeUrl(orderId);
 
   try {
     const result = await sendPaymentInvoiceEmail(order, { paymentUrl });
@@ -515,7 +535,7 @@ export async function sendAbandonedCheckoutRecovery(orderId) {
     throw err;
   }
 
-  const resumeUrl = `${siteUrl()}/checkout/resume?order=${encodeURIComponent(orderId)}`;
+  const resumeUrl = paymentResumeUrl(orderId);
   const recoverySettings = await getAbandonedRecoverySettings();
 
   try {

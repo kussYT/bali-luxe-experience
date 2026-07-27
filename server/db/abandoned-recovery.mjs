@@ -1,7 +1,7 @@
 import { getSetting, setSetting } from "./settings-store.mjs";
 import { listAbandonedCheckouts, markRecoveryEmailSent } from "./orders.mjs";
 import { sendAbandonedCheckoutEmail } from "../emails/abandoned-checkout-email.mjs";
-import { siteUrl } from "../email.mjs";
+import { paymentResumeUrl } from "../email.mjs";
 
 const DEFAULT_SETTINGS = {
   enabled: false,
@@ -13,7 +13,7 @@ const DEFAULT_SETTINGS = {
   emailTitle: "Votre panier vous attend",
   emailIntro:
     "Vous aviez commencé une commande sur Bingin Diaries — votre sélection vous attend encore.",
-  emailButtonLabel: "Finaliser ma commande",
+  emailButtonLabel: "Complete your purchase",
   emailClosing:
     "Ce lien est valable 30 jours. Si vous avez des questions, répondez simplement à cet e-mail.",
 };
@@ -121,7 +121,7 @@ export async function processAbandonedRecoveries() {
       continue;
     }
 
-    const resumeUrl = `${siteUrl()}/checkout/resume?order=${encodeURIComponent(order.id)}`;
+    const resumeUrl = paymentResumeUrl(order.id);
     try {
       const result = await sendAbandonedCheckoutEmail(order, {
         resumeUrl,

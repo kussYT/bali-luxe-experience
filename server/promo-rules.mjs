@@ -6,6 +6,7 @@ export const DEFAULT_PROMO_RULES = {
   productSlugs: [],
   minSubtotalEur: null,
   startsAt: null,
+  countryCodes: [],
 };
 
 export function normalizePromoRules(raw) {
@@ -24,6 +25,9 @@ export function normalizePromoRules(raw) {
         ? Number(raw.minSubtotalEur)
         : null,
     startsAt: raw.startsAt || null,
+    countryCodes: Array.isArray(raw.countryCodes)
+      ? [...new Set(raw.countryCodes.map((c) => String(c).trim().toUpperCase()).filter(Boolean))]
+      : [],
   };
 }
 
@@ -63,9 +67,18 @@ export function eligibleSubtotalEur(eligible) {
   return eligible.reduce((sum, { product, qty }) => sum + unitPriceEur(product) * qty, 0);
 }
 
-export function validatePromoEligibility(promo, resolved) {
+export function validatePromoEligibility(promo, resolved, { countryCode } = {}) {
   const rules = normalizePromoRules(promo.rules);
   const { eligible, ineligible } = splitResolvedByPromo(resolved, rules);
+
+  if (rules.countryCodes.length > 0) {
+    const code = String(countryCode || "").trim().toUpperCase();
+    if (!code || !rules.countryCodes.includes(code)) {
+      const err = new Error("Ce code n'est pas valable pour votre pays de livraison");
+      err.status = 400;
+      throw err;
+    }
+  }
 
   if (rules.scope !== "all" && eligible.length === 0) {
     const err = new Error("Ce code ne s'applique pas aux articles de votre panier");

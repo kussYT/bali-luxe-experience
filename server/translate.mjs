@@ -240,3 +240,117 @@ export async function translateProductMessagesLocales({ sourceLocale, targetLoca
 
   return { locales: out, provider: "deepl" };
 }
+
+export async function translateSizingLocales({ sourceLocale, targetLocales, fields }) {
+  const source = sourceLocale?.trim().toLowerCase();
+  const targets = (targetLocales || []).filter((t) => t && t !== source);
+  if (!source || !SITE_LOCALE_CODES.includes(source)) {
+    const err = new Error("Invalid source locale");
+    err.status = 400;
+    throw err;
+  }
+  if (!fields?.title?.trim()) {
+    const err = new Error("Source title is required");
+    err.status = 400;
+    throw err;
+  }
+  if (!isTranslateConfigured()) {
+    const err = new Error("Traduction indisponible : configurez DEEPL_API_KEY.");
+    err.status = 503;
+    throw err;
+  }
+
+  const out = {};
+  for (const target of targets) {
+    if (!SITE_LOCALE_CODES.includes(target)) continue;
+    const body = Array.isArray(fields.body) ? fields.body : [];
+    const translatedBody = [];
+    for (const paragraph of body) {
+      translatedBody.push(paragraph?.trim() ? await translateText(paragraph, source, target) : "");
+    }
+    out[target] = {
+      title: await translateText(fields.title, source, target),
+      eyebrow: fields.eyebrow?.trim() ? await translateText(fields.eyebrow, source, target) : "",
+      metaDescription: fields.metaDescription?.trim()
+        ? await translateText(fields.metaDescription, source, target)
+        : "",
+      body: translatedBody.filter(Boolean),
+      imageAlt: fields.imageAlt?.trim() ? await translateText(fields.imageAlt, source, target) : "",
+      backLink: fields.backLink?.trim() ? await translateText(fields.backLink, source, target) : "",
+    };
+  }
+
+  return { locales: out, provider: "deepl" };
+}
+
+export async function translateAboutLocales({ sourceLocale, targetLocales, fields }) {
+  const source = sourceLocale?.trim().toLowerCase();
+  const targets = (targetLocales || []).filter((t) => t && t !== source);
+  if (!source || !SITE_LOCALE_CODES.includes(source)) {
+    const err = new Error("Invalid source locale");
+    err.status = 400;
+    throw err;
+  }
+  if (!fields?.title?.trim()) {
+    const err = new Error("Source title is required");
+    err.status = 400;
+    throw err;
+  }
+  if (!isTranslateConfigured()) {
+    const err = new Error("Traduction indisponible : configurez DEEPL_API_KEY.");
+    err.status = 503;
+    throw err;
+  }
+
+  const sections = Array.isArray(fields.sections) ? fields.sections : [];
+  const values = Array.isArray(fields.values) ? fields.values : [];
+  const sidebarLinks = Array.isArray(fields.sidebarLinks) ? fields.sidebarLinks : [];
+
+  const out = {};
+  for (const target of targets) {
+    if (!SITE_LOCALE_CODES.includes(target)) continue;
+
+    const translatedSections = [];
+    for (const section of sections) {
+      translatedSections.push({
+        id: typeof section.id === "string" ? section.id : "",
+        eyebrow: section.eyebrow?.trim() ? await translateText(section.eyebrow, source, target) : "",
+        title: section.title?.trim() ? await translateText(section.title, source, target) : "",
+        body: section.body?.trim() ? await translateText(section.body, source, target) : "",
+      });
+    }
+
+    const translatedValues = [];
+    for (const value of values) {
+      translatedValues.push({
+        n: typeof value.n === "string" ? value.n : "",
+        t: value.t?.trim() ? await translateText(value.t, source, target) : "",
+        d: value.d?.trim() ? await translateText(value.d, source, target) : "",
+      });
+    }
+
+    const translatedSidebar = [];
+    for (const link of sidebarLinks) {
+      translatedSidebar.push({
+        label: link.label?.trim() ? await translateText(link.label, source, target) : "",
+        to: typeof link.to === "string" ? link.to : "",
+        hash: link.hash,
+        image: typeof link.image === "string" ? link.image : "",
+        imageFocal: link.imageFocal,
+      });
+    }
+
+    out[target] = {
+      title: await translateText(fields.title, source, target),
+      eyebrow: fields.eyebrow?.trim() ? await translateText(fields.eyebrow, source, target) : "",
+      metaDescription: fields.metaDescription?.trim()
+        ? await translateText(fields.metaDescription, source, target)
+        : "",
+      sections: translatedSections,
+      values: translatedValues,
+      sidebarLinks: translatedSidebar,
+    };
+  }
+
+  return { locales: out, provider: "deepl" };
+}

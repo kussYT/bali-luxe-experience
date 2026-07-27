@@ -1,27 +1,14 @@
 import type { InstagramPost } from "@/data/instagram-content";
 
-const LIFESTYLE_FALLBACKS = [
-  "/lifestyle/lookbook-sunburn.jpg",
-  "/lifestyle/journal-sunset.jpg",
-  "/lifestyle/shop-mood.jpg",
-  "/lifestyle/journal-bingin.jpg",
-  "/lifestyle/lookbook-salt.jpg",
-  "/lifestyle/editorial-designed.jpg",
-];
-
 export function isReliableImageUrl(url: string | undefined) {
   if (!url) return false;
   if (url.startsWith("/")) return true;
-  if (url.includes("cdninstagram.com")) return false;
+  // Live Graph CDN URLs are OK for immediate display (they expire later; sync localizes them).
+  if (url.includes("cdninstagram.com") || url.includes("fbcdn.net")) return true;
   return url.startsWith("http://") || url.startsWith("https://");
 }
 
-/** Prefer local/synced paths; swap expired Instagram CDN URLs for lifestyle fallbacks. */
+/** Drop posts with no image; keep local paths and live CDN previews. */
 export function sanitizeInstagramPosts(posts: InstagramPost[]): InstagramPost[] {
-  return posts
-    .map((post, i) => {
-      if (isReliableImageUrl(post.image)) return post;
-      return { ...post, image: LIFESTYLE_FALLBACKS[i % LIFESTYLE_FALLBACKS.length] };
-    })
-    .filter((post) => post.image);
+  return posts.filter((post) => Boolean(post.image));
 }

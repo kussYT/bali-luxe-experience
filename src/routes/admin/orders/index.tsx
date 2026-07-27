@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   fetchAdminOrders,
   fetchAbandonedCheckouts,
@@ -15,12 +15,24 @@ import {
   type AbandonedRecoverySettings,
 } from "@/lib/admin-api";
 import { orderStatusLabel } from "@/lib/order-status";
+import {
+  ORDER_ROW_TONE_CLASS,
+  orderProductSummary,
+  orderRowTone,
+  sortOrdersForAdmin,
+} from "@/lib/order-display";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ChannelBadge } from "@/components/admin/ChannelBadge";
 import { MarketplaceOrderForm } from "@/components/admin/MarketplaceOrderForm";
 import { ManualInvoiceOrderForm } from "@/components/admin/ManualInvoiceOrderForm";
@@ -77,6 +89,11 @@ function AdminOrdersPage() {
   const [recoveryDraft, setRecoveryDraft] = useState<AbandonedRecoverySettings | null>(null);
   const [savingRecovery, setSavingRecovery] = useState(false);
   const [runningRecovery, setRunningRecovery] = useState(false);
+  const [quickOrder, setQuickOrder] = useState<AdminOrder | null>(null);
+  const [exportFrom, setExportFrom] = useState("");
+  const [exportTo, setExportTo] = useState("");
+
+  const sortedOrders = useMemo(() => sortOrdersForAdmin(orders), [orders]);
 
   const loadOrders = useCallback(() => {
     fetchAdminOrders(channelFilter || undefined)
@@ -197,14 +214,34 @@ function AdminOrdersPage() {
             Commandes payées · paniers abandonnés (checkout Stripe non finalisé, &gt; 1 h)
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 items-end">
           <ManualInvoiceOrderForm onCreated={loadOrders} />
           <MarketplaceOrderForm onCreated={loadOrders} />
-          <Button variant="outline" asChild>
-            <a href={adminOrdersExportUrl()} download>
-              Export CSV
-            </a>
-          </Button>
+          <div className="flex flex-wrap items-end gap-2 border border-border rounded-sm px-3 py-2">
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Export from</Label>
+              <Input
+                type="date"
+                className="h-8 w-[140px]"
+                value={exportFrom}
+                onChange={(e) => setExportFrom(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">to</Label>
+              <Input
+                type="date"
+                className="h-8 w-[140px]"
+                value={exportTo}
+                onChange={(e) => setExportTo(e.target.value)}
+              />
+            </div>
+            <Button variant="outline" size="sm" asChild>
+              <a href={adminOrdersExportUrl({ from: exportFrom || undefined, to: exportTo || undefined })} download>
+                Export CSV
+              </a>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -283,15 +320,30 @@ function AdminOrdersPage() {
             </Card>
           </div>
 
+          <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-3 rounded-sm bg-emerald-100 border border-emerald-200" /> À traiter
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-3 rounded-sm bg-orange-100 border border-orange-200" /> Facture en attente
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-3 rounded-sm bg-white border border-border" /> Pending / abandon
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-3 rounded-sm bg-muted border border-border" /> Expédiée / clôturée
+            </span>
+          </div>
+
           <div className="border border-border rounded-sm overflow-x-auto">
-            <table className="w-full text-sm min-w-[900px]">
+            <table className="w-full text-sm min-w-[980px]">
               <thead className="bg-muted/50 text-left">
                 <tr>
                   <th className="p-3 font-medium">Date</th>
                   <th className="p-3 font-medium">Canal</th>
                   <th className="p-3 font-medium">Status</th>
+                  <th className="p-3 font-medium">Produits</th>
                   <th className="p-3 font-medium">Customer</th>
-                  <th className="p-3 font-medium">Réf.</th>
                   <th className="p-3 font-medium">Ship to</th>
                   <th className="p-3 font-medium">Warehouse</th>
                   <th className="p-3 font-medium">Total</th>
@@ -299,46 +351,161 @@ function AdminOrdersPage() {
                 </tr>
               </thead>
               <tbody>
-                {orders.length === 0 && !error && (
+                {sortedOrders.length === 0 && !error && (
                   <tr>
                     <td colSpan={9} className="p-6 text-center text-muted-foreground">
                       No orders yet. Complete a test checkout or add a marketplace order.
                     </td>
                   </tr>
                 )}
-                {orders.map((order) => (
-                  <tr key={order.id} className="border-t border-border">
-                    <td className="p-3 whitespace-nowrap">
-                      {new Date(order.createdAt).toLocaleString()}
-                    </td>
-                    <td className="p-3">
-                      <div className="flex flex-col gap-1">
-                        <ChannelBadge channel={order.channel || "website"} />
-                        {order.externalRef === "manual_invoice" && (
-                          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                            Facture
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-3">{orderStatusLabel(order.status)}</td>
-                    <td className="p-3">{order.customerEmail || "—"}</td>
-                    <td className="p-3 font-mono text-xs">{order.externalRef || "—"}</td>
-                    <td className="p-3">{order.shippingCountryCode || order.countryCode || "—"}</td>
-                    <td className="p-3">{warehouseLabel(order.fulfillmentWarehouse)}</td>
-                    <td className="p-3">{formatMoney(order.amountTotal, order.currency)}</td>
-                    <td className="p-3 text-right">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link to="/admin/orders/$orderId" params={{ orderId: order.id }}>
+                {sortedOrders.map((order) => {
+                  const tone = orderRowTone(order);
+                  const summary = orderProductSummary(order.items || []);
+                  return (
+                    <tr
+                      key={order.id}
+                      className={`border-t border-border/80 ${ORDER_ROW_TONE_CLASS[tone]}`}
+                    >
+                      <td className="p-3 whitespace-nowrap">
+                        {new Date(order.createdAt).toLocaleString()}
+                      </td>
+                      <td className="p-3">
+                        <div className="flex flex-col gap-1">
+                          <ChannelBadge channel={order.channel || "website"} />
+                          {order.externalRef === "manual_invoice" && (
+                            <span className="text-[10px] uppercase tracking-wide text-orange-700/80">
+                              Facture
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-3">{orderStatusLabel(order.status)}</td>
+                      <td className="p-3">
+                        <p className="font-mono text-xs font-medium tracking-wide">{summary.refs}</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {summary.count} article{summary.count === 1 ? "" : "s"}
+                        </p>
+                      </td>
+                      <td className="p-3">{order.customerEmail || "—"}</td>
+                      <td className="p-3">{order.shippingCountryCode || order.countryCode || "—"}</td>
+                      <td className="p-3">{warehouseLabel(order.fulfillmentWarehouse)}</td>
+                      <td className="p-3">{formatMoney(order.amountTotal, order.currency)}</td>
+                      <td className="p-3 text-right whitespace-nowrap">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mr-2"
+                          onClick={() => setQuickOrder(order)}
+                        >
                           Voir
-                        </Link>
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+                        </Button>
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link to="/admin/orders/$orderId" params={{ orderId: order.id }}>
+                            Page
+                          </Link>
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
+
+          <Dialog open={Boolean(quickOrder)} onOpenChange={(open) => !open && setQuickOrder(null)}>
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+              {quickOrder && (
+                <>
+                  <DialogHeader>
+                    <DialogTitle className="font-display text-2xl">
+                      {orderStatusLabel(quickOrder.status)}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 text-sm">
+                    <div
+                      className={`rounded-sm border border-border px-3 py-2 ${ORDER_ROW_TONE_CLASS[orderRowTone(quickOrder)]}`}
+                    >
+                      <p className="font-mono text-xs break-all">{quickOrder.id}</p>
+                      {quickOrder.shippingAddress?.method === "mondial_relay" && (
+                        <p className="mt-1 font-medium">
+                          Mondial Relay
+                          {quickOrder.shippingAddress.pickupId
+                            ? ` · ${quickOrder.shippingAddress.pickupId}`
+                            : ""}
+                        </p>
+                      )}
+                      <p className="mt-1 font-medium">
+                        {quickOrder.customerName || quickOrder.shippingAddress?.name || "—"}
+                      </p>
+                      <p className="mt-0.5">{quickOrder.customerEmail || "—"}</p>
+                      {(quickOrder.customerPhone || quickOrder.shippingAddress?.phone) && (
+                        <p className="mt-0.5">{quickOrder.customerPhone || quickOrder.shippingAddress?.phone}</p>
+                      )}
+                      {quickOrder.shippingAddress?.line1 && (
+                        <p className="text-muted-foreground mt-2">
+                          {[
+                            quickOrder.shippingAddress.line1,
+                            quickOrder.shippingAddress.line2,
+                            [quickOrder.shippingAddress.postalCode, quickOrder.shippingAddress.city]
+                              .filter(Boolean)
+                              .join(" "),
+                            quickOrder.shippingAddress.country ||
+                              quickOrder.shippingCountryCode ||
+                              quickOrder.countryCode,
+                          ]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </p>
+                      )}
+                      <p className="text-muted-foreground mt-1">
+                        {formatMoney(quickOrder.amountTotal, quickOrder.currency)} ·{" "}
+                        {quickOrder.shippingCountryCode || quickOrder.countryCode || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-eyebrow text-muted-foreground mb-2">Produits</p>
+                      <ul className="space-y-2">
+                        {(quickOrder.items || []).map((item) => {
+                          const summary = orderProductSummary([item]);
+                          return (
+                            <li key={item.id} className="flex justify-between gap-3 border-b border-border pb-2">
+                              <div className="flex gap-3 min-w-0">
+                                {item.image ? (
+                                  <img
+                                    src={item.image}
+                                    alt=""
+                                    className="size-12 object-cover bg-muted shrink-0 rounded-sm"
+                                  />
+                                ) : null}
+                                <div className="min-w-0">
+                                  <p className="font-mono text-xs font-medium">{summary.refs}</p>
+                                  <p className="text-muted-foreground">
+                                    {item.name}
+                                    {item.variantTitle ? ` — ${item.variantTitle}` : ""}
+                                  </p>
+                                </div>
+                              </div>
+                              <span>×{item.qty}</span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      <Button asChild>
+                        <Link to="/admin/orders/$orderId" params={{ orderId: quickOrder.id }}>
+                          Ouvrir / traiter
+                        </Link>
+                      </Button>
+                      <Button variant="outline" onClick={() => setQuickOrder(null)}>
+                        Fermer
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </DialogContent>
+          </Dialog>
         </>
       ) : (
         <>
@@ -564,7 +731,7 @@ function AdminOrdersPage() {
                   </tr>
                 )}
                 {abandoned.map((checkout) => (
-                  <tr key={checkout.id} className="border-t border-border align-top">
+                  <tr key={checkout.id} className="border-t border-border align-top bg-white">
                     <td className="p-3 font-mono text-xs whitespace-nowrap">
                       #{checkout.id.slice(0, 8)}
                     </td>

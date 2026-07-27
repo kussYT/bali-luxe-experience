@@ -12,6 +12,17 @@ import { isDatabaseConfigured } from "./db/pool.mjs";
 import { buildOrderItemFromCartLine, isManualInvoiceOrder } from "./db/orders.mjs";
 import { getStripe, getSiteUrl } from "./stripe-client.mjs";
 import {
+  shippingDetailsFromStripeSession,
+  hasUsableShippingAddress,
+  mergeShippingForFulfillment,
+} from "./shipping-address.mjs";
+import {
+  isMondialRelayCountry,
+  normalizePickupPoint,
+  isMondialRelayAddress,
+  getMondialRelayBrandId,
+} from "./mondial-relay.mjs";
+import {
   unitPrice,
   toStripeAmount,
   stripeCurrency,
@@ -122,11 +133,13 @@ function normalizeCheckoutCountry(raw, fallback = "FR") {
   return code;
 }
 
-function stripeSessionMetadata({ orderId, promoCode, countryCode }) {
+function stripeSessionMetadata({ orderId, promoCode, countryCode, shippingMethod, pickupId }) {
   return {
     orderId,
     promoCode: promoCode || "",
     countryCode: normalizeCheckoutCountry(countryCode),
+    shippingMethod: shippingMethod || "home",
+    pickupId: pickupId || "",
   };
 }
 
@@ -143,7 +156,13 @@ function stripeShippingAddressCollection(countryCode) {
 }
 
 async function validatePaidCheckout(order, stripeSession) {
-  const shippingCountry = shippingCountryFromStripeSession(stripeSession);
+  const isRelay =
+    isMondialRelayAddress(order.shippingAddress) ||
+    stripeSession.metadata?.shippingMethod === "mondial_relay";
+
+  const shippingCountry =
+    shippingCountryFromStripeSession(stripeSession) ||
+    (isRelay ? order.shippingAddress?.country || order.shippingCountryCode : null);
   const expectedCountry = normalizeCheckoutCountry(
     stripeSession.metadata?.countryCode || order.countryCode,
   );
@@ -188,7 +207,9 @@ async function validatePaidCheckout(order, stripeSession) {
   }
 }
 
-function paymentMetaFromStripeSession(stripeSession, stripeEventId = null) {
+function paymentMetaFromStripeSession(stripeSession, stripeEventId = null, existingOrder = null) {
+  const fromStripe = shippingDetailsFromStripeSession(stripeSession);
+  const shippingAddress = mergeShippingForFulfillment(existingOrder?.shippingAddress, fromStripe);
   return {
     stripeSessionId: stripeSession.id,
     stripePaymentIntentId:
@@ -197,11 +218,27 @@ function paymentMetaFromStripeSession(stripeSession, stripeEventId = null) {
         : stripeSession.payment_intent?.id,
     stripeEventId,
     customerEmail: stripeSession.customer_details?.email || stripeSession.customer_email,
+    customerName:
+      shippingAddress?.name ||
+      existingOrder?.customerName ||
+      stripeSession.customer_details?.name ||
+      null,
+    customerPhone:
+      shippingAddress?.phone ||
+      fromStripe?.phone ||
+      existingOrder?.customerPhone ||
+      stripeSession.customer_details?.phone ||
+      null,
+    shippingAddress,
     amountTotal: stripeSession.amount_total,
     amountSubtotal: stripeSession.amount_subtotal,
     amountShipping: stripeSession.total_details?.amount_shipping ?? null,
     currency: stripeSession.currency?.toUpperCase(),
-    shippingCountryCode: shippingCountryFromStripeSession(stripeSession),
+    shippingCountryCode:
+      shippingAddress?.country ||
+      shippingCountryFromStripeSession(stripeSession) ||
+      existingOrder?.shippingCountryCode ||
+      null,
   };
 }
 
@@ -231,14 +268,25 @@ function buildOrderItems(resolved, currency) {
   });
 }
 
-async function fulfillFreeOrder({ orderId, promo, customerEmail, countryCode, currency, amounts }) {
+async function fulfillFreeOrder({
+  orderId,
+  promo,
+  customerEmail,
+  countryCode,
+  currency,
+  amounts,
+  shippingAddress = null,
+  customerName = null,
+}) {
   const { order: paid, newlyPaid } = await markOrderPaid(orderId, {
     customerEmail,
+    customerName,
+    shippingAddress,
     amountTotal: 0,
     amountSubtotal: amounts.subtotalSmallest - amounts.productDiscount,
     amountShipping: amounts.shippingSmallest - amounts.shippingDiscount,
     currency: currency.toLowerCase(),
-    shippingCountryCode: countryCode,
+    shippingCountryCode: shippingAddress?.country || countryCode,
     promoCode: promo.code,
   });
   if (isDatabaseConfigured() && newlyPaid) {
@@ -254,6 +302,8 @@ export async function createCheckoutSession({
   countryCode,
   promoCode,
   customerEmail,
+  shippingMethod = "home",
+  pickupPoint = null,
 }) {
   const allowed = ["EUR", "USD", "IDR"];
   if (!allowed.includes(currency)) {
@@ -263,6 +313,23 @@ export async function createCheckoutSession({
   }
 
   const checkoutCountry = normalizeCheckoutCountry(countryCode);
+  const method = shippingMethod === "mondial_relay" ? "mondial_relay" : "home";
+  let relayAddress = null;
+
+  if (method === "mondial_relay") {
+    if (!isMondialRelayCountry(checkoutCountry)) {
+      const err = new Error("Mondial Relay n’est pas disponible pour ce pays");
+      err.status = 400;
+      throw err;
+    }
+    relayAddress = normalizePickupPoint(pickupPoint, checkoutCountry);
+    if (!relayAddress) {
+      const err = new Error("Sélectionnez un Point Relais Mondial Relay");
+      err.status = 400;
+      throw err;
+    }
+  }
+
   const catalog = await readCatalog();
   const resolved = await validateCartItems(catalog, items, checkoutCountry);
   const siteUrl = getSiteUrl();
@@ -287,7 +354,7 @@ export async function createCheckoutSession({
   if (promoCode?.trim()) {
     promo = await validatePromoCode(promoCode);
     try {
-      amounts = { ...computePromoAmounts({ promo, resolved, currency, shippingSmallest }), shippingSmallest };
+      amounts = { ...computePromoAmounts({ promo, resolved, currency, shippingSmallest, countryCode: checkoutCountry }), shippingSmallest };
     } catch (e) {
       const err = new Error(e.message || "Code promo invalide pour ce panier");
       err.status = e.status || 400;
@@ -307,11 +374,18 @@ export async function createCheckoutSession({
     amountSubtotal: amounts.subtotalSmallest - amounts.productDiscount,
     amountShipping: Math.max(0, amounts.shippingSmallest - amounts.shippingDiscount),
     amountTotal: amounts.totalSmallest,
+    customerName: relayAddress?.name || null,
+    shippingAddress: relayAddress,
   });
 
   if (amounts.isFullyFree) {
     if (!customerEmail?.trim()) {
       const err = new Error("Email requis pour une commande cadeau");
+      err.status = 400;
+      throw err;
+    }
+    if (method === "mondial_relay" && !relayAddress) {
+      const err = new Error("Sélectionnez un Point Relais Mondial Relay");
       err.status = 400;
       throw err;
     }
@@ -322,6 +396,8 @@ export async function createCheckoutSession({
       countryCode: checkoutCountry,
       currency,
       amounts,
+      shippingAddress: relayAddress,
+      customerName: relayAddress?.name || null,
     });
     return {
       url: `${siteUrl}/checkout/success?order_id=${order.id}&free=1`,
@@ -363,11 +439,23 @@ export async function createCheckoutSession({
     shippingSmallest - (amounts.shippingDiscount || 0),
   );
 
+  const shippingLabel = promo?.freeShipping
+    ? "Complimentary shipping"
+    : method === "mondial_relay"
+      ? "Mondial Relay — Point Relais"
+      : "Standard shipping";
+
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     line_items,
     client_reference_id: order.id,
-    metadata: stripeSessionMetadata({ orderId: order.id, promoCode: promo?.code, countryCode: checkoutCountry }),
+    metadata: stripeSessionMetadata({
+      orderId: order.id,
+      promoCode: promo?.code,
+      countryCode: checkoutCountry,
+      shippingMethod: method,
+      pickupId: relayAddress?.pickupId,
+    }),
     success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${siteUrl}/checkout/cancel`,
     shipping_address_collection: stripeShippingAddressCollection(checkoutCountry),
@@ -379,10 +467,10 @@ export async function createCheckoutSession({
             amount: finalShipping,
             currency: stripeCurrency(currency),
           },
-          display_name: promo?.freeShipping ? "Complimentary shipping" : "Standard shipping",
+          display_name: shippingLabel,
           delivery_estimate: {
-            minimum: { unit: "business_day", value: 5 },
-            maximum: { unit: "business_day", value: 14 },
+            minimum: { unit: "business_day", value: method === "mondial_relay" ? 3 : 5 },
+            maximum: { unit: "business_day", value: method === "mondial_relay" ? 8 : 14 },
           },
         },
       },
@@ -391,6 +479,15 @@ export async function createCheckoutSession({
     billing_address_collection: "required",
     phone_number_collection: { enabled: true },
     customer_email: customerEmail?.trim() || undefined,
+    custom_text:
+      method === "mondial_relay"
+        ? {
+            shipping_address: {
+              message:
+                "Point Relais déjà choisi sur le site — indiquez votre adresse (facturation / contact). Le colis ira au Point Relais sélectionné.",
+            },
+          }
+        : undefined,
   });
 
   await attachStripeSession(order.id, session.id);
@@ -566,7 +663,7 @@ export async function resumeCheckoutSession(orderId) {
     const promoCode = order.promoCode?.trim();
     if (promoCode) {
       promo = await validatePromoCode(promoCode);
-      amounts = { ...computePromoAmounts({ promo, resolved, currency, shippingSmallest }), shippingSmallest };
+      amounts = { ...computePromoAmounts({ promo, resolved, currency, shippingSmallest, countryCode: checkoutCountry }), shippingSmallest };
     } else {
       amounts.totalSmallest = amounts.subtotalSmallest + shippingSmallest;
     }
@@ -602,7 +699,7 @@ export async function fulfillPaidSession(stripeSession, stripeEventId = null) {
   if (existing.status === "on_hold") return existing;
 
   const promoCode = stripeSession.metadata?.promoCode?.trim() || null;
-  const paymentMeta = paymentMetaFromStripeSession(stripeSession, stripeEventId);
+  const paymentMeta = paymentMetaFromStripeSession(stripeSession, stripeEventId, existing);
   const validation = await validatePaidCheckout(existing, stripeSession);
 
   if (!validation.ok) {
@@ -688,5 +785,39 @@ export async function getCheckoutSessionStatus(sessionId, orderId) {
     status: session.payment_status,
     customerEmail: session.customer_details?.email,
     order: updated,
+  };
+}
+
+/**
+ * For older paid orders: pull shipping from Stripe Checkout Session and persist.
+ */
+export async function enrichOrderShippingFromStripe(order) {
+  if (!order?.stripeSessionId) return order;
+  if (hasUsableShippingAddress(order.shippingAddress)) return order;
+
+  const stripe = getStripe();
+  const session = await stripe.checkout.sessions.retrieve(order.stripeSessionId);
+  const shippingAddress = shippingDetailsFromStripeSession(session);
+  if (!hasUsableShippingAddress(shippingAddress)) return order;
+
+  const { updateOrderShippingDetails } = await import("./db/orders.mjs");
+  const saved = await updateOrderShippingDetails(order.id, shippingAddress);
+  return saved || { ...order, shippingAddress, customerName: shippingAddress.name, customerPhone: shippingAddress.phone };
+}
+
+/** Public config for cart shipping method UI. */
+export function getShippingOptionsForCountry(countryCode) {
+  const code = normalizeCheckoutCountry(countryCode);
+  const mondialEnabled = isMondialRelayCountry(code);
+  return {
+    countryCode: code,
+    methods: mondialEnabled ? ["home", "mondial_relay"] : ["home"],
+    mondialRelay: mondialEnabled
+      ? {
+          enabled: true,
+          brandId: getMondialRelayBrandId(),
+          countries: ["FR", "BE", "LU", "NL", "ES"],
+        }
+      : { enabled: false, brandId: null, countries: [] },
   };
 }

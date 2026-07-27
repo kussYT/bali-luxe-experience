@@ -49,7 +49,7 @@ export async function postValidatePromo(body) {
   try {
     amounts =
       resolved.length > 0
-        ? computePromoAmounts({ promo, resolved, currency, shippingSmallest })
+        ? computePromoAmounts({ promo, resolved, currency, shippingSmallest, countryCode })
         : {
             subtotalSmallest: 0,
             eligibleSubtotalSmallest: 0,

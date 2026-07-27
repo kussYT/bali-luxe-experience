@@ -1,23 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
-export const Route = createFileRoute("/checkout/resume")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    order: typeof search.order === "string" ? search.order : undefined,
-  }),
+/** Short payment link used in emails — less fragile than long query-string URLs. */
+export const Route = createFileRoute("/pay/$orderId")({
   head: () => ({
     meta: [{ title: "Complete your purchase — Bingin Diaries" }],
   }),
-  component: CheckoutResumePage,
+  component: PayOrderPage,
 });
 
-function CheckoutResumePage() {
-  const { order } = Route.useSearch();
+function PayOrderPage() {
+  const { orderId } = Route.useParams();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!order) {
-      setError("Invalid link — no order found.");
+    if (!orderId?.trim()) {
+      setError("Invalid payment link — no order found.");
       return;
     }
 
@@ -27,7 +25,7 @@ function CheckoutResumePage() {
         const res = await fetch("/api/checkout/resume", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId: order }),
+          body: JSON.stringify({ orderId: orderId.trim() }),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
@@ -47,7 +45,7 @@ function CheckoutResumePage() {
     return () => {
       cancelled = true;
     };
-  }, [order]);
+  }, [orderId]);
 
   return (
     <section className="page-wrap section-pad py-24 md:py-32 max-w-2xl mx-auto text-center">

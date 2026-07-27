@@ -188,6 +188,21 @@ export type AboutContent = {
   sidebarLinks: AboutSidebarLink[];
 };
 
+export type AboutLocaleFields = {
+  eyebrow: string;
+  title: string;
+  metaDescription: string;
+  sections: AboutSection[];
+  values: AboutValue[];
+  sidebarLinks: AboutSidebarLink[];
+};
+
+/** About page as stored in CMS (shared YouTube + per-locale copy). */
+export type AboutStored = {
+  youtubeId: string;
+  locales: Partial<Record<import("@/lib/i18n/messages").Locale, AboutLocaleFields>>;
+};
+
 export type StockistStore = {
   name: string;
   instagram?: string;
@@ -262,6 +277,22 @@ export type SizingContent = {
   imageFocal?: ImageFocal;
   imageAlt: string;
   backLink: string;
+};
+
+export type SizingLocaleFields = {
+  eyebrow: string;
+  title: string;
+  metaDescription: string;
+  body: string[];
+  imageAlt: string;
+  backLink: string;
+};
+
+/** Size guide as stored in CMS (shared image + per-locale copy). */
+export type SizingStored = {
+  image: string;
+  imageFocal?: ImageFocal;
+  locales: Partial<Record<import("@/lib/i18n/messages").Locale, SizingLocaleFields>>;
 };
 
 export type FooterContent = {

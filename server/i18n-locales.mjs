@@ -20,6 +20,11 @@ export function resolvePageLocaleBlock(locales, locale) {
   return null;
 }
 
+/** About / sizing / care page blobs — valid when title is set. */
+export function resolveCmsBlobLocaleBlock(locales, locale) {
+  return resolvePageLocaleBlock(locales, locale);
+}
+
 /** Same fallback chain as pages — post blocks use title, excerpt, category, body. */
 export function resolvePostLocaleBlock(locales, locale) {
   return resolvePageLocaleBlock(locales, locale);

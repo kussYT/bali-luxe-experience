@@ -33,6 +33,7 @@ import {
   promoStatusLabel,
 } from "@/lib/promo-admin";
 import { Badge } from "@/components/ui/badge";
+import { SHIPPING_COUNTRIES } from "@/data/shipping-countries";
 
 export const Route = createFileRoute("/admin/promotions/")({
   head: () => ({ meta: [{ title: "Promotions — Bingin Diaries Admin" }] }),
@@ -145,8 +146,19 @@ function AdminPromotionsPage() {
     setProductQuery("");
   }
 
-  function applyPreset(preset: "collection" | "influencer" | "product" | "newsletter" | "loyalty" | "friends") {
-    if (preset === "influencer") {
+  function applyPreset(
+    preset: "collection" | "influencer" | "product" | "newsletter" | "loyalty" | "friends" | "freeship",
+  ) {
+    if (preset === "freeship") {
+      setDraft({
+        ...EMPTY,
+        discountType: "percent",
+        discountValue: 0,
+        freeShipping: true,
+        label: "Livraison offerte",
+        rules: { ...DEFAULT_PROMO_RULES, scope: "all", minSubtotalEur: 120 },
+      });
+    } else if (preset === "influencer") {
       setDraft({
         ...EMPTY,
         category: "influencer",
@@ -322,6 +334,9 @@ function AdminPromotionsPage() {
       </div>
 
       <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" size="sm" onClick={() => applyPreset("freeship")}>
+          Preset · Livraison offerte
+        </Button>
         <Button type="button" variant="outline" size="sm" onClick={() => applyPreset("newsletter")}>
           Preset · Newsletter
         </Button>
@@ -386,15 +401,28 @@ function AdminPromotionsPage() {
               <div className="space-y-2">
                 <Label>Type</Label>
                 <Select
-                  value={draft.discountType || "percent"}
-                  onValueChange={(v) =>
+                  value={
+                    draft.freeShipping && (draft.discountValue ?? 0) === 0 && draft.discountType !== "free"
+                      ? "shipping"
+                      : draft.discountType || "percent"
+                  }
+                  onValueChange={(v) => {
+                    if (v === "shipping") {
+                      setDraft({
+                        ...draft,
+                        discountType: "percent",
+                        discountValue: 0,
+                        freeShipping: true,
+                      });
+                      return;
+                    }
                     setDraft({
                       ...draft,
                       discountType: v as AdminPromoCode["discountType"],
-                      discountValue: v === "free" ? 100 : draft.discountValue,
+                      discountValue: v === "free" ? 100 : draft.discountValue || 10,
                       freeShipping: v === "free" ? true : draft.freeShipping,
-                    })
-                  }
+                    });
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -402,7 +430,8 @@ function AdminPromotionsPage() {
                   <SelectContent>
                     <SelectItem value="percent">Pourcentage</SelectItem>
                     <SelectItem value="fixed">Montant fixe (€)</SelectItem>
-                    <SelectItem value="free">100 % cadeau</SelectItem>
+                    <SelectItem value="shipping">Livraison offerte seule</SelectItem>
+                    <SelectItem value="free">100 % cadeau (produit)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -411,8 +440,14 @@ function AdminPromotionsPage() {
                 <MoneyInput
                   value={draft.discountValue ?? 0}
                   onChange={(n) => setDraft({ ...draft, discountValue: n ?? 0 })}
-                  disabled={draft.discountType === "free"}
+                  disabled={
+                    draft.discountType === "free" ||
+                    (Boolean(draft.freeShipping) && (draft.discountValue ?? 0) === 0)
+                  }
                 />
+                <p className="text-xs text-muted-foreground">
+                  Pour une livraison gratuite seule, choisissez « Livraison offerte seule » (valeur 0).
+                </p>
               </div>
               <div className="space-y-2">
                 <Label>Influenceur (optionnel)</Label>
@@ -528,16 +563,16 @@ function AdminPromotionsPage() {
               )}
             </div>
 
-            <details className="border border-border rounded-sm p-4">
-              <summary className="text-sm font-medium cursor-pointer">Avancé (optionnel)</summary>
-              <div className="grid gap-4 sm:grid-cols-2 mt-4">
+            <div className="border border-border rounded-sm p-4 space-y-4">
+              <p className="text-sm font-medium">Conditions (panier min., dates, pays)</p>
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Panier éligible min. (€)</Label>
                   <MoneyInput
                     allowEmpty
                     value={rules.minSubtotalEur ?? undefined}
                     onChange={(n) => patchRules({ minSubtotalEur: n ?? null })}
-                    placeholder="Ex. 80"
+                    placeholder="Ex. 120 pour BDFREESHIPPING"
                   />
                 </div>
                 <div className="space-y-2">
@@ -557,7 +592,44 @@ function AdminPromotionsPage() {
                   />
                 </div>
               </div>
-            </details>
+              <div className="space-y-2">
+                <Label>Pays de livraison (vide = tous)</Label>
+                <p className="text-xs text-muted-foreground">
+                  Cliquez pour limiter le code à certains pays. Ex. FR, DE, ID…
+                </p>
+                <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+                  {SHIPPING_COUNTRIES.map((c) => {
+                    const selected = (rules.countryCodes || []).includes(c.code);
+                    return (
+                      <Button
+                        key={c.code}
+                        type="button"
+                        size="sm"
+                        variant={selected ? "default" : "outline"}
+                        onClick={() => {
+                          const set = new Set(rules.countryCodes || []);
+                          if (set.has(c.code)) set.delete(c.code);
+                          else set.add(c.code);
+                          patchRules({ countryCodes: [...set] });
+                        }}
+                      >
+                        {c.code}
+                      </Button>
+                    );
+                  })}
+                </div>
+                {(rules.countryCodes || []).length > 0 && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => patchRules({ countryCodes: [] })}
+                  >
+                    Tous les pays
+                  </Button>
+                )}
+              </div>
+            </div>
 
             <div className="flex flex-wrap gap-2">
               <Button type="submit">{editingId ? "Enregistrer" : "Créer le code"}</Button>
@@ -590,14 +662,24 @@ function AdminPromotionsPage() {
                 </div>
                 {promo.label && <p className="text-sm text-foreground/90">{promo.label}</p>}
                 <p className="text-sm text-muted-foreground">
-                  {promo.discountType === "free"
-                    ? "Cadeau 100 %"
-                    : promo.discountType === "percent"
-                      ? `${promo.discountValue} %`
-                      : `${promo.discountValue} €`}
-                  {promo.freeShipping ? " · livraison offerte" : ""}
+                  {promo.freeShipping && (promo.discountValue ?? 0) === 0 && promo.discountType !== "free"
+                    ? "Livraison offerte"
+                    : promo.discountType === "free"
+                      ? "Cadeau 100 %"
+                      : promo.discountType === "percent"
+                        ? `${promo.discountValue} %`
+                        : `${promo.discountValue} €`}
+                  {promo.freeShipping && !((promo.discountValue ?? 0) === 0 && promo.discountType !== "free")
+                    ? " · livraison offerte"
+                    : ""}
                   {" · "}
                   {scopeSummary(promo.rules)}
+                  {promo.rules?.minSubtotalEur
+                    ? ` · min. ${promo.rules.minSubtotalEur} €`
+                    : ""}
+                  {promo.rules?.countryCodes?.length
+                    ? ` · pays: ${promo.rules.countryCodes.join(", ")}`
+                    : ""}
                   {promo.influencerName ? ` · ${promo.influencerName}` : ""}
                 </p>
                 <p className="text-xs text-muted-foreground">

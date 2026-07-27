@@ -29,6 +29,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as WishlistTokenRouteImport } from './routes/wishlist.$token'
 import { Route as UploadsSplatRouteImport } from './routes/uploads/$'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
+import { Route as PayOrderIdRouteImport } from './routes/pay.$orderId'
 import { Route as JournalSlugRouteImport } from './routes/journal.$slug'
 import { Route as CheckoutSuccessRouteImport } from './routes/checkout.success'
 import { Route as CheckoutResumeRouteImport } from './routes/checkout.resume'
@@ -164,6 +165,11 @@ const UploadsSplatRoute = UploadsSplatRouteImport.update({
 const ProductSlugRoute = ProductSlugRouteImport.update({
   id: '/product/$slug',
   path: '/product/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PayOrderIdRoute = PayOrderIdRouteImport.update({
+  id: '/pay/$orderId',
+  path: '/pay/$orderId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JournalSlugRoute = JournalSlugRouteImport.update({
@@ -377,6 +383,7 @@ export interface FileRoutesByFullPath {
   '/checkout/resume': typeof CheckoutResumeRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/journal/$slug': typeof JournalSlugRoute
+  '/pay/$orderId': typeof PayOrderIdRoute
   '/product/$slug': typeof ProductSlugRoute
   '/uploads/$': typeof UploadsSplatRoute
   '/wishlist/$token': typeof WishlistTokenRoute
@@ -434,6 +441,7 @@ export interface FileRoutesByTo {
   '/checkout/resume': typeof CheckoutResumeRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/journal/$slug': typeof JournalSlugRoute
+  '/pay/$orderId': typeof PayOrderIdRoute
   '/product/$slug': typeof ProductSlugRoute
   '/uploads/$': typeof UploadsSplatRoute
   '/wishlist/$token': typeof WishlistTokenRoute
@@ -493,6 +501,7 @@ export interface FileRoutesById {
   '/checkout/resume': typeof CheckoutResumeRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/journal/$slug': typeof JournalSlugRoute
+  '/pay/$orderId': typeof PayOrderIdRoute
   '/product/$slug': typeof ProductSlugRoute
   '/uploads/$': typeof UploadsSplatRoute
   '/wishlist/$token': typeof WishlistTokenRoute
@@ -553,6 +562,7 @@ export interface FileRouteTypes {
     | '/checkout/resume'
     | '/checkout/success'
     | '/journal/$slug'
+    | '/pay/$orderId'
     | '/product/$slug'
     | '/uploads/$'
     | '/wishlist/$token'
@@ -610,6 +620,7 @@ export interface FileRouteTypes {
     | '/checkout/resume'
     | '/checkout/success'
     | '/journal/$slug'
+    | '/pay/$orderId'
     | '/product/$slug'
     | '/uploads/$'
     | '/wishlist/$token'
@@ -668,6 +679,7 @@ export interface FileRouteTypes {
     | '/checkout/resume'
     | '/checkout/success'
     | '/journal/$slug'
+    | '/pay/$orderId'
     | '/product/$slug'
     | '/uploads/$'
     | '/wishlist/$token'
@@ -720,6 +732,7 @@ export interface RootRouteChildren {
   CheckoutResumeRoute: typeof CheckoutResumeRoute
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   JournalSlugRoute: typeof JournalSlugRoute
+  PayOrderIdRoute: typeof PayOrderIdRoute
   ProductSlugRoute: typeof ProductSlugRoute
   UploadsSplatRoute: typeof UploadsSplatRoute
   WishlistTokenRoute: typeof WishlistTokenRoute
@@ -865,6 +878,13 @@ declare module '@tanstack/react-router' {
       path: '/product/$slug'
       fullPath: '/product/$slug'
       preLoaderRoute: typeof ProductSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pay/$orderId': {
+      id: '/pay/$orderId'
+      path: '/pay/$orderId'
+      fullPath: '/pay/$orderId'
+      preLoaderRoute: typeof PayOrderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/journal/$slug': {
@@ -1216,6 +1236,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutResumeRoute: CheckoutResumeRoute,
   CheckoutSuccessRoute: CheckoutSuccessRoute,
   JournalSlugRoute: JournalSlugRoute,
+  PayOrderIdRoute: PayOrderIdRoute,
   ProductSlugRoute: ProductSlugRoute,
   UploadsSplatRoute: UploadsSplatRoute,
   WishlistTokenRoute: WishlistTokenRoute,

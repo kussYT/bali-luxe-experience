@@ -5,15 +5,17 @@ import {
   DEFAULT_HOMEPAGE,
   mergeAnnouncement,
   mergeHomepage,
-  mergeAbout,
   mergeFindUs,
   mergeContact,
   mergeCare,
-  mergeSizing,
   mergeFooter,
   mergeProductMessages,
   resolveProductMessages,
   resolveNavigation,
+  resolveAbout,
+  resolveSizing,
+  normalizeAboutStored,
+  normalizeSizingStored,
   navigationStoredForAdmin,
 } from "../content-defaults.mjs";
 
@@ -40,9 +42,9 @@ export async function updateHomepageContent(patch) {
   return getHomepageContent();
 }
 
-export async function getAboutContent() {
+export async function getAboutContent(locale = "fr") {
   const stored = await getSetting("about", null);
-  return mergeAbout(stored);
+  return resolveAbout(stored, locale);
 }
 
 export async function getFindUsContent() {
@@ -60,9 +62,9 @@ export async function getCareContent() {
   return mergeCare(stored);
 }
 
-export async function getSizingContent() {
+export async function getSizingContent(locale = "fr") {
   const stored = await getSetting("sizing", null);
-  return mergeSizing(stored);
+  return resolveSizing(stored, locale);
 }
 
 export async function getFooterContent() {
@@ -97,11 +99,11 @@ export async function getPublicSiteContent({ locale } = {}) {
         navigation: resolveNavigation(homepage.navigation, locale),
       };
     })(),
-    about: mergeAbout(stored.about),
+    about: resolveAbout(stored.about, locale),
     findUs: mergeFindUs(stored.findUs),
     contact: mergeContact(stored.contact),
     care: mergeCare(stored.care),
-    sizing: mergeSizing(stored.sizing),
+    sizing: resolveSizing(stored.sizing, locale),
     footer: mergeFooter(stored.footer),
     productMessages: resolveProductMessages(stored.productMessages, locale),
     defaults: { homepage: DEFAULT_HOMEPAGE },
@@ -122,11 +124,11 @@ export async function getAdminSiteContent() {
   ]);
   const storedHomepage = stored.homepage || {};
   const storedAnnouncement = stored.announcement || {};
-  const storedAbout = stored.about || {};
+  const storedAbout = normalizeAboutStored(stored.about);
   const storedFindUs = stored.findUs || {};
   const storedContact = stored.contact || {};
   const storedCare = stored.care || {};
-  const storedSizing = stored.sizing || {};
+  const storedSizing = normalizeSizingStored(stored.sizing);
   const storedFooter = stored.footer || {};
   const storedProductMessages = stored.productMessages || {};
   const homepageMerged = mergeHomepage(storedHomepage);
@@ -138,11 +140,11 @@ export async function getAdminSiteContent() {
       navigation: resolveNavigation(storedHomepage?.navigation, "en"),
       navigationStored: { locales: navigationStored.locales },
     },
-    about: mergeAbout(storedAbout),
+    about: storedAbout,
     findUs: mergeFindUs(storedFindUs),
     contact: mergeContact(storedContact),
     care: mergeCare(storedCare),
-    sizing: mergeSizing(storedSizing),
+    sizing: storedSizing,
     footer: mergeFooter(storedFooter),
     productMessages: mergeProductMessages(storedProductMessages),
     stored: {
@@ -168,7 +170,8 @@ export async function patchAdminSiteContent(body) {
     invalidateCache("site-content:");
   }
   if (body.about) {
-    await setSetting("about", body.about);
+    await setSetting("about", normalizeAboutStored(body.about));
+    invalidateCache("site-content:");
   }
   if (body.findUs) {
     await setSetting("findUs", body.findUs);
@@ -180,7 +183,8 @@ export async function patchAdminSiteContent(body) {
     await setSetting("care", body.care);
   }
   if (body.sizing) {
-    await setSetting("sizing", body.sizing);
+    await setSetting("sizing", normalizeSizingStored(body.sizing));
+    invalidateCache("site-content:");
   }
   if (body.footer) {
     await setSetting("footer", body.footer);

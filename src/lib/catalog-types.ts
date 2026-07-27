@@ -62,6 +62,8 @@ export type Product = {
   compareAtEUR?: number;
   priceUSD: number;
   priceIDR: number;
+  /** Short packing code e.g. RSP — used as RSP-M with size */
+  referenceCode?: string;
   images: string[];
   /** Per-image focal points (same order as images) */
   imageFocals?: { x: number; y: number }[];

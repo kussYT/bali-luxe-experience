@@ -2,10 +2,36 @@ import { randomUUID } from "node:crypto";
 import { query, withTransaction, isDatabaseConfigured } from "./pool.mjs";
 import { decrementInventoryForSale } from "./fulfillment.mjs";
 import { getDefaultVariant, preferredWarehouse } from "../warehouse-allocation.mjs";
+import { hasUsableShippingAddress } from "../shipping-address.mjs";
 
 export const ORDER_CHANNELS = ["website", "wolf_badger", "other", "influencer"];
 
+function normalizeShippingAddress(raw) {
+  if (!raw) return null;
+  const obj = typeof raw === "string" ? (() => {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  })() : raw;
+  if (!obj || typeof obj !== "object") return null;
+  return {
+    method: obj.method === "mondial_relay" ? "mondial_relay" : obj.method || "home",
+    pickupId: obj.pickupId || obj.pickup_id || null,
+    name: obj.name || null,
+    phone: obj.phone || null,
+    line1: obj.line1 || null,
+    line2: obj.line2 || null,
+    city: obj.city || null,
+    state: obj.state || null,
+    postalCode: obj.postalCode || obj.postal_code || null,
+    country: obj.country || null,
+  };
+}
+
 function mapOrderRow(row, items = []) {
+  const shippingAddress = normalizeShippingAddress(row.shipping_address);
   return {
     id: row.id,
     status: row.status,
@@ -17,6 +43,9 @@ function mapOrderRow(row, items = []) {
     shippingCountryCode: row.shipping_country_code || null,
     fulfillmentWarehouse: row.fulfillment_warehouse || null,
     customerEmail: row.customer_email || null,
+    customerName: row.customer_name || shippingAddress?.name || null,
+    customerPhone: row.customer_phone || shippingAddress?.phone || null,
+    shippingAddress,
     stripeSessionId: row.stripe_session_id || null,
     stripePaymentIntentId: row.stripe_payment_intent_id || null,
     amountSubtotal: row.amount_subtotal ?? null,
@@ -100,6 +129,8 @@ function mapItemRow(row) {
     slug: row.product_slug,
     name: row.product_name,
     variantTitle: row.variant_title || null,
+    sku: row.variant_sku || null,
+    productCode: row.product_reference_code || null,
     qty: row.qty,
     unitPrice: row.unit_price,
     warehouseId: row.warehouse_id,
@@ -111,7 +142,14 @@ async function loadItemsForOrders(orderIds, client = null) {
   if (orderIds.length === 0) return new Map();
   const q = client ? client.query.bind(client) : query;
   const { rows } = await q(
-    `SELECT * FROM order_items WHERE order_id = ANY($1::uuid[]) ORDER BY created_at ASC`,
+    `SELECT oi.*,
+            v.sku AS variant_sku,
+            p.reference_code AS product_reference_code
+     FROM order_items oi
+     LEFT JOIN product_variants v ON v.id = oi.variant_id
+     LEFT JOIN products p ON p.id = oi.product_id
+     WHERE oi.order_id = ANY($1::uuid[])
+     ORDER BY oi.created_at ASC`,
     [orderIds],
   );
   const map = new Map();
@@ -131,6 +169,9 @@ export async function createPendingOrder({
   amountSubtotal,
   amountShipping,
   amountTotal,
+  customerName = null,
+  customerPhone = null,
+  shippingAddress = null,
 }) {
   if (!isDatabaseConfigured()) {
     const err = new Error("Database not configured");
@@ -140,20 +181,27 @@ export async function createPendingOrder({
 
   const orderId = randomUUID();
   const fulfillmentWarehouse = items[0]?.warehouseId || null;
+  const addressJson = shippingAddress ? JSON.stringify(shippingAddress) : null;
+  const shipCountry = shippingAddress?.country || countryCode || null;
 
   return withTransaction(async (client) => {
     await client.query(
       `INSERT INTO orders (
-         id, status, channel, currency, country_code, fulfillment_warehouse,
-         customer_email, promo_code, amount_subtotal, amount_shipping, amount_total
+         id, status, channel, currency, country_code, shipping_country_code, fulfillment_warehouse,
+         customer_email, customer_name, customer_phone, shipping_address,
+         promo_code, amount_subtotal, amount_shipping, amount_total
        )
-       VALUES ($1, 'pending', 'website', $2, $3, $4, $5, $6, $7, $8, $9)`,
+       VALUES ($1, 'pending', 'website', $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11, $12, $13)`,
       [
         orderId,
         currency,
         countryCode || null,
+        shipCountry,
         fulfillmentWarehouse,
         customerEmail || null,
+        customerName || shippingAddress?.name || null,
+        customerPhone || shippingAddress?.phone || null,
+        addressJson,
         promoCode || null,
         amountSubtotal ?? null,
         amountShipping ?? null,
@@ -226,6 +274,9 @@ export async function holdOrderAfterPaymentBlocked(
     stripePaymentIntentId,
     stripeEventId,
     customerEmail,
+    customerName,
+    customerPhone,
+    shippingAddress,
     amountTotal,
     amountSubtotal,
     amountShipping,
@@ -254,6 +305,7 @@ export async function holdOrderAfterPaymentBlocked(
 
     const note = `${CHECKOUT_BLOCKED_NOTE} ${reason}`.trim();
     const mergedNotes = order.notes ? `${order.notes}\n${note}` : note;
+    const addressJson = shippingAddress ? JSON.stringify(shippingAddress) : null;
 
     await client.query(
       `UPDATE orders SET
@@ -268,6 +320,9 @@ export async function holdOrderAfterPaymentBlocked(
          currency = COALESCE($9, currency),
          shipping_country_code = COALESCE($10, shipping_country_code),
          notes = $11,
+         customer_name = COALESCE($12, customer_name),
+         customer_phone = COALESCE($13, customer_phone),
+         shipping_address = COALESCE($14::jsonb, shipping_address),
          paid_at = now(),
          updated_at = now()
        WHERE id = $1`,
@@ -283,6 +338,9 @@ export async function holdOrderAfterPaymentBlocked(
         currency,
         shippingCountryCode,
         mergedNotes,
+        customerName || shippingAddress?.name || null,
+        customerPhone || shippingAddress?.phone || null,
+        addressJson,
       ],
     );
 
@@ -301,6 +359,9 @@ export async function fulfillOrderPayment({
   stripePaymentIntentId,
   stripeEventId,
   customerEmail,
+  customerName,
+  customerPhone,
+  shippingAddress,
   amountTotal,
   amountSubtotal,
   amountShipping,
@@ -353,6 +414,7 @@ export async function fulfillOrderPayment({
 
     const shipCountry = shippingCountryCode || order.country_code;
     const fulfillmentWarehouse = order.fulfillment_warehouse || itemRows[0]?.warehouse_id || null;
+    const addressJson = shippingAddress ? JSON.stringify(shippingAddress) : null;
 
     await client.query(
       `UPDATE orders SET
@@ -368,6 +430,9 @@ export async function fulfillOrderPayment({
          shipping_country_code = COALESCE($10, shipping_country_code),
          fulfillment_warehouse = COALESCE($11, fulfillment_warehouse),
          promo_code = COALESCE($12, promo_code),
+         customer_name = COALESCE($13, customer_name),
+         customer_phone = COALESCE($14, customer_phone),
+         shipping_address = COALESCE($15::jsonb, shipping_address),
          paid_at = now(),
          updated_at = now()
        WHERE id = $1`,
@@ -384,6 +449,9 @@ export async function fulfillOrderPayment({
         shipCountry,
         fulfillmentWarehouse,
         promoCode || null,
+        customerName || shippingAddress?.name || null,
+        customerPhone || shippingAddress?.phone || null,
+        addressJson,
       ],
     );
 
@@ -391,6 +459,31 @@ export async function fulfillOrderPayment({
     const items = itemRows.map(mapItemRow);
     return { order: mapOrderRow(updated[0], items), newlyPaid: true };
   });
+}
+
+/** Persist shipping snapshot (e.g. backfill from Stripe for older orders). */
+export async function updateOrderShippingDetails(orderId, shippingAddress) {
+  if (!shippingAddress || !hasUsableShippingAddress(shippingAddress)) {
+    return findOrderById(orderId);
+  }
+  const addressJson = JSON.stringify(shippingAddress);
+  await query(
+    `UPDATE orders SET
+       customer_name = COALESCE($2, customer_name),
+       customer_phone = COALESCE($3, customer_phone),
+       shipping_address = COALESCE($4::jsonb, shipping_address),
+       shipping_country_code = COALESCE($5, shipping_country_code),
+       updated_at = now()
+     WHERE id = $1`,
+    [
+      orderId,
+      shippingAddress.name || null,
+      shippingAddress.phone || null,
+      addressJson,
+      shippingAddress.country || null,
+    ],
+  );
+  return findOrderById(orderId);
 }
 
 export async function listOrders({ limit = 100 } = {}) {
@@ -792,8 +885,22 @@ function csvEscape(value) {
   return s;
 }
 
-export async function exportOrdersCsv() {
-  const orders = await listOrdersAdmin();
+export async function exportOrdersCsv({ from = null, to = null } = {}) {
+  let orders = await listOrdersAdmin();
+  if (from) {
+    const start = new Date(from);
+    if (!Number.isNaN(start.getTime())) {
+      orders = orders.filter((o) => new Date(o.createdAt) >= start);
+    }
+  }
+  if (to) {
+    const end = new Date(to);
+    if (!Number.isNaN(end.getTime())) {
+      // include full end day when date-only
+      if (/^\d{4}-\d{2}-\d{2}$/.test(String(to))) end.setHours(23, 59, 59, 999);
+      orders = orders.filter((o) => new Date(o.createdAt) <= end);
+    }
+  }
   const headers = [
     "id",
     "status",
@@ -805,6 +912,13 @@ export async function exportOrdersCsv() {
     "tracking_number",
     "tracking_carrier",
     "customer_email",
+    "customer_name",
+    "customer_phone",
+    "shipping_line1",
+    "shipping_line2",
+    "shipping_city",
+    "shipping_postal_code",
+    "shipping_state",
     "currency",
     "amount_total",
     "shipping_country",
@@ -822,6 +936,7 @@ export async function exportOrdersCsv() {
         return `${label} x${i.qty}`;
       })
       .join("; ");
+    const addr = order.shippingAddress || {};
 
     lines.push(
       [
@@ -835,6 +950,13 @@ export async function exportOrdersCsv() {
         order.trackingNumber || "",
         order.trackingCarrier || "",
         order.customerEmail || "",
+        order.customerName || addr.name || "",
+        order.customerPhone || addr.phone || "",
+        addr.line1 || "",
+        addr.line2 || "",
+        addr.city || "",
+        addr.postalCode || "",
+        addr.state || "",
         order.currency,
         order.amountTotal ?? "",
         order.shippingCountryCode || order.countryCode || "",

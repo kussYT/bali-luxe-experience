@@ -3,7 +3,7 @@ import { uploadAdminFiles } from "@/lib/upload-admin-files";
 import type { CountryShippingRow } from "@/lib/country-shipping-types";
 import type { Catalog, Product } from "@/lib/catalog-types";
 import type {
-  AboutContent,
+  AboutStored,
   AnnouncementContent,
   CareContent,
   CmsPage,
@@ -15,7 +15,7 @@ import type {
   JournalPostBlock,
   ProductMessagesContent,
   ProductMessagesStored,
-  SizingContent,
+  SizingStored,
   AdminCollectionMeta,
 } from "@/lib/content-types";
 
@@ -117,6 +117,19 @@ export async function fetchAdminInventory() {
   return request<AdminInventoryResponse>("/api/admin/inventory");
 }
 
+export type AdminOrderShippingAddress = {
+  method?: "home" | "mondial_relay" | string | null;
+  pickupId?: string | null;
+  name: string | null;
+  phone: string | null;
+  line1: string | null;
+  line2: string | null;
+  city: string | null;
+  state: string | null;
+  postalCode: string | null;
+  country: string | null;
+};
+
 export type AdminOrder = {
   id: string;
   status: string;
@@ -128,7 +141,12 @@ export type AdminOrder = {
   shippingCountryCode: string | null;
   fulfillmentWarehouse: string | null;
   customerEmail: string | null;
+  customerName: string | null;
+  customerPhone: string | null;
+  shippingAddress: AdminOrderShippingAddress | null;
   stripeSessionId: string | null;
+  amountSubtotal?: number | null;
+  amountShipping?: number | null;
   amountTotal: number | null;
   paidAt: string | null;
   shippedAt: string | null;
@@ -145,6 +163,8 @@ export type AdminOrder = {
     slug: string;
     name: string;
     variantTitle: string | null;
+    sku?: string | null;
+    productCode?: string | null;
     qty: number;
     unitPrice: number;
     warehouseId: string;
@@ -259,8 +279,12 @@ export async function resendOrderConfirmation(orderId: string) {
   );
 }
 
-export function adminOrdersExportUrl() {
-  return "/api/admin/orders/export.csv";
+export function adminOrdersExportUrl(opts?: { from?: string; to?: string }) {
+  const params = new URLSearchParams();
+  if (opts?.from) params.set("from", opts.from);
+  if (opts?.to) params.set("to", opts.to);
+  const qs = params.toString();
+  return qs ? `/api/admin/orders/export.csv?${qs}` : "/api/admin/orders/export.csv";
 }
 
 export async function fetchAdminAnalytics() {
@@ -483,21 +507,21 @@ export async function fetchAdminSiteContent() {
   return request<{
     announcement: AnnouncementContent;
     homepage: HomepageContent;
-    about: AboutContent;
+    about: AboutStored;
     findUs: FindUsContent;
     contact: ContactContent;
     care: CareContent;
-    sizing: SizingContent;
+    sizing: SizingStored;
     footer: FooterContent;
     productMessages: ProductMessagesStored;
     stored: {
       announcement: Partial<AnnouncementContent>;
       homepage: Partial<HomepageContent>;
-      about: Partial<AboutContent>;
+      about: AboutStored;
       findUs: Partial<FindUsContent>;
       contact: Partial<ContactContent>;
       care: Partial<CareContent>;
-      sizing: Partial<SizingContent>;
+      sizing: SizingStored;
       footer: Partial<FooterContent>;
       productMessages: Partial<ProductMessagesStored>;
     };
@@ -508,32 +532,32 @@ export async function fetchAdminSiteContent() {
 export async function updateAdminSiteContent(payload: {
   announcement?: Partial<AnnouncementContent>;
   homepage?: Partial<HomepageContent>;
-  about?: AboutContent;
+  about?: AboutStored;
   findUs?: FindUsContent;
   contact?: ContactContent;
   care?: CareContent;
-  sizing?: SizingContent;
+  sizing?: SizingStored;
   footer?: FooterContent;
   productMessages?: ProductMessagesStored;
 }) {
   return request<{
     announcement: AnnouncementContent;
     homepage: HomepageContent;
-    about: AboutContent;
+    about: AboutStored;
     findUs: FindUsContent;
     contact: ContactContent;
     care: CareContent;
-    sizing: SizingContent;
+    sizing: SizingStored;
     footer: FooterContent;
     productMessages: ProductMessagesStored;
     stored: {
       announcement: Partial<AnnouncementContent>;
       homepage: Partial<HomepageContent>;
-      about: Partial<AboutContent>;
+      about: AboutStored;
       findUs: Partial<FindUsContent>;
       contact: Partial<ContactContent>;
       care: Partial<CareContent>;
-      sizing: Partial<SizingContent>;
+      sizing: SizingStored;
       footer: Partial<FooterContent>;
       productMessages: Partial<ProductMessagesStored>;
     };
@@ -784,6 +808,80 @@ export async function autoTranslateProductMessages(payload: {
   });
 }
 
+export async function autoTranslateSizing(payload: {
+  sourceLocale: string;
+  targetLocales: string[];
+  fields: {
+    title: string;
+    eyebrow: string;
+    metaDescription: string;
+    body: string[];
+    imageAlt: string;
+    backLink: string;
+  };
+}) {
+  return request<{
+    locales: Record<
+      string,
+      {
+        title: string;
+        eyebrow: string;
+        metaDescription: string;
+        body: string[];
+        imageAlt: string;
+        backLink: string;
+      }
+    >;
+    provider: string;
+  }>("/api/admin/translate-sizing", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function autoTranslateAbout(payload: {
+  sourceLocale: string;
+  targetLocales: string[];
+  fields: {
+    title: string;
+    eyebrow: string;
+    metaDescription: string;
+    sections: { id: string; eyebrow: string; title: string; body: string }[];
+    values: { n: string; t: string; d: string }[];
+    sidebarLinks: {
+      label: string;
+      to: string;
+      hash?: string;
+      image: string;
+      imageFocal?: { x: number; y: number };
+    }[];
+  };
+}) {
+  return request<{
+    locales: Record<
+      string,
+      {
+        title: string;
+        eyebrow: string;
+        metaDescription: string;
+        sections: { id: string; eyebrow: string; title: string; body: string }[];
+        values: { n: string; t: string; d: string }[];
+        sidebarLinks: {
+          label: string;
+          to: string;
+          hash?: string;
+          image: string;
+          imageFocal?: { x: number; y: number };
+        }[];
+      }
+    >;
+    provider: string;
+  }>("/api/admin/translate-about", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function fetchCollectionProducts(slug: string) {
   return request<{ products: { slug: string; name: string; isPrimary: boolean }[] }>(
     `/api/admin/collections/${encodeURIComponent(slug)}/products`,
@@ -806,6 +904,8 @@ export type PromoRules = {
   productSlugs: string[];
   minSubtotalEur: number | null;
   startsAt: string | null;
+  /** Empty = all countries. Otherwise ISO codes e.g. ["FR","DE"]. */
+  countryCodes: string[];
 };
 
 export const DEFAULT_PROMO_RULES: PromoRules = {
@@ -814,6 +914,7 @@ export const DEFAULT_PROMO_RULES: PromoRules = {
   productSlugs: [],
   minSubtotalEur: null,
   startsAt: null,
+  countryCodes: [],
 };
 
 export type AdminPromoCode = {

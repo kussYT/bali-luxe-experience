@@ -2,8 +2,8 @@ import { toStripeAmount, unitPrice } from "./pricing.mjs";
 import { validatePromoEligibility } from "./promo-rules.mjs";
 
 /** Discount amounts in Stripe smallest currency unit (eligible lines only). */
-export function computePromoAmounts({ promo, resolved, currency, shippingSmallest }) {
-  const { eligible, ineligible } = validatePromoEligibility(promo, resolved);
+export function computePromoAmounts({ promo, resolved, currency, shippingSmallest, countryCode }) {
+  const { eligible, ineligible } = validatePromoEligibility(promo, resolved, { countryCode });
 
   const subtotalSmallest = resolved.reduce((sum, { product, variant, qty }) => {
     return sum + toStripeAmount(unitPrice(product, currency), currency) * qty;

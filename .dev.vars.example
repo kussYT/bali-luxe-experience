@@ -8,3 +8,5 @@ SITE_URL=http://localhost:8787
 RESEND_API_KEY=
 EMAIL_FROM=Bingin Diaries <info@bingindiaries.com>
 EMAIL_OPS=info@bingindiaries.com
+# Mondial Relay widget Brand ID (8 chars, pad with spaces). BDTEST = sandbox widget.
+MONDIAL_RELAY_BRAND_ID=BDTEST

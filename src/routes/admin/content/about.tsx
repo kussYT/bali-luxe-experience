@@ -1,29 +1,93 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { fetchAdminSiteContent, updateAdminSiteContent } from "@/lib/admin-api";
-import type { AboutContent } from "@/lib/content-types";
+import {
+  autoTranslateAbout,
+  fetchAdminSiteContent,
+  fetchTranslateStatus,
+  updateAdminSiteContent,
+} from "@/lib/admin-api";
+import type { AboutLocaleFields, AboutStored } from "@/lib/content-types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { ContentSubnav } from "@/components/admin/ContentSubnav";
 import { CmsField } from "@/components/admin/CmsField";
 import { CmsMediaField } from "@/components/admin/CmsMediaField";
+import { CMS_LOCALES, emptyAboutLocaleFields } from "@/lib/i18n/cms-locales";
+import type { Locale } from "@/lib/i18n/messages";
 
 export const Route = createFileRoute("/admin/content/about")({
   head: () => ({ meta: [{ title: "About — Bingin Diaries Admin" }] }),
   component: AdminAboutContentPage,
 });
 
+function localeFields(stored: AboutStored, code: Locale): AboutLocaleFields {
+  return stored.locales?.[code] || emptyAboutLocaleFields();
+}
+
 function AdminAboutContentPage() {
-  const [about, setAbout] = useState<AboutContent | null>(null);
+  const [about, setAbout] = useState<AboutStored | null>(null);
+  const [activeLocale, setActiveLocale] = useState<Locale>("fr");
+  const [sourceLocale, setSourceLocale] = useState<Locale>("fr");
+  const [translateAvailable, setTranslateAvailable] = useState<boolean | null>(null);
+  const [translating, setTranslating] = useState(false);
+  const [translateNote, setTranslateNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchTranslateStatus()
+      .then((s) => setTranslateAvailable(s.available))
+      .catch(() => setTranslateAvailable(false));
+  }, []);
 
   useEffect(() => {
     fetchAdminSiteContent()
       .then((res) => setAbout(res.about))
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load"));
   }, []);
+
+  function patchLocale(code: Locale, patch: Partial<AboutLocaleFields>) {
+    if (!about) return;
+    const current = localeFields(about, code);
+    setAbout({
+      ...about,
+      locales: {
+        ...about.locales,
+        [code]: { ...current, ...patch },
+      },
+    });
+  }
+
+  async function handleTranslate() {
+    if (!about) return;
+    const fields = localeFields(about, sourceLocale);
+    if (!fields.title.trim()) {
+      setTranslateNote("Renseignez un titre dans la langue source avant de traduire.");
+      return;
+    }
+    setTranslating(true);
+    setTranslateNote(null);
+    setError(null);
+    try {
+      const targets = CMS_LOCALES.map((l) => l.code).filter((c) => c !== sourceLocale);
+      const res = await autoTranslateAbout({
+        sourceLocale,
+        targetLocales: targets,
+        fields,
+      });
+      setAbout({
+        ...about,
+        locales: { ...about.locales, ...res.locales },
+      });
+      setTranslateNote(`Traduit via ${res.provider}. Relisez les autres langues avant publication.`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Traduction impossible");
+    } finally {
+      setTranslating(false);
+    }
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -46,37 +110,109 @@ function AdminAboutContentPage() {
     return <p className="text-muted-foreground">{error || "Chargement…"}</p>;
   }
 
+  const fields = localeFields(about, activeLocale);
+
   return (
     <div className="space-y-8 max-w-4xl">
       <ContentSubnav />
       <div>
         <p className="text-eyebrow text-muted-foreground">CMS</p>
         <h2 className="font-display text-4xl mt-2">About — La marque</h2>
-        <p className="text-sm text-muted-foreground mt-2">Textes, vidéo YouTube, sections et photos latérales.</p>
+        <p className="text-sm text-muted-foreground mt-2">
+          Textes, vidéo YouTube, sections et photos latérales — par langue (DeepL).
+        </p>
       </div>
 
       {error && <p className="text-destructive text-sm">{error}</p>}
       {message && <p className="text-sm text-muted-foreground">{message}</p>}
+      {translateNote && <p className="text-sm text-muted-foreground">{translateNote}</p>}
 
       <form onSubmit={handleSave} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">En-tête</CardTitle>
+            <CardTitle className="text-lg">Langue & traduction</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <CmsField label="Eyebrow" value={about.eyebrow} onChange={(v) => setAbout({ ...about, eyebrow: v })} />
-            <CmsField label="Titre" value={about.title} onChange={(v) => setAbout({ ...about, title: v })} />
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              {CMS_LOCALES.map((l) => (
+                <Button
+                  key={l.code}
+                  type="button"
+                  size="sm"
+                  variant={activeLocale === l.code ? "default" : "outline"}
+                  onClick={() => setActiveLocale(l.code)}
+                >
+                  {l.adminLabel}
+                </Button>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Langue source DeepL</Label>
+                <div className="flex flex-wrap gap-2">
+                  {CMS_LOCALES.map((l) => (
+                    <Button
+                      key={l.code}
+                      type="button"
+                      size="sm"
+                      variant={sourceLocale === l.code ? "secondary" : "ghost"}
+                      onClick={() => setSourceLocale(l.code)}
+                    >
+                      {l.code.toUpperCase()}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={translating || translateAvailable === false}
+                onClick={handleTranslate}
+              >
+                {translating
+                  ? "Traduction…"
+                  : translateAvailable === false
+                    ? "DeepL non configuré"
+                    : "Traduire les autres langues"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Partagé (toutes langues)</CardTitle>
+          </CardHeader>
+          <CardContent>
             <CmsField
               label="ID vidéo YouTube"
               value={about.youtubeId}
               onChange={(v) => setAbout({ ...about, youtubeId: v })}
               placeholder="Ol56ZDhtlnY"
             />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">En-tête ({activeLocale.toUpperCase()})</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <CmsField
+              label="Eyebrow"
+              value={fields.eyebrow}
+              onChange={(v) => patchLocale(activeLocale, { eyebrow: v })}
+            />
+            <CmsField
+              label="Titre"
+              value={fields.title}
+              onChange={(v) => patchLocale(activeLocale, { title: v })}
+            />
             <div className="sm:col-span-2">
               <CmsField
                 label="Meta description (SEO)"
-                value={about.metaDescription}
-                onChange={(v) => setAbout({ ...about, metaDescription: v })}
+                value={fields.metaDescription}
+                onChange={(v) => patchLocale(activeLocale, { metaDescription: v })}
                 multiline
               />
             </div>
@@ -91,11 +227,10 @@ function AdminAboutContentPage() {
               variant="outline"
               size="sm"
               onClick={() =>
-                setAbout({
-                  ...about,
+                patchLocale(activeLocale, {
                   sections: [
-                    ...about.sections,
-                    { id: `section-${about.sections.length + 1}`, eyebrow: "", title: "", body: "" },
+                    ...fields.sections,
+                    { id: `section-${fields.sections.length + 1}`, eyebrow: "", title: "", body: "" },
                   ],
                 })
               }
@@ -104,7 +239,7 @@ function AdminAboutContentPage() {
             </Button>
           </CardHeader>
           <CardContent className="space-y-4">
-            {about.sections.map((section, i) => (
+            {fields.sections.map((section, i) => (
               <div key={i} className="border border-border p-4 rounded-sm space-y-3">
                 <div className="flex justify-between items-center gap-2">
                   <p className="text-sm font-medium">Section {i + 1}</p>
@@ -112,7 +247,11 @@ function AdminAboutContentPage() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => setAbout({ ...about, sections: about.sections.filter((_, j) => j !== i) })}
+                    onClick={() =>
+                      patchLocale(activeLocale, {
+                        sections: fields.sections.filter((_, j) => j !== i),
+                      })
+                    }
                   >
                     Supprimer
                   </Button>
@@ -122,18 +261,18 @@ function AdminAboutContentPage() {
                     label="Ancre (id)"
                     value={section.id}
                     onChange={(v) => {
-                      const sections = [...about.sections];
+                      const sections = [...fields.sections];
                       sections[i] = { ...sections[i], id: v };
-                      setAbout({ ...about, sections });
+                      patchLocale(activeLocale, { sections });
                     }}
                   />
                   <CmsField
                     label="Eyebrow"
                     value={section.eyebrow}
                     onChange={(v) => {
-                      const sections = [...about.sections];
+                      const sections = [...fields.sections];
                       sections[i] = { ...sections[i], eyebrow: v };
-                      setAbout({ ...about, sections });
+                      patchLocale(activeLocale, { sections });
                     }}
                   />
                   <div className="sm:col-span-2">
@@ -141,9 +280,9 @@ function AdminAboutContentPage() {
                       label="Titre"
                       value={section.title}
                       onChange={(v) => {
-                        const sections = [...about.sections];
+                        const sections = [...fields.sections];
                         sections[i] = { ...sections[i], title: v };
-                        setAbout({ ...about, sections });
+                        patchLocale(activeLocale, { sections });
                       }}
                     />
                   </div>
@@ -152,9 +291,9 @@ function AdminAboutContentPage() {
                       label="Texte"
                       value={section.body}
                       onChange={(v) => {
-                        const sections = [...about.sections];
+                        const sections = [...fields.sections];
                         sections[i] = { ...sections[i], body: v };
-                        setAbout({ ...about, sections });
+                        patchLocale(activeLocale, { sections });
                       }}
                       multiline
                     />
@@ -172,39 +311,43 @@ function AdminAboutContentPage() {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setAbout({ ...about, values: [...about.values, { n: "", t: "", d: "" }] })}
+              onClick={() =>
+                patchLocale(activeLocale, {
+                  values: [...fields.values, { n: "", t: "", d: "" }],
+                })
+              }
             >
               Ajouter
             </Button>
           </CardHeader>
           <CardContent className="space-y-4">
-            {about.values.map((value, i) => (
+            {fields.values.map((value, i) => (
               <div key={i} className="grid gap-3 sm:grid-cols-3 border border-border p-4 rounded-sm">
                 <CmsField
                   label="Numéro"
                   value={value.n}
                   onChange={(v) => {
-                    const values = [...about.values];
+                    const values = [...fields.values];
                     values[i] = { ...values[i], n: v };
-                    setAbout({ ...about, values });
+                    patchLocale(activeLocale, { values });
                   }}
                 />
                 <CmsField
                   label="Titre"
                   value={value.t}
                   onChange={(v) => {
-                    const values = [...about.values];
+                    const values = [...fields.values];
                     values[i] = { ...values[i], t: v };
-                    setAbout({ ...about, values });
+                    patchLocale(activeLocale, { values });
                   }}
                 />
                 <CmsField
                   label="Description"
                   value={value.d}
                   onChange={(v) => {
-                    const values = [...about.values];
+                    const values = [...fields.values];
                     values[i] = { ...values[i], d: v };
-                    setAbout({ ...about, values });
+                    patchLocale(activeLocale, { values });
                   }}
                 />
               </div>
@@ -220,9 +363,8 @@ function AdminAboutContentPage() {
               variant="outline"
               size="sm"
               onClick={() =>
-                setAbout({
-                  ...about,
-                  sidebarLinks: [...about.sidebarLinks, { label: "", to: "/about", image: "" }],
+                patchLocale(activeLocale, {
+                  sidebarLinks: [...fields.sidebarLinks, { label: "", to: "/about", image: "" }],
                 })
               }
             >
@@ -230,50 +372,50 @@ function AdminAboutContentPage() {
             </Button>
           </CardHeader>
           <CardContent className="space-y-4">
-            {about.sidebarLinks.map((link, i) => (
+            {fields.sidebarLinks.map((link, i) => (
               <div key={i} className="grid gap-3 sm:grid-cols-2 border border-border p-4 rounded-sm">
                 <CmsField
                   label="Label"
                   value={link.label}
                   onChange={(v) => {
-                    const sidebarLinks = [...about.sidebarLinks];
+                    const sidebarLinks = [...fields.sidebarLinks];
                     sidebarLinks[i] = { ...sidebarLinks[i], label: v };
-                    setAbout({ ...about, sidebarLinks });
+                    patchLocale(activeLocale, { sidebarLinks });
                   }}
                 />
                 <CmsField
                   label="Lien (chemin)"
                   value={link.to}
                   onChange={(v) => {
-                    const sidebarLinks = [...about.sidebarLinks];
+                    const sidebarLinks = [...fields.sidebarLinks];
                     sidebarLinks[i] = { ...sidebarLinks[i], to: v };
-                    setAbout({ ...about, sidebarLinks });
+                    patchLocale(activeLocale, { sidebarLinks });
                   }}
                 />
                 <CmsField
                   label="Ancre (#, optionnel)"
                   value={link.hash ?? ""}
                   onChange={(v) => {
-                    const sidebarLinks = [...about.sidebarLinks];
+                    const sidebarLinks = [...fields.sidebarLinks];
                     sidebarLinks[i] = { ...sidebarLinks[i], hash: v || undefined };
-                    setAbout({ ...about, sidebarLinks });
+                    patchLocale(activeLocale, { sidebarLinks });
                   }}
                 />
                 <CmsMediaField
                   label="Image (URL)"
                   value={link.image}
                   onChange={(v) => {
-                    const sidebarLinks = [...about.sidebarLinks];
+                    const sidebarLinks = [...fields.sidebarLinks];
                     sidebarLinks[i] = { ...sidebarLinks[i], image: v };
-                    setAbout({ ...about, sidebarLinks });
+                    patchLocale(activeLocale, { sidebarLinks });
                   }}
                   folder={`sidebar-${i + 1}`}
                   accept="image/*"
                   focal={link.imageFocal}
                   onFocalChange={(imageFocal) => {
-                    const sidebarLinks = [...about.sidebarLinks];
+                    const sidebarLinks = [...fields.sidebarLinks];
                     sidebarLinks[i] = { ...sidebarLinks[i], imageFocal };
-                    setAbout({ ...about, sidebarLinks });
+                    patchLocale(activeLocale, { sidebarLinks });
                   }}
                   focalAspect={3 / 4}
                 />

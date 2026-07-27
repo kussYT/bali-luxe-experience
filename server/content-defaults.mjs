@@ -1,7 +1,12 @@
 /** Default editorial content — mirrors src/data/lifestyle-content.ts (fallback when DB empty). */
 
 import stockists from "../src/data/stockists.json" with { type: "json" };
-import { SITE_LOCALE_CODES, resolveProductMessagesLocaleBlock, resolveNavigationLocaleBlock } from "./i18n-locales.mjs";
+import {
+  SITE_LOCALE_CODES,
+  resolveProductMessagesLocaleBlock,
+  resolveNavigationLocaleBlock,
+  resolveCmsBlobLocaleBlock,
+} from "./i18n-locales.mjs";
 
 export const DEFAULT_ANNOUNCEMENT = {
   enabled: true,
@@ -782,10 +787,6 @@ export function mergeAnnouncement(stored) {
   return { ...DEFAULT_ANNOUNCEMENT, ...(stored || {}) };
 }
 
-export function mergeAbout(stored) {
-  return deepMerge(DEFAULT_ABOUT, stored || {});
-}
-
 export function mergeFindUs(stored) {
   return deepMerge(DEFAULT_FIND_US, stored || {});
 }
@@ -798,8 +799,100 @@ export function mergeCare(stored) {
   return deepMerge(DEFAULT_CARE, stored || {});
 }
 
+export function mergeAbout(stored) {
+  return resolveAbout(stored, "fr");
+}
+
 export function mergeSizing(stored) {
-  return deepMerge(DEFAULT_SIZING, stored || {});
+  return resolveSizing(stored, "fr");
+}
+
+function aboutLocaleFieldsFromFlat(flat) {
+  return {
+    eyebrow: flat.eyebrow || "",
+    title: flat.title || "",
+    metaDescription: flat.metaDescription || "",
+    sections: Array.isArray(flat.sections) ? flat.sections : [],
+    values: Array.isArray(flat.values) ? flat.values : [],
+    sidebarLinks: Array.isArray(flat.sidebarLinks) ? flat.sidebarLinks : [],
+  };
+}
+
+/** Normalize about blob to { youtubeId, locales }. Migrates legacy flat content → locales.fr */
+export function normalizeAboutStored(stored) {
+  const raw = stored && typeof stored === "object" ? stored : {};
+  if (raw.locales && typeof raw.locales === "object" && Object.keys(raw.locales).length > 0) {
+    const youtubeId =
+      typeof raw.youtubeId === "string" && raw.youtubeId.trim()
+        ? raw.youtubeId.trim()
+        : DEFAULT_ABOUT.youtubeId;
+    return { youtubeId, locales: { ...raw.locales } };
+  }
+  const merged = deepMerge(DEFAULT_ABOUT, raw);
+  return {
+    youtubeId: merged.youtubeId,
+    locales: { fr: aboutLocaleFieldsFromFlat(merged) },
+  };
+}
+
+export function resolveAbout(stored, locale = "fr") {
+  const normalized = normalizeAboutStored(stored);
+  const resolved = resolveCmsBlobLocaleBlock(normalized.locales, locale);
+  const block = resolved?.block || aboutLocaleFieldsFromFlat(DEFAULT_ABOUT);
+  return {
+    youtubeId: normalized.youtubeId || DEFAULT_ABOUT.youtubeId,
+    eyebrow: block.eyebrow || "",
+    title: block.title || "",
+    metaDescription: block.metaDescription || "",
+    sections: Array.isArray(block.sections) ? block.sections : DEFAULT_ABOUT.sections,
+    values: Array.isArray(block.values) ? block.values : DEFAULT_ABOUT.values,
+    sidebarLinks: Array.isArray(block.sidebarLinks) ? block.sidebarLinks : DEFAULT_ABOUT.sidebarLinks,
+  };
+}
+
+function sizingLocaleFieldsFromFlat(flat) {
+  return {
+    eyebrow: flat.eyebrow || "",
+    title: flat.title || "",
+    metaDescription: flat.metaDescription || "",
+    body: Array.isArray(flat.body) ? flat.body : [],
+    imageAlt: flat.imageAlt || "",
+    backLink: flat.backLink || "",
+  };
+}
+
+/** Normalize sizing blob to { image, imageFocal, locales }. */
+export function normalizeSizingStored(stored) {
+  const raw = stored && typeof stored === "object" ? stored : {};
+  if (raw.locales && typeof raw.locales === "object" && Object.keys(raw.locales).length > 0) {
+    return {
+      image: typeof raw.image === "string" ? raw.image : DEFAULT_SIZING.image,
+      imageFocal: raw.imageFocal,
+      locales: { ...raw.locales },
+    };
+  }
+  const merged = deepMerge(DEFAULT_SIZING, raw);
+  return {
+    image: merged.image,
+    imageFocal: merged.imageFocal,
+    locales: { fr: sizingLocaleFieldsFromFlat(merged) },
+  };
+}
+
+export function resolveSizing(stored, locale = "fr") {
+  const normalized = normalizeSizingStored(stored);
+  const resolved = resolveCmsBlobLocaleBlock(normalized.locales, locale);
+  const block = resolved?.block || sizingLocaleFieldsFromFlat(DEFAULT_SIZING);
+  return {
+    image: normalized.image || DEFAULT_SIZING.image,
+    imageFocal: normalized.imageFocal,
+    eyebrow: block.eyebrow || "",
+    title: block.title || "",
+    metaDescription: block.metaDescription || "",
+    body: Array.isArray(block.body) ? block.body : DEFAULT_SIZING.body,
+    imageAlt: block.imageAlt || "",
+    backLink: block.backLink || "",
+  };
 }
 
 export function mergeFooter(stored) {

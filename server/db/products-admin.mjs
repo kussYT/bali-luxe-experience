@@ -1,6 +1,9 @@
 import { withTransaction, query, isDatabaseConfigured } from "./pool.mjs";
 import { mapOriginToWarehouse, buildVariantSlug } from "./catalog.mjs";
 import { ensureCollectionsCatalog, KNOWN_COLLECTIONS } from "../collections-catalog.mjs";
+import { buildVariantSku, suggestProductCode } from "../product-ref.mjs";
+import { parseMoneyValue } from "../parse-money.mjs";
+import { EUR_TO_IDR, EUR_TO_USD } from "../pricing.mjs";
 
 const collectionNameBySlug = new Map(KNOWN_COLLECTIONS.map((c) => [c.slug, c.name]));
 
@@ -17,13 +20,12 @@ function slugify(value) {
     .replace(/^-+|-+$/g, "");
 }
 
-import { parseMoneyValue } from "../parse-money.mjs";
-
 export function normalizeAdminProductBody(body) {
   const priceEUR = parseMoneyValue(body.priceEUR);
   const compareRaw =
     body.compareAtEUR != null && body.compareAtEUR !== "" ? parseMoneyValue(body.compareAtEUR) : null;
   const onSale = compareRaw != null && compareRaw < priceEUR;
+  const sellEUR = onSale ? compareRaw : priceEUR;
   const images =
     Array.isArray(body.images) && body.images.length > 0
       ? body.images
@@ -33,10 +35,16 @@ export function normalizeAdminProductBody(body) {
   const extraSlugs = Array.isArray(body.collectionSlugs)
     ? [...new Set(body.collectionSlugs.map((s) => slugify(s)).filter(Boolean))]
     : [];
+  const name = body.name || "Untitled";
+  const referenceCode = String(body.referenceCode || body.sku || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9-]/g, "")
+    .slice(0, 12) || suggestProductCode(name);
 
   return {
     slug: slugify(body.slug || body.name || "product"),
-    name: body.name || "Untitled",
+    name,
     story: body.story || "",
     collection: body.collection || "Shop",
     collectionSlug: slugify(body.collectionSlug || body.collection || "shop"),
@@ -46,8 +54,15 @@ export function normalizeAdminProductBody(body) {
     productType: body.productType || "",
     priceEUR,
     compareAtEUR: onSale ? compareRaw : null,
-    priceUSD: Number(body.priceUSD) || Math.round(priceEUR * 1.1),
-    priceIDR: Number(body.priceIDR) || Math.round(priceEUR * 17_000),
+    priceUSD:
+      body.priceUSD != null && body.priceUSD !== ""
+        ? Number(body.priceUSD)
+        : Math.round(sellEUR * EUR_TO_USD),
+    priceIDR:
+      body.priceIDR != null && body.priceIDR !== ""
+        ? Math.round(Number(body.priceIDR))
+        : Math.round(sellEUR * EUR_TO_IDR),
+    referenceCode,
     status: body.status === "draft" ? "draft" : "published",
     featured: Boolean(body.featured),
     origin: body.origin === "France" ? "France" : "Bali",
@@ -147,6 +162,7 @@ async function createVariantWithInventory(client, productId, p, variant, positio
   const defaultWarehouse = mapOriginToWarehouse(p.origin);
   const secondary = defaultWarehouse === "bali" ? "france" : "bali";
   const variantSlug = buildVariantSlug(p.slug, variant.title, position);
+  const sku = buildVariantSku(p.referenceCode, p.name, variant.title);
 
   const { rows } = await client.query(
     `INSERT INTO product_variants (
@@ -156,7 +172,7 @@ async function createVariantWithInventory(client, productId, p, variant, positio
     [
       productId,
       variantSlug,
-      p.slug,
+      sku,
       variant.title,
       variant.title === "Default" ? null : variant.title,
       p.priceEUR,
@@ -222,23 +238,26 @@ async function syncProductVariants(client, productId, p, { syncStock = true } = 
     const position = i;
     const variantSlug = buildVariantSlug(p.slug, variant.title, position);
     const option1 = variant.title === "Default" ? null : variant.title;
+    const sku = buildVariantSku(p.referenceCode, p.name, variant.title);
 
     if (variant.id && existing.some((row) => row.id === variant.id)) {
       keepIds.add(variant.id);
       await client.query(
         `UPDATE product_variants SET
            slug = $2,
-           title = $3,
-           option1 = $4,
-           price_eur = $5,
-           compare_at_eur = $6,
-           position = $7,
-           is_default = $8,
+           sku = $3,
+           title = $4,
+           option1 = $5,
+           price_eur = $6,
+           compare_at_eur = $7,
+           position = $8,
+           is_default = $9,
            updated_at = now()
          WHERE id = $1`,
         [
           variant.id,
           variantSlug,
+          sku,
           variant.title,
           option1,
           p.priceEUR,
@@ -296,8 +315,8 @@ export async function createProductInDb(rawBody) {
       `INSERT INTO products (
          slug, name, story, collection_id, subcategory, category, product_type,
          price_eur, compare_at_eur, price_usd, price_idr, status, featured, origin, default_warehouse, video_url,
-         seo_title, meta_description, locales
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+         seo_title, meta_description, locales, reference_code
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
        RETURNING id`,
       [
         p.slug,
@@ -319,6 +338,7 @@ export async function createProductInDb(rawBody) {
         p.seoTitle || "",
         p.metaDescription || "",
         JSON.stringify(p.locales || {}),
+        p.referenceCode || "",
       ],
     );
 
@@ -396,6 +416,7 @@ export async function updateProductInDb(currentSlug, rawBody) {
          seo_title = $18,
          meta_description = $19,
          locales = $20,
+         reference_code = $21,
          updated_at = now()
        WHERE id = $1`,
       [
@@ -419,6 +440,7 @@ export async function updateProductInDb(currentSlug, rawBody) {
         p.seoTitle || "",
         p.metaDescription || "",
         JSON.stringify(p.locales || {}),
+        p.referenceCode || "",
       ],
     );
 
