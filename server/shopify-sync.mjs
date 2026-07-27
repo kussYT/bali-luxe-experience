@@ -199,7 +199,7 @@ export async function buildCatalogFromShopify({ manifestPath }) {
       productType: sp.product_type || "",
       ...pricing,
       priceUSD: Math.round((pricing.compareAtEUR ?? pricing.priceEUR) * 1.1),
-      priceIDR: Math.round((pricing.compareAtEUR ?? pricing.priceEUR) * 17_000),
+      priceIDR: Math.round((pricing.compareAtEUR ?? pricing.priceEUR) * 20_000),
       image: images[0],
       images,
       story,

@@ -129,29 +129,33 @@ export async function sendPaymentInvoiceEmail(order, { paymentUrl }) {
     order.amountShipping != null ? formatMoneyEmail(order.amountShipping, currency) : null;
 
   const body = `
-    <p>Voici le récapitulatif de votre commande Bingin Diaries.</p>
-    <p>Cliquez sur le bouton ci-dessous pour régler en toute sécurité (carte bancaire via Stripe).</p>
-    <p style="font-size:12px;color:#8a8278;">Commande <span style="font-family:monospace;">${order.id.slice(0, 8)}…</span></p>
+    <p>Here is a summary of your Bingin Diaries order.</p>
+    <p>Click the button below to pay securely by card (Stripe).</p>
+    <p style="font-size:12px;color:#8a8278;">Order <span style="font-family:monospace;">${order.id.slice(0, 8)}…</span></p>
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;font-size:14px;">
       ${itemsHtml(order.items || [], currency)}
     </table>
-    ${shipping ? `<p style="text-align:right;font-size:14px;">Livraison : ${shipping}</p>` : ""}
+    ${shipping ? `<p style="text-align:right;font-size:14px;">Shipping : ${shipping}</p>` : ""}
     <p style="text-align:right;font-size:16px;margin-top:8px;"><strong>Total : ${total}</strong></p>
     <p style="text-align:center;margin:28px 0;">
       <a href="${paymentUrl}" style="display:inline-block;background:#1a1a1a;color:#f5f0e8;text-decoration:none;padding:14px 28px;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;">
-        Payer ma commande
+        Complete your purchase
       </a>
     </p>
+    <p style="font-size:12px;color:#8a8278;word-break:break-all;margin-top:8px;">
+      If the button does not work, open this link:<br/>
+      <a href="${paymentUrl}" style="color:#1a1a1a;">${paymentUrl}</a>
+    </p>
     <p style="font-size:13px;color:#8a8278;margin-top:24px;">
-      Ce lien est valable 30 jours. Une fois le paiement reçu, vous recevrez un email de confirmation.
-      Pour toute question, répondez simplement à cet e-mail.
+      This link is valid for 30 days. Once payment is received, you will get a confirmation email.
+      For any question, just reply to this email.
     </p>
   `;
 
   return sendEmail({
     to: email,
-    subject: `Votre commande à régler — Bingin Diaries (${total})`,
-    html: layout({ title: "Paiement de votre commande", body }),
+    subject: `Complete your purchase — Bingin Diaries (${total})`,
+    html: layout({ title: "Complete your purchase", body }),
   });
 }
 

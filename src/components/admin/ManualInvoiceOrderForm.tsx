@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { parseMoneyInput } from "@/lib/parse-money";
+import { formatMoneyInput, parseMoneyInput } from "@/lib/parse-money";
 import {
   createManualInvoiceOrder,
   fetchAdminCatalog,
@@ -7,7 +7,10 @@ import {
   type ManualInvoicePreview,
 } from "@/lib/admin-api";
 import type { Product } from "@/lib/catalog-types";
-import { SHIPPING_COUNTRIES } from "@/data/shipping-countries";
+import { getShippingCountry, SHIPPING_COUNTRIES } from "@/data/shipping-countries";
+import type { Currency } from "@/lib/currency";
+import { EUR_TO_IDR, EUR_TO_USD, getUnitPrice } from "@/lib/pricing";
+import { useAdminLocale } from "@/lib/admin-locale";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,7 +34,7 @@ type LineDraft = {
   productSlug: string;
   variantSlug: string;
   qty: string;
-  unitPriceEur: string;
+  unitPrice: string;
 };
 
 type ManualInvoiceOrderFormProps = {
@@ -42,19 +45,166 @@ const emptyLine = (): LineDraft => ({
   productSlug: "",
   variantSlug: "",
   qty: "1",
-  unitPriceEur: "",
+  unitPrice: "",
 });
 
-function formatEurCents(cents: number) {
-  return `€${(cents / 100).toFixed(2)}`;
+function currencySymbol(currency: Currency) {
+  if (currency === "IDR") return "Rp";
+  if (currency === "USD") return "$";
+  return "€";
 }
 
-function saleUnitEur(product: Product) {
-  if (product.onSale && product.compareAtEUR != null) return Number(product.compareAtEUR);
-  return Number(product.priceEUR) || 0;
+function formatAmount(amount: number, currency: Currency) {
+  if (currency === "IDR") return `Rp ${Math.round(amount).toLocaleString("en-US")}`;
+  if (currency === "USD") return `$${Number(amount).toFixed(2)}`;
+  return `€${Number(amount).toFixed(2)}`;
 }
+
+/** Preview/DB amounts are Stripe smallest units (cents) except IDR (whole rupiah). */
+function formatStripeAmount(amount: number, currency: Currency) {
+  if (currency === "IDR") return formatAmount(amount, currency);
+  return formatAmount(amount / 100, currency);
+}
+
+function convertDisplayAmount(amount: number, from: Currency, to: Currency) {
+  if (from === to) return amount;
+  const asEur =
+    from === "EUR" ? amount : from === "USD" ? amount / EUR_TO_USD : amount / EUR_TO_IDR;
+  if (to === "EUR") return Math.round(asEur * 100) / 100;
+  if (to === "USD") return Math.round(asEur * EUR_TO_USD * 100) / 100;
+  return Math.round(asEur * EUR_TO_IDR);
+}
+
+function toStripeUnit(displayAmount: number, currency: Currency) {
+  if (currency === "IDR") return Math.round(displayAmount);
+  return Math.round(displayAmount * 100);
+}
+
+const COPY = {
+  fr: {
+    trigger: "Créer commande + lien paiement",
+    title: "Commande manuelle (facture)",
+    intro:
+      "Choisissez les produits, ajoutez une remise si besoin, générez l’aperçu (avec frais de livraison selon le pays), puis créez et envoyez le lien de paiement. Le stock n’est déduit qu’après paiement.",
+    customerEmail: "Email client *",
+    shippingCountry: "Pays livraison *",
+    shippingHint:
+      "La devise et les frais de port suivent le pays (Indonésie = IDR). Calculés dès l’aperçu.",
+    countryPlaceholder: "Pays",
+    items: "Articles",
+    loading: "(chargement…)",
+    addLine: "+ Ligne",
+    product: "Produit",
+    productPlaceholder: "Choisir une référence",
+    variant: "Taille / variante",
+    sizePlaceholder: "Taille",
+    oneSize: "Taille unique",
+    qty: "Qté",
+    unitPrice: (symbol: string) => `Prix unitaire (${symbol})`,
+    remove: "Retirer",
+    discount: "Remise / promotion",
+    discountNone: "Aucune",
+    discountPercent: "Pourcentage (%)",
+    discountFixed: (symbol: string) => `Montant fixe (${symbol})`,
+    discountPctLabel: "Remise %",
+    discountFixedLabel: (symbol: string) => `Remise ${symbol}`,
+    notes: "Notes internes",
+    notesPlaceholder: "Ex. commande Instagram DM",
+    sendEmail: "Après validation : envoyer l’email avec le lien de paiement",
+    previewing: "Calcul de l’aperçu…",
+    previewBtn: "1. Aperçu (obligatoire)",
+    previewTitle: "Aperçu avant envoi",
+    client: "Client :",
+    delivery: "Livraison :",
+    currency: "Devise :",
+    beforeDiscount: "Sous-total avant remise",
+    discountLine: "Remise",
+    subtotal: "Sous-total",
+    shipping: "Livraison",
+    total: "Total à payer",
+    shippingNote:
+      "Ces frais de livraison sont inclus dans le total du lien de paiement. Le client confirmera son adresse au checkout Stripe.",
+    back: "← Modifier",
+    creating: "Création…",
+    createSend: "2. Créer et envoyer le lien",
+    createNoEmail: "2. Créer sans email",
+    emailSent: (email: string) => `Commande créée — email de paiement envoyé à ${email}.`,
+    createdNoEmail:
+      "Commande créée (email non envoyé). Vous pourrez renvoyer le lien depuis le détail.",
+    paymentLink: "Lien de paiement (à copier si besoin)",
+    errEmail: "Email client requis",
+    errProduct: "Choisissez un produit pour chaque ligne",
+    errPrice: (slug: string) => `Prix invalide pour ${slug}`,
+    errPct: "Remise % invalide (1–100)",
+    errFixed: "Montant de remise invalide",
+    errPreview: "Échec de l'aperçu",
+    errNeedPreview: "Veuillez d'abord générer l'aperçu",
+    errCreate: "Échec de création",
+  },
+  en: {
+    trigger: "Create order + payment link",
+    title: "Manual order (invoice)",
+    intro:
+      "Pick products, add a discount if needed, generate the preview (shipping by country), then create and send the payment link. Stock is only deducted after payment.",
+    customerEmail: "Customer email *",
+    shippingCountry: "Shipping country *",
+    shippingHint:
+      "Currency and shipping follow the country (Indonesia = IDR). Calculated at preview.",
+    countryPlaceholder: "Country",
+    items: "Items",
+    loading: "(loading…)",
+    addLine: "+ Line",
+    product: "Product",
+    productPlaceholder: "Choose a product",
+    variant: "Size / variant",
+    sizePlaceholder: "Size",
+    oneSize: "One size",
+    qty: "Qty",
+    unitPrice: (symbol: string) => `Unit price (${symbol})`,
+    remove: "Remove",
+    discount: "Discount / promotion",
+    discountNone: "None",
+    discountPercent: "Percentage (%)",
+    discountFixed: (symbol: string) => `Fixed amount (${symbol})`,
+    discountPctLabel: "Discount %",
+    discountFixedLabel: (symbol: string) => `Discount ${symbol}`,
+    notes: "Internal notes",
+    notesPlaceholder: "e.g. Instagram DM order",
+    sendEmail: "After create: send payment-link email",
+    previewing: "Calculating preview…",
+    previewBtn: "1. Preview (required)",
+    previewTitle: "Preview before send",
+    client: "Customer:",
+    delivery: "Shipping:",
+    currency: "Currency:",
+    beforeDiscount: "Subtotal before discount",
+    discountLine: "Discount",
+    subtotal: "Subtotal",
+    shipping: "Shipping",
+    total: "Total due",
+    shippingNote:
+      "Shipping is included in the payment-link total. The customer will confirm their address at Stripe checkout.",
+    back: "← Edit",
+    creating: "Creating…",
+    createSend: "2. Create and send link",
+    createNoEmail: "2. Create without email",
+    emailSent: (email: string) => `Order created — payment email sent to ${email}.`,
+    createdNoEmail: "Order created (email not sent). You can resend the link from the order detail.",
+    paymentLink: "Payment link (copy if needed)",
+    errEmail: "Customer email required",
+    errProduct: "Choose a product for each line",
+    errPrice: (slug: string) => `Invalid price for ${slug}`,
+    errPct: "Invalid % discount (1–100)",
+    errFixed: "Invalid discount amount",
+    errPreview: "Preview failed",
+    errNeedPreview: "Please generate the preview first",
+    errCreate: "Create failed",
+  },
+} as const;
 
 export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProps) {
+  const { locale } = useAdminLocale();
+  const copy = COPY[locale] || COPY.en;
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"edit" | "preview">("edit");
   const [products, setProducts] = useState<Product[]>([]);
@@ -71,6 +221,10 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
   const [previewing, setPreviewing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+
+  const currency = getShippingCountry(shippingCountryCode).currency;
+  const symbol = currencySymbol(currency);
 
   useEffect(() => {
     if (!open) return;
@@ -104,6 +258,7 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
     setPreview(null);
     setError(null);
     setSuccess(null);
+    setPaymentUrl(null);
   }
 
   function updateLine(index: number, patch: Partial<LineDraft>) {
@@ -114,13 +269,39 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
 
   function selectProduct(index: number, slug: string) {
     const product = productBySlug.get(slug);
-    const variants = product?.variants?.filter((v) => v.title !== "Default Title" && v.title !== "Default") ?? [];
+    const variants =
+      product?.variants?.filter((v) => v.title !== "Default Title" && v.title !== "Default") ?? [];
     const defaultVariant = variants[0];
+    const price = product ? getUnitPrice(product, currency) : 0;
     updateLine(index, {
       productSlug: slug,
       variantSlug: defaultVariant?.slug || "",
-      unitPriceEur: product ? String(saleUnitEur(product).toFixed(2)).replace(".", ",") : "",
+      unitPrice: product ? formatMoneyInput(price) : "",
     });
+  }
+
+  function changeShippingCountry(code: string) {
+    const nextCurrency = getShippingCountry(code).currency;
+    const prevCurrency = currency;
+    setShippingCountryCode(code);
+    setStep("edit");
+    setPreview(null);
+    if (nextCurrency === prevCurrency) return;
+
+    setLines((prev) =>
+      prev.map((line) => {
+        const parsed = parseMoneyInput(line.unitPrice);
+        if (parsed == null) return line;
+        const converted = convertDisplayAmount(parsed, prevCurrency, nextCurrency);
+        return { ...line, unitPrice: formatMoneyInput(converted) };
+      }),
+    );
+    if (discountType === "fixed") {
+      const parsed = parseMoneyInput(discountValue);
+      if (parsed != null) {
+        setDiscountValue(formatMoneyInput(convertDisplayAmount(parsed, prevCurrency, nextCurrency)));
+      }
+    }
   }
 
   function addLine() {
@@ -137,19 +318,19 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
 
   function buildPayload() {
     if (!customerEmail.trim() || !customerEmail.includes("@")) {
-      throw new Error("Email client requis");
+      throw new Error(copy.errEmail);
     }
     const items = lines.map((line) => {
-      if (!line.productSlug.trim()) throw new Error("Choisissez un produit pour chaque ligne");
-      const euros = parseMoneyInput(line.unitPriceEur);
-      if (euros == null || euros < 0) {
-        throw new Error(`Prix invalide pour ${line.productSlug}`);
+      if (!line.productSlug.trim()) throw new Error(copy.errProduct);
+      const amount = parseMoneyInput(line.unitPrice);
+      if (amount == null || amount < 0) {
+        throw new Error(copy.errPrice(line.productSlug));
       }
       return {
         productSlug: line.productSlug.trim(),
         variantSlug: line.variantSlug.trim() || undefined,
         qty: Number(line.qty),
-        unitPrice: Math.round(euros * 100),
+        unitPrice: toStripeUnit(amount, currency),
       };
     });
 
@@ -161,19 +342,19 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
     if (discountType === "percent") {
       const pct = Number(String(discountValue).replace(",", "."));
       if (!Number.isFinite(pct) || pct <= 0 || pct > 100) {
-        throw new Error("Remise % invalide (1–100)");
+        throw new Error(copy.errPct);
       }
       discountPayload = { discountType: "percent", discountValue: pct };
     } else if (discountType === "fixed") {
-      const euros = parseMoneyInput(discountValue);
-      if (euros == null || euros <= 0) throw new Error("Montant de remise invalide");
-      discountPayload = { discountType: "fixed", discountValue: Math.round(euros * 100) };
+      const amount = parseMoneyInput(discountValue);
+      if (amount == null || amount <= 0) throw new Error(copy.errFixed);
+      discountPayload = { discountType: "fixed", discountValue: toStripeUnit(amount, currency) };
     }
 
     return {
       customerEmail: customerEmail.trim(),
       shippingCountryCode: shippingCountryCode.trim().toUpperCase(),
-      currency: "EUR" as const,
+      currency,
       items,
       notes: notes.trim() || undefined,
       ...discountPayload,
@@ -191,7 +372,7 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
       setPreview(result.preview);
       setStep("preview");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Échec de l'aperçu");
+      setError(err instanceof Error ? err.message : copy.errPreview);
       setStep("edit");
       setPreview(null);
     } finally {
@@ -201,7 +382,7 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
 
   async function handleCreate() {
     if (!preview) {
-      setError("Veuillez d'abord générer l'aperçu");
+      setError(copy.errNeedPreview);
       return;
     }
     setSaving(true);
@@ -210,22 +391,25 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
     try {
       const payload = buildPayload();
       const result = await createManualInvoiceOrder({ ...payload, sendEmail });
+      setPaymentUrl(result.paymentUrl || null);
       setSuccess(
         result.emailSent
-          ? `Commande créée — email de paiement envoyé à ${result.email}.`
-          : "Commande créée (email non envoyé). Vous pourrez renvoyer le lien depuis le détail.",
+          ? copy.emailSent(result.email || customerEmail.trim())
+          : copy.createdNoEmail,
       );
       onCreated?.();
       setTimeout(() => {
         setOpen(false);
         resetForm();
-      }, 1800);
+      }, 6000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Échec de création");
+      setError(err instanceof Error ? err.message : copy.errCreate);
     } finally {
       setSaving(false);
     }
   }
+
+  const previewCurrency = (preview?.currency as Currency) || currency;
 
   return (
     <Dialog
@@ -236,23 +420,19 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="outline">Créer commande + lien paiement</Button>
+        <Button variant="outline">{copy.trigger}</Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-display text-2xl">Commande manuelle (facture)</DialogTitle>
+          <DialogTitle className="font-display text-2xl">{copy.title}</DialogTitle>
         </DialogHeader>
-        <p className="text-sm text-muted-foreground">
-          Choisissez les produits, ajoutez une remise si besoin, générez l’aperçu (avec frais de
-          livraison selon le pays), puis créez et envoyez le lien de paiement. Le stock n’est déduit
-          qu’après paiement.
-        </p>
+        <p className="text-sm text-muted-foreground">{copy.intro}</p>
 
         {step === "edit" ? (
           <form className="space-y-5 mt-2" onSubmit={handlePreview}>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="invoiceEmail">Email client *</Label>
+                <Label htmlFor="invoiceEmail">{copy.customerEmail}</Label>
                 <Input
                   id="invoiceEmail"
                   type="email"
@@ -267,38 +447,30 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
                 />
               </div>
               <div className="space-y-2">
-                <Label>Pays livraison *</Label>
-                <Select
-                  value={shippingCountryCode}
-                  onValueChange={(v) => {
-                    setShippingCountryCode(v);
-                    setStep("edit");
-                    setPreview(null);
-                  }}
-                >
+                <Label>{copy.shippingCountry}</Label>
+                <Select value={shippingCountryCode} onValueChange={changeShippingCountry}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Pays" />
+                    <SelectValue placeholder={copy.countryPlaceholder} />
                   </SelectTrigger>
                   <SelectContent className="max-h-72">
                     {SHIPPING_COUNTRIES.map((c) => (
                       <SelectItem key={c.code} value={c.code}>
-                        {c.flag} {c.name} ({c.code})
+                        {c.name} ({c.code}) · {c.currency}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
-                  Les frais de port sont calculés pour ce pays dès l’aperçu (pas à la dernière minute
-                  au paiement).
-                </p>
+                <p className="text-xs text-muted-foreground">{copy.shippingHint}</p>
               </div>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label>Articles {catalogLoading ? "(chargement…)" : ""}</Label>
+                <Label>
+                  {copy.items} {catalogLoading ? copy.loading : ""}
+                </Label>
                 <Button type="button" variant="outline" size="sm" onClick={addLine}>
-                  + Ligne
+                  {copy.addLine}
                 </Button>
               </div>
               {lines.map((line, index) => {
@@ -313,13 +485,13 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
                     className="grid sm:grid-cols-4 gap-2 items-end border border-border p-3 rounded-sm"
                   >
                     <div className="space-y-1 sm:col-span-2">
-                      <Label className="text-xs">Produit</Label>
+                      <Label className="text-xs">{copy.product}</Label>
                       <Select
                         value={line.productSlug || undefined}
                         onValueChange={(slug) => selectProduct(index, slug)}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Choisir une référence" />
+                          <SelectValue placeholder={copy.productPlaceholder} />
                         </SelectTrigger>
                         <SelectContent className="max-h-72">
                           {products.map((p) => (
@@ -331,14 +503,14 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
                       </Select>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">Taille / variante</Label>
+                      <Label className="text-xs">{copy.variant}</Label>
                       {variants.length > 0 ? (
                         <Select
                           value={line.variantSlug || undefined}
                           onValueChange={(slug) => updateLine(index, { variantSlug: slug })}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Taille" />
+                            <SelectValue placeholder={copy.sizePlaceholder} />
                           </SelectTrigger>
                           <SelectContent>
                             {variants.map((v) => (
@@ -349,11 +521,11 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
                           </SelectContent>
                         </Select>
                       ) : (
-                        <Input value="Taille unique" disabled />
+                        <Input value={copy.oneSize} disabled />
                       )}
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">Qté</Label>
+                      <Label className="text-xs">{copy.qty}</Label>
                       <Input
                         required
                         type="number"
@@ -363,17 +535,22 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
                       />
                     </div>
                     <div className="space-y-1 sm:col-span-2">
-                      <Label className="text-xs">Prix unitaire (€)</Label>
+                      <Label className="text-xs">{copy.unitPrice(symbol)}</Label>
                       <Input
                         required
-                        value={line.unitPriceEur}
-                        onChange={(e) => updateLine(index, { unitPriceEur: e.target.value })}
-                        placeholder="49,00"
+                        value={line.unitPrice}
+                        onChange={(e) => updateLine(index, { unitPrice: e.target.value })}
+                        placeholder={currency === "IDR" ? "697000" : "49,00"}
                       />
                     </div>
                     {lines.length > 1 && (
-                      <Button type="button" variant="ghost" size="sm" onClick={() => removeLine(index)}>
-                        Retirer
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeLine(index)}
+                      >
+                        {copy.remove}
                       </Button>
                     )}
                   </div>
@@ -383,7 +560,7 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
 
             <div className="grid sm:grid-cols-2 gap-4 border border-border rounded-sm p-3">
               <div className="space-y-2">
-                <Label>Remise / promotion</Label>
+                <Label>{copy.discount}</Label>
                 <Select
                   value={discountType}
                   onValueChange={(v) => {
@@ -396,15 +573,19 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Aucune</SelectItem>
-                    <SelectItem value="percent">Pourcentage (%)</SelectItem>
-                    <SelectItem value="fixed">Montant fixe (€)</SelectItem>
+                    <SelectItem value="none">{copy.discountNone}</SelectItem>
+                    <SelectItem value="percent">{copy.discountPercent}</SelectItem>
+                    <SelectItem value="fixed">{copy.discountFixed(symbol)}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               {discountType !== "none" && (
                 <div className="space-y-2">
-                  <Label>{discountType === "percent" ? "Remise %" : "Remise €"}</Label>
+                  <Label>
+                    {discountType === "percent"
+                      ? copy.discountPctLabel
+                      : copy.discountFixedLabel(symbol)}
+                  </Label>
                   <Input
                     value={discountValue}
                     onChange={(e) => {
@@ -412,7 +593,7 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
                       setPreview(null);
                       setStep("edit");
                     }}
-                    placeholder={discountType === "percent" ? "10" : "15,00"}
+                    placeholder={discountType === "percent" ? "10" : currency === "IDR" ? "50000" : "15,00"}
                     required
                   />
                 </div>
@@ -420,13 +601,13 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="invoiceNotes">Notes internes</Label>
+              <Label htmlFor="invoiceNotes">{copy.notes}</Label>
               <Textarea
                 id="invoiceNotes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
-                placeholder="Ex. commande Instagram DM"
+                placeholder={copy.notesPlaceholder}
               />
             </div>
 
@@ -436,25 +617,29 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
                 checked={sendEmail}
                 onChange={(e) => setSendEmail(e.target.checked)}
               />
-              Après validation : envoyer l’email avec le lien de paiement
+              {copy.sendEmail}
             </label>
 
             {error && <p className="text-sm text-destructive">{error}</p>}
 
             <Button type="submit" disabled={previewing || catalogLoading}>
-              {previewing ? "Calcul de l’aperçu…" : "1. Aperçu (obligatoire)"}
+              {previewing ? copy.previewing : copy.previewBtn}
             </Button>
           </form>
         ) : (
           <div className="space-y-5 mt-2">
             <div className="border border-border rounded-sm p-4 space-y-3 bg-muted/30">
-              <p className="text-eyebrow text-muted-foreground">Aperçu avant envoi</p>
+              <p className="text-eyebrow text-muted-foreground">{copy.previewTitle}</p>
               <p className="text-sm">
-                <span className="text-muted-foreground">Client :</span> {preview?.customerEmail}
+                <span className="text-muted-foreground">{copy.client}</span>{" "}
+                {preview?.customerEmail}
               </p>
               <p className="text-sm">
-                <span className="text-muted-foreground">Livraison :</span>{" "}
+                <span className="text-muted-foreground">{copy.delivery}</span>{" "}
                 {preview?.shippingCountryCode}
+              </p>
+              <p className="text-sm">
+                <span className="text-muted-foreground">{copy.currency}</span> {previewCurrency}
               </p>
               <table className="w-full text-sm">
                 <tbody>
@@ -464,7 +649,9 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
                         {line.name}
                         {line.variantTitle ? ` — ${line.variantTitle}` : ""} × {line.qty}
                       </td>
-                      <td className="py-2 text-right">{formatEurCents(line.lineTotal)}</td>
+                      <td className="py-2 text-right">
+                        {formatStripeAmount(line.lineTotal, previewCurrency)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -473,53 +660,63 @@ export function ManualInvoiceOrderForm({ onCreated }: ManualInvoiceOrderFormProp
                 {(preview?.discountCents ?? 0) > 0 && (
                   <>
                     <div className="flex justify-between text-muted-foreground">
-                      <span>Sous-total avant remise</span>
-                      <span>{formatEurCents(preview!.grossSubtotal)}</span>
+                      <span>{copy.beforeDiscount}</span>
+                      <span>{formatStripeAmount(preview!.grossSubtotal, previewCurrency)}</span>
                     </div>
                     <div className="flex justify-between text-muted-foreground">
                       <span>
-                        Remise
+                        {copy.discountLine}
                         {preview?.discountType === "percent"
                           ? ` (−${preview.discountValue}%)`
                           : ""}
                       </span>
-                      <span>−{formatEurCents(preview!.discountCents)}</span>
+                      <span>−{formatStripeAmount(preview!.discountCents, previewCurrency)}</span>
                     </div>
                   </>
                 )}
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Sous-total</span>
-                  <span>{formatEurCents(preview?.amountSubtotal ?? 0)}</span>
+                  <span>{copy.subtotal}</span>
+                  <span>{formatStripeAmount(preview?.amountSubtotal ?? 0, previewCurrency)}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Livraison ({preview?.shippingCountryCode})</span>
-                  <span>{preview?.shippingLabel || formatEurCents(preview?.amountShipping ?? 0)}</span>
+                  <span>
+                    {copy.shipping} ({preview?.shippingCountryCode})
+                  </span>
+                  <span>
+                    {preview?.shippingLabel ||
+                      formatStripeAmount(preview?.amountShipping ?? 0, previewCurrency)}
+                  </span>
                 </div>
                 <div className="flex justify-between font-medium text-base pt-1">
-                  <span>Total à payer</span>
-                  <span>{formatEurCents(preview?.amountTotal ?? 0)}</span>
+                  <span>{copy.total}</span>
+                  <span>{formatStripeAmount(preview?.amountTotal ?? 0, previewCurrency)}</span>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Ces frais de livraison sont inclus dans le total du lien de paiement. Le client
-                confirmera son adresse au checkout Stripe, mais le montant shipping affiché / facturé
-                est celui calculé pour le pays choisi ici.
-              </p>
+              <p className="text-xs text-muted-foreground">{copy.shippingNote}</p>
             </div>
 
             {error && <p className="text-sm text-destructive">{error}</p>}
             {success && <p className="text-sm text-muted-foreground">{success}</p>}
+            {paymentUrl && (
+              <div className="rounded-sm border border-border bg-muted/40 p-3 space-y-1">
+                <p className="text-xs font-medium">{copy.paymentLink}</p>
+                <a
+                  href={paymentUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs break-all text-foreground underline"
+                >
+                  {paymentUrl}
+                </a>
+              </div>
+            )}
 
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" onClick={() => setStep("edit")} disabled={saving}>
-                ← Modifier
+                {copy.back}
               </Button>
               <Button type="button" onClick={handleCreate} disabled={saving || !preview}>
-                {saving
-                  ? "Création…"
-                  : sendEmail
-                    ? "2. Créer et envoyer le lien"
-                    : "2. Créer sans email"}
+                {saving ? copy.creating : sendEmail ? copy.createSend : copy.createNoEmail}
               </Button>
             </div>
           </div>

@@ -17,8 +17,8 @@ const secrets = [
   "BREVO_LIST_ID",
   "INSTAGRAM_ACCESS_TOKEN",
   "INSTAGRAM_USER_ID",
+  "MONDIAL_RELAY_BRAND_ID",
 ];
-
 console.log("# Cloudflare Workers secrets — run from project root:\n");
 for (const name of secrets) {
   console.log(`npx wrangler secret put ${name}`);

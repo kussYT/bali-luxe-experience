@@ -10,8 +10,8 @@ name: Instagram maintenance
 
 on:
   schedule:
-    # Every Sunday 04:00 UTC
-    - cron: "0 4 * * 0"
+    # Every day 04:00 UTC (localize new posts before CDN URLs expire)
+    - cron: "0 4 * * *"
   workflow_dispatch:
 
 permissions:

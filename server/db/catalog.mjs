@@ -124,6 +124,7 @@ export async function fetchCatalogFromDb({ includeDrafts = false, locale, includ
         p.meta_description,
         p.sort_order,
         p.locales,
+        p.reference_code,
         c.slug AS collection_slug,
         c.name AS collection_name
       FROM products p
@@ -301,6 +302,7 @@ export async function fetchCatalogFromDb({ includeDrafts = false, locale, includ
       compareAtEUR: onSale ? compareRaw : undefined,
       priceUSD: p.price_usd,
       priceIDR: p.price_idr,
+      referenceCode: p.reference_code || undefined,
       image: images[0] || "/shopify-import/placeholder.jpg",
       images,
       imageFocal: focal,

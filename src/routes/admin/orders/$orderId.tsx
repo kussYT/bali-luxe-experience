@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   fetchAdminOrder,
   updateAdminOrder,
@@ -8,6 +8,8 @@ import {
   type AdminOrder,
 } from "@/lib/admin-api";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_OPTIONS } from "@/lib/order-status";
+import { ORDER_ROW_TONE_CLASS, orderProductSummary, orderRowTone, productLineRef } from "@/lib/order-display";
+import { printOrderInvoice } from "@/lib/order-invoice";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,12 +53,19 @@ function AdminOrderDetailPage() {
   const [notes, setNotes] = useState("");
   const [resending, setResending] = useState(false);
   const [sendingPaymentLink, setSendingPaymentLink] = useState(false);
+  const fulfillRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     fetchAdminOrder(orderId)
       .then((res) => {
         setOrder(res.order);
         syncForm(res.order);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        if (FULFILL_FROM.has(res.order.status)) {
+          requestAnimationFrame(() => {
+            fulfillRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+          });
+        }
       })
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load order"));
   }, [orderId]);
@@ -178,19 +187,139 @@ function AdminOrderDetailPage() {
   }
 
   const canFulfill = FULFILL_FROM.has(order.status);
+  const tone = orderRowTone(order);
+  const itemsSummary = orderProductSummary(order.items || []);
 
   return (
-    <div className="space-y-8 max-w-3xl">
+    <div className="space-y-6 max-w-3xl mx-auto">
       <div>
         <Link to="/admin/orders" className="text-sm link-underline text-muted-foreground">
           ← Commandes
         </Link>
-        <h2 className="font-display text-4xl mt-4">Détail commande</h2>
-        <p className="text-xs text-muted-foreground mt-2 font-mono">{order.id}</p>
+        <div className={`mt-4 rounded-sm border border-border px-4 py-4 ${ORDER_ROW_TONE_CLASS[tone]}`}>
+          <h2 className="font-display text-4xl">
+            {ORDER_STATUS_LABELS[order.status] ?? order.status}
+          </h2>
+          <p className="text-xs text-muted-foreground mt-2 font-mono break-all">{order.id}</p>
+          <p className="text-sm mt-2 font-mono font-medium tracking-wide">{itemsSummary.refs}</p>
+          <div className="mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                try {
+                  printOrderInvoice(order);
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : "Impossible d’ouvrir la facture");
+                }
+              }}
+            >
+              Facture récapitulative
+            </Button>
+          </div>
+        </div>
       </div>
 
       {message && <p className="text-sm text-muted-foreground">{message}</p>}
       {error && order && <p className="text-sm text-destructive">{error}</p>}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-display text-xl">Articles</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-4 text-sm">
+            {order.items.map((item) => (
+              <li
+                key={item.id}
+                className="flex justify-between gap-4 border-b border-border pb-3 last:border-0"
+              >
+                <div className="flex gap-3 min-w-0">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt=""
+                      className="size-16 object-cover bg-muted shrink-0 rounded-sm"
+                    />
+                  ) : (
+                    <div className="size-16 bg-muted shrink-0 rounded-sm" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-mono text-xs font-medium tracking-wide">
+                      {productLineRef(item)}
+                    </p>
+                    <p className="font-medium mt-0.5">{item.name}</p>
+                    <p className="text-muted-foreground">
+                      {item.variantTitle} · qté {item.qty}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Expédié depuis {warehouseLabel(item.warehouseId)}
+                    </p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+
+      {canFulfill && (
+        <Card ref={fulfillRef} className="border-emerald-200 shadow-sm ring-1 ring-emerald-100">
+          <CardHeader>
+            <CardTitle className="font-display text-xl">Traiter la commande</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleFulfill} className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Ajoutez le numéro de suivi et choisissez si le client reçoit l&apos;email
+                d&apos;expédition.
+              </p>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fulfill-tracking">Numéro de suivi</Label>
+                  <Input
+                    id="fulfill-tracking"
+                    value={trackingNumber}
+                    onChange={(e) => setTrackingNumber(e.target.value)}
+                    placeholder="Ex. 3S1234567890"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fulfill-carrier">Transporteur</Label>
+                  <Input
+                    id="fulfill-carrier"
+                    value={trackingCarrier}
+                    onChange={(e) => setTrackingCarrier(e.target.value)}
+                    placeholder="Colissimo, DHL…"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="fulfill-url">Lien de suivi (optionnel)</Label>
+                <Input
+                  id="fulfill-url"
+                  value={trackingUrl}
+                  onChange={(e) => setTrackingUrl(e.target.value)}
+                  placeholder="https://…"
+                />
+              </div>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={notifyCustomer}
+                  onChange={(e) => setNotifyCustomer(e.target.checked)}
+                  className="rounded border-border"
+                />
+                Envoyer l&apos;email au client (« commande en cours d&apos;acheminement »)
+              </label>
+              <Button type="submit" disabled={saving}>
+                {saving ? "Traitement…" : "Marquer comme traitée"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid sm:grid-cols-2 gap-4">
         <Card>
@@ -238,7 +367,56 @@ function AdminOrderDetailPage() {
             <CardTitle className="text-sm font-normal text-muted-foreground">Livraison</CardTitle>
           </CardHeader>
           <CardContent className="text-sm space-y-1">
+            {order.shippingAddress?.method === "mondial_relay" && (
+              <p className="font-medium text-foreground">
+                Mondial Relay — Point Relais
+                {order.shippingAddress.pickupId ? ` ${order.shippingAddress.pickupId}` : ""}
+              </p>
+            )}
             <p>
+              <span className="text-muted-foreground">Nom :</span>{" "}
+              {order.customerName || order.shippingAddress?.name || "—"}
+            </p>
+            <p>
+              <span className="text-muted-foreground">Email :</span> {order.customerEmail || "—"}
+            </p>
+            <p>
+              <span className="text-muted-foreground">Téléphone :</span>{" "}
+              {order.customerPhone || order.shippingAddress?.phone || "—"}
+            </p>
+            {order.shippingAddress?.line1 || order.shippingAddress?.city || order.shippingAddress?.pickupId ? (
+              <div className="pt-2 space-y-0.5">
+                <p className="text-muted-foreground">
+                  {order.shippingAddress?.method === "mondial_relay" ? "Point Relais :" : "Adresse :"}
+                </p>
+                {order.shippingAddress.name &&
+                  order.shippingAddress.method === "mondial_relay" && (
+                    <p>{order.shippingAddress.name}</p>
+                  )}
+                {order.shippingAddress.line1 && <p>{order.shippingAddress.line1}</p>}
+                {order.shippingAddress.line2 && <p>{order.shippingAddress.line2}</p>}
+                <p>
+                  {[order.shippingAddress.postalCode, order.shippingAddress.city]
+                    .filter(Boolean)
+                    .join(" ")}
+                </p>
+                {order.shippingAddress.state && <p>{order.shippingAddress.state}</p>}
+                <p>
+                  {order.shippingAddress.country ||
+                    order.shippingCountryCode ||
+                    order.countryCode ||
+                    "—"}
+                </p>
+              </div>
+            ) : (
+              <p className="text-muted-foreground pt-1">
+                Adresse complète non disponible
+                {order.stripeSessionId
+                  ? " (récupération Stripe en cours ou absente sur la session)."
+                  : "."}
+              </p>
+            )}
+            <p className="pt-2">
               <span className="text-muted-foreground">Pays checkout :</span> {order.countryCode || "—"}
             </p>
             <p>
@@ -248,9 +426,6 @@ function AdminOrderDetailPage() {
             <p>
               <span className="text-muted-foreground">Entrepôt :</span>{" "}
               {warehouseLabel(order.fulfillmentWarehouse)}
-            </p>
-            <p>
-              <span className="text-muted-foreground">Client :</span> {order.customerEmail || "—"}
             </p>
             {order.externalRef && (
               <p>
@@ -307,63 +482,6 @@ function AdminOrderDetailPage() {
                 </Button>
               </>
             )}
-          </CardContent>
-        </Card>
-      )}
-
-      {canFulfill && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-display text-xl">Traiter la commande</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleFulfill} className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Ajoutez le numéro de suivi et choisissez si le client reçoit l&apos;email
-                d&apos;expédition.
-              </p>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fulfill-tracking">Numéro de suivi</Label>
-                  <Input
-                    id="fulfill-tracking"
-                    value={trackingNumber}
-                    onChange={(e) => setTrackingNumber(e.target.value)}
-                    placeholder="Ex. 3S1234567890"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="fulfill-carrier">Transporteur</Label>
-                  <Input
-                    id="fulfill-carrier"
-                    value={trackingCarrier}
-                    onChange={(e) => setTrackingCarrier(e.target.value)}
-                    placeholder="Colissimo, DHL…"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="fulfill-url">Lien de suivi (optionnel)</Label>
-                <Input
-                  id="fulfill-url"
-                  value={trackingUrl}
-                  onChange={(e) => setTrackingUrl(e.target.value)}
-                  placeholder="https://…"
-                />
-              </div>
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={notifyCustomer}
-                  onChange={(e) => setNotifyCustomer(e.target.checked)}
-                  className="rounded border-border"
-                />
-                Envoyer l&apos;email au client (« commande en cours d&apos;acheminement »)
-              </label>
-              <Button type="submit" disabled={saving}>
-                {saving ? "Traitement…" : "Marquer comme traitée"}
-              </Button>
-            </form>
           </CardContent>
         </Card>
       )}
@@ -433,32 +551,6 @@ function AdminOrderDetailPage() {
               {saving ? "Enregistrement…" : "Enregistrer le statut"}
             </Button>
           </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-display text-xl">Articles</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-4 text-sm">
-            {order.items.map((item) => (
-              <li
-                key={item.id}
-                className="flex justify-between gap-4 border-b border-border pb-3 last:border-0"
-              >
-                <div>
-                  <p className="font-medium">{item.name}</p>
-                  <p className="text-muted-foreground">
-                    {item.variantTitle} · {item.slug} · qté {item.qty}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Expédié depuis {warehouseLabel(item.warehouseId)}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
         </CardContent>
       </Card>
     </div>

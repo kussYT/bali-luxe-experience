@@ -28,6 +28,12 @@ export function InstagramSection() {
               loading="lazy"
               decoding="async"
               referrerPolicy="no-referrer"
+              onError={(e) => {
+                const el = e.currentTarget;
+                if (el.dataset.fallback === "1") return;
+                el.dataset.fallback = "1";
+                el.src = `/lifestyle/lookbook-sunburn.jpg`;
+              }}
               className="size-full object-cover image-editorial transition-transform duration-[1.4s] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
             />
           </a>

@@ -32,3 +32,31 @@ export function emptyProductMessagesLocaleFields() {
     inStock: "",
   };
 }
+
+export function emptyAboutLocaleFields() {
+  return {
+    eyebrow: "",
+    title: "",
+    metaDescription: "",
+    sections: [] as { id: string; eyebrow: string; title: string; body: string }[],
+    values: [] as { n: string; t: string; d: string }[],
+    sidebarLinks: [] as {
+      label: string;
+      to: string;
+      hash?: string;
+      image: string;
+      imageFocal?: { x: number; y: number };
+    }[],
+  };
+}
+
+export function emptySizingLocaleFields() {
+  return {
+    eyebrow: "",
+    title: "",
+    metaDescription: "",
+    body: [] as string[],
+    imageAlt: "",
+    backLink: "",
+  };
+}

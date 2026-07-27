@@ -16,18 +16,53 @@ const GRAPH_VERSION = "v21.0";
 
 function mapGraphMedia(item) {
   const type = item.media_type;
-  const image =
-    type === "VIDEO" ? item.thumbnail_url || item.media_url : item.media_url;
+  let image = null;
+
+  if (type === "VIDEO") {
+    image = item.thumbnail_url || item.media_url || null;
+  } else if (type === "CAROUSEL_ALBUM") {
+    const children = item.children?.data || [];
+    const firstImage = children.find((c) => c.media_type === "IMAGE" && c.media_url);
+    const firstVideo = children.find((c) => c.media_type === "VIDEO" && (c.thumbnail_url || c.media_url));
+    const firstAny = children.find((c) => c.media_url || c.thumbnail_url);
+    image =
+      firstImage?.media_url ||
+      firstVideo?.thumbnail_url ||
+      firstVideo?.media_url ||
+      firstAny?.thumbnail_url ||
+      firstAny?.media_url ||
+      item.media_url ||
+      item.thumbnail_url ||
+      null;
+  } else {
+    // IMAGE and any newer types Meta may send
+    image = item.media_url || item.thumbnail_url || null;
+  }
+
   if (!image) return null;
   const caption = typeof item.caption === "string" ? item.caption : "";
   const alt = caption.slice(0, 120) || "Bingin Diaries on Instagram";
   return {
-    id: item.id,
+    id: String(item.id),
     image,
     alt,
     caption: caption || undefined,
     permalink: item.permalink || INSTAGRAM_PROFILE.profileUrl,
   };
+}
+
+async function hydrateCarouselChildren(item, token) {
+  if (item.media_type !== "CAROUSEL_ALBUM") return item;
+  if (item.children?.data?.length) return item;
+  try {
+    const url = `https://graph.instagram.com/${item.id}?fields=children{media_url,media_type,thumbnail_url}&access_token=${encodeURIComponent(token)}`;
+    const res = await fetch(url);
+    if (!res.ok) return item;
+    const data = await res.json();
+    return { ...item, children: data.children };
+  } catch {
+    return item;
+  }
 }
 
 /** Instagram Graph API — requires INSTAGRAM_ACCESS_TOKEN */
@@ -36,9 +71,11 @@ export async function fetchInstagramFromGraph() {
   const userId = process.env.INSTAGRAM_USER_ID?.trim();
   if (!token) return null;
 
-  const fields = "id,media_type,media_url,permalink,caption,thumbnail_url";
+  // Pull extra items so one unusable video/carousel doesn't leave the homepage grid at 5.
+  const fields =
+    "id,media_type,media_url,permalink,caption,thumbnail_url,children{media_url,media_type,thumbnail_url}";
   const accountPath = userId ? `${userId}/media` : "me/media";
-  const url = `https://graph.instagram.com/${accountPath}?fields=${fields}&limit=6&access_token=${encodeURIComponent(token)}`;
+  const url = `https://graph.instagram.com/${accountPath}?fields=${fields}&limit=18&access_token=${encodeURIComponent(token)}`;
 
   const res = await fetch(url);
   if (!res.ok) {
@@ -47,7 +84,13 @@ export async function fetchInstagramFromGraph() {
   }
 
   const data = await res.json();
-  const posts = (data.data || []).map(mapGraphMedia).filter(Boolean);
+  const raw = data.data || [];
+  const hydrated = [];
+  for (const item of raw) {
+    hydrated.push(await hydrateCarouselChildren(item, token));
+  }
+
+  const posts = hydrated.map(mapGraphMedia).filter(Boolean).slice(0, 6);
   if (posts.length === 0) return null;
 
   return {
@@ -55,6 +98,10 @@ export async function fetchInstagramFromGraph() {
     posts,
     syncedAt: new Date().toISOString(),
     source: "graph-api",
+    meta: {
+      rawCount: raw.length,
+      mappedCount: hydrated.map(mapGraphMedia).filter(Boolean).length,
+    },
   };
 }
 

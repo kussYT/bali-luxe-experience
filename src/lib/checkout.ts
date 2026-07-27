@@ -9,7 +9,20 @@ export async function startCheckout(
   items: CartItem[],
   currency: Currency,
   countryCode: string,
-  options?: { promoCode?: string; customerEmail?: string },
+  options?: {
+    promoCode?: string;
+    customerEmail?: string;
+    shippingMethod?: "home" | "mondial_relay";
+    pickupPoint?: {
+      id: string;
+      name: string;
+      line1: string;
+      line2?: string;
+      postalCode: string;
+      city: string;
+      country: string;
+    };
+  },
 ): Promise<CheckoutResult> {
   try {
     const res = await fetch("/api/checkout/session", {
@@ -21,6 +34,8 @@ export async function startCheckout(
         countryCode,
         promoCode: options?.promoCode,
         customerEmail: options?.customerEmail,
+        shippingMethod: options?.shippingMethod || "home",
+        pickupPoint: options?.pickupPoint,
       }),
     });
     const data = (await res.json()) as { url?: string; error?: string };

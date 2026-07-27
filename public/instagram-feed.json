@@ -7,11 +7,32 @@
   },
   "posts": [
     {
+      "id": "18078631472326194",
+      "image": "/instagram/18078631472326194.jpg",
+      "alt": "At Bingin Diaries, choosing the right materials is important, so you know when you buy your product that is made to last",
+      "caption": "At Bingin Diaries, choosing the right materials is important, so you know when you buy your product that is made to last.",
+      "permalink": "https://www.instagram.com/p/DbIMTyYDd75/"
+    },
+    {
+      "id": "17900122398473237",
+      "image": "/instagram/17900122398473237.jpg",
+      "alt": "The 90s Fisherman has a timeless and unique style. Available in different colours so you can find the one that suits YOU",
+      "caption": "The 90s Fisherman has a timeless and unique style. Available in different colours so you can find the one that suits YOU the most :)",
+      "permalink": "https://www.instagram.com/p/DbF9Xy6N564/"
+    },
+    {
       "id": "18601642528014251",
       "image": "/instagram/18601642528014251.jpg",
       "alt": "@roam.homeware is a curated concept store celebrating local artists, thoughtful design, and timeless homeware. Every pie",
       "caption": "@roam.homeware is a curated concept store celebrating local artists, thoughtful design, and timeless homeware. Every piece tells a story and brings warmth to your home and wardrobe !\nA fine selection of our bestsellers are available in store and on their website !",
       "permalink": "https://www.instagram.com/p/DbAtSXhtSrD/"
+    },
+    {
+      "id": "17936910255313554",
+      "image": "/instagram/17936910255313554.webp",
+      "alt": "Our favorite summer piece. \nThe Bingin Diaries Shell Earring, handcrafted, inspired by the sea and made for long days un",
+      "caption": "Our favorite summer piece. \nThe Bingin Diaries Shell Earring, handcrafted, inspired by the sea and made for long days under the sun.",
+      "permalink": "https://www.instagram.com/p/Da42XY6jaov/"
     },
     {
       "id": "18071858978381182",
@@ -26,22 +47,12 @@
       "alt": "Meet The Gilda hat \n\nHand-crocheted from natural banana leaf fiber. Lightweight, timeless, and crafted by hand—it's the ",
       "caption": "Meet The Gilda hat \n\nHand-crocheted from natural banana leaf fiber. Lightweight, timeless, and crafted by hand—it's the piece you'll reach for all season long.\n\n📸 : @saltysun.bijoux",
       "permalink": "https://www.instagram.com/p/DaulznjtNQc/"
-    },
-    {
-      "id": "18056070071772991",
-      "image": "/instagram/18056070071772991.webp",
-      "alt": "Packing sunshine, one order at a time.",
-      "caption": "Packing sunshine, one order at a time.",
-      "permalink": "https://www.instagram.com/p/Dam3am2jaV2/"
-    },
-    {
-      "id": "17891231970570842",
-      "image": "/instagram/17891231970570842.jpg",
-      "alt": "You are a Bingin girl",
-      "caption": "You are a Bingin girl",
-      "permalink": "https://www.instagram.com/reel/DakcumRt2Jc/"
     }
   ],
-  "syncedAt": "2026-07-21T10:44:13.560Z",
-  "source": "graph-api-local"
+  "syncedAt": "2026-07-23T09:37:17.096Z",
+  "source": "graph-api-local",
+  "meta": {
+    "rawCount": 18,
+    "mappedCount": 18
+  }
 }

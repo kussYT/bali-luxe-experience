@@ -58,7 +58,7 @@ function normalizeProduct(raw) {
     priceEUR,
     compareAtEUR: onSale ? compareAtEUR : undefined,
     priceUSD: Number(raw.priceUSD) || Math.round(priceEUR * 1.1),
-    priceIDR: Number(raw.priceIDR) || Math.round(priceEUR * 17_000),
+    priceIDR: Number(raw.priceIDR) || Math.round(priceEUR * 20_000),
     image: images[0] || "/shopify-import/placeholder.jpg",
     images,
     videoUrl: typeof raw.videoUrl === "string" ? raw.videoUrl : undefined,

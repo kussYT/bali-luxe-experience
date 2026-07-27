@@ -19,14 +19,38 @@ export function formatMoneyEmail(amount, currency) {
   return `€${value.toFixed(2)}`;
 }
 
-/** Public site origin only — ignores any path suffix on SITE_URL (e.g. `/admin`). */
+const PRODUCTION_SITE_ORIGIN = "https://bingindiaries.com";
+
+/**
+ * Public storefront origin for emails, Stripe redirects, magic links.
+ * Ignores path suffixes on SITE_URL (e.g. `/admin`).
+ * Rewrites workers.dev → bingindiaries.com so payment emails never hit staging.
+ */
 export function siteUrl() {
-  const raw = (process.env.SITE_URL || "http://localhost:8080").trim();
-  try {
-    return new URL(raw).origin;
-  } catch {
-    return raw.replace(/\/$/, "");
+  const raw = (process.env.SITE_URL || "").trim();
+  if (!raw) {
+    // Cloudflare Workers have no reliable NODE_ENV; missing SITE_URL must not fall back to localhost.
+    return PRODUCTION_SITE_ORIGIN;
   }
+
+  let origin;
+  try {
+    origin = new URL(raw).origin;
+  } catch {
+    origin = raw.replace(/\/$/, "");
+  }
+
+  const host = origin.replace(/^https?:\/\//, "").toLowerCase();
+  if (host.includes("workers.dev")) {
+    return PRODUCTION_SITE_ORIGIN;
+  }
+
+  return origin;
+}
+
+/** Stable short payment URL for invoice / recovery emails. */
+export function paymentResumeUrl(orderId) {
+  return `${siteUrl()}/pay/${encodeURIComponent(orderId)}`;
 }
 
 export { opsInbox };

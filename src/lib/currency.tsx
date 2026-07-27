@@ -17,6 +17,7 @@ import { LOCALE_CHANGED_EVENT, LOCALE_DEFAULT_COUNTRY } from "@/lib/locale-marke
 import type { Locale } from "@/lib/i18n/messages";
 import { useLocale } from "@/lib/i18n/locale-context";
 import { formatMoneyAmount } from "@/lib/format-money";
+import { EUR_TO_IDR, EUR_TO_USD, getUnitPrice } from "@/lib/pricing";
 
 export type Currency = "EUR" | "USD" | "IDR";
 export type Country = { code: string; name: string; currency: Currency; flag: string };
@@ -93,13 +94,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
 
   const format = useCallback(
     (p: Product) => {
-      const eur = p.onSale && p.compareAtEUR != null ? p.compareAtEUR : p.priceEUR;
-      const value =
-        country.currency === "EUR"
-          ? eur
-          : country.currency === "USD"
-            ? Math.round(eur * 1.1)
-            : Math.round(eur * 17_000);
+      const value = getUnitPrice(p, country.currency);
       return formatMoneyAmount(value, country.currency, locale);
     },
     [country.currency, locale],
@@ -111,8 +106,8 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         country.currency === "EUR"
           ? eur
           : country.currency === "USD"
-            ? Math.round(eur * 1.1)
-            : Math.round(eur * 17_000);
+            ? Math.round(eur * EUR_TO_USD)
+            : Math.round(eur * EUR_TO_IDR);
       return formatMoneyAmount(value, country.currency, locale);
     },
     [country.currency, locale],

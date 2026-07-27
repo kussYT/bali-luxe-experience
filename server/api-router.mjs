@@ -84,7 +84,7 @@ import {
   seedCmsContent,
 } from "./api/content-admin.mjs";
 import { getAdminCmsStatusResponse } from "./api/cms-status.mjs";
-import { mergeFeedWithLocalImages, sanitizeInstagramFeed, LIFESTYLE_FALLBACK_IMAGES } from "./instagram-utils.mjs";
+import { mergeFeedWithLocalImages, sanitizeInstagramFeed } from "./instagram-utils.mjs";
 import {
   createAdminProduct,
   updateAdminProduct,
@@ -108,7 +108,15 @@ import {
   getAdminCustomersExportCsv,
   getAdminCustomersExportBrevoCsv,
 } from "./api/customers-admin.mjs";
-import { postAdminTranslatePage, postAdminTranslatePost, postAdminTranslateProduct, postAdminTranslateProductMessages, getAdminTranslateStatusResponse } from "./api/translate-admin.mjs";
+import {
+  postAdminTranslatePage,
+  postAdminTranslatePost,
+  postAdminTranslateProduct,
+  postAdminTranslateProductMessages,
+  postAdminTranslateSizing,
+  postAdminTranslateAbout,
+  getAdminTranslateStatusResponse,
+} from "./api/translate-admin.mjs";
 import {
   getAdminPromotionsResponse,
   postAdminPromotion,
@@ -157,12 +165,86 @@ async function parseMultipartRequest(request) {
   return files;
 }
 
-function hasLocalInstagramImages(feed) {
-  return feed?.posts?.some((p) => typeof p.image === "string" && p.image.startsWith("/instagram/"));
+/** Keep homepage grid full: append older cached posts not already in the live list. */
+function padInstagramPosts(livePosts, staticPosts, target = 6) {
+  const posts = [...(livePosts || [])];
+  const seen = new Set(posts.map((p) => String(p.id)));
+  for (const post of staticPosts || []) {
+    if (posts.length >= target) break;
+    const id = String(post.id);
+    if (seen.has(id)) continue;
+    if (!post.image) continue;
+    seen.add(id);
+    posts.push(post);
+  }
+  return posts.slice(0, target);
 }
 
-function usesLifestyleFallbacks(feed) {
-  return feed?.posts?.some((p) => LIFESTYLE_FALLBACK_IMAGES.includes(p.image));
+function isInstagramCdnHost(hostname) {
+  return (
+    hostname.includes("cdninstagram.com") ||
+    hostname.includes("fbcdn.net") ||
+    hostname.startsWith("scontent")
+  );
+}
+
+/** Browser can't reliably load Instagram CDN (hotlink). Proxy through our API. */
+function rewriteInstagramImagesForBrowser(posts) {
+  return (posts || []).map((post) => {
+    const image = post?.image;
+    if (typeof image !== "string" || !image.startsWith("http")) return post;
+    try {
+      const host = new URL(image).hostname;
+      if (!isInstagramCdnHost(host)) return post;
+      return {
+        ...post,
+        image: `/api/instagram/img?u=${encodeURIComponent(image)}`,
+      };
+    } catch {
+      return post;
+    }
+  });
+}
+
+async function proxyInstagramImage(request) {
+  const raw = new URL(request.url).searchParams.get("u");
+  if (!raw) return jsonResponse(400, { error: "u required" });
+
+  let target;
+  try {
+    target = new URL(raw);
+  } catch {
+    return jsonResponse(400, { error: "invalid url" });
+  }
+
+  if (!isInstagramCdnHost(target.hostname)) {
+    return jsonResponse(400, { error: "host not allowed" });
+  }
+
+  try {
+    const upstream = await fetch(target.toString(), {
+      redirect: "follow",
+      headers: {
+        Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      },
+    });
+    if (!upstream.ok || !upstream.body) {
+      return new Response(null, { status: 502 });
+    }
+    const contentType = upstream.headers.get("content-type") || "image/jpeg";
+    return new Response(upstream.body, {
+      status: 200,
+      headers: {
+        "Content-Type": contentType,
+        "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+      },
+    });
+  } catch (e) {
+    console.warn("[instagram proxy]", e.message);
+    return new Response(null, { status: 502 });
+  }
 }
 
 async function instagramResponse(request) {
@@ -171,14 +253,15 @@ async function instagramResponse(request) {
   try {
     const live = await fetchInstagramFeed();
     if (live) {
-      const merged = sanitizeInstagramFeed(mergeFeedWithLocalImages(live, staticFeed));
-      if (usesLifestyleFallbacks(merged) && hasLocalInstagramImages(staticFeed)) {
-        return jsonResponse(200, {
-          ...staticFeed,
-          source: staticFeed.source || "static",
-        });
-      }
-      return jsonResponse(200, merged);
+      const merged = mergeFeedWithLocalImages(live, staticFeed);
+      const posts = rewriteInstagramImagesForBrowser(
+        padInstagramPosts(merged.posts, staticFeed?.posts, 6),
+      );
+      return jsonResponse(200, {
+        ...merged,
+        posts,
+        source: merged.source || "graph-api",
+      });
     }
   } catch (e) {
     liveError = e;
@@ -189,6 +272,7 @@ async function instagramResponse(request) {
     if (staticFeed?.posts?.length) {
       return jsonResponse(200, {
         ...staticFeed,
+        posts: rewriteInstagramImagesForBrowser(padInstagramPosts(staticFeed.posts, [], 6)),
         source: staticFeed.source || "static",
         error: liveError ? "Instagram live feed unavailable. Using cached content." : undefined,
       });
@@ -239,8 +323,16 @@ export async function handleApiRequest(request, context = {}) {
         countryCode: body.countryCode,
         promoCode: body.promoCode,
         customerEmail: body.customerEmail,
+        shippingMethod: body.shippingMethod,
+        pickupPoint: body.pickupPoint,
       });
       return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/shipping/options" && method === "GET") {
+      const { getShippingOptionsForCountry } = await import("./checkout.mjs");
+      const country = url.searchParams.get("country") || "FR";
+      return jsonResponse(200, getShippingOptionsForCountry(country));
     }
 
     if (pathname === "/api/checkout/session" && method === "GET") {
@@ -260,6 +352,10 @@ export async function handleApiRequest(request, context = {}) {
 
     if (pathname === "/api/instagram" && method === "GET") {
       return instagramResponse(request);
+    }
+
+    if (pathname === "/api/instagram/img" && method === "GET") {
+      return proxyInstagramImage(request);
     }
 
     if (pathname === "/api/geo" && method === "GET") {
@@ -577,7 +673,7 @@ export async function handleApiRequest(request, context = {}) {
     }
 
     if (pathname === "/api/admin/orders/export.csv" && method === "GET") {
-      const csv = await getAdminOrdersCsv();
+      const csv = await getAdminOrdersCsv(Object.fromEntries(url.searchParams));
       return new Response(csv, {
         status: 200,
         headers: {
@@ -878,6 +974,18 @@ export async function handleApiRequest(request, context = {}) {
     if (pathname === "/api/admin/translate-product-messages" && method === "POST") {
       const body = await readJsonBody(request);
       const result = await postAdminTranslateProductMessages(body);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/translate-sizing" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await postAdminTranslateSizing(body);
+      return jsonResponse(200, result);
+    }
+
+    if (pathname === "/api/admin/translate-about" && method === "POST") {
+      const body = await readJsonBody(request);
+      const result = await postAdminTranslateAbout(body);
       return jsonResponse(200, result);
     }
 

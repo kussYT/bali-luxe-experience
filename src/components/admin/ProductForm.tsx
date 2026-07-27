@@ -26,6 +26,8 @@ import {
   shopCategoryFromSubcategory,
 } from "@/lib/catalog-taxonomy";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
+import { suggestProductCode } from "@/lib/order-display";
+import { EUR_TO_IDR, EUR_TO_USD } from "@/lib/pricing";
 
 export type VariantFormRow = {
   id?: string;
@@ -39,6 +41,9 @@ export type ProductFormValues = {
   story: string;
   priceEUR: number;
   compareAtEUR?: number;
+  priceUSD?: number;
+  priceIDR?: number;
+  referenceCode: string;
   collection: string;
   collectionSlug: string;
   subcategory: string;
@@ -96,6 +101,9 @@ const empty: ProductFormValues = {
   story: "",
   priceEUR: 0,
   compareAtEUR: undefined,
+  priceUSD: undefined,
+  priceIDR: undefined,
+  referenceCode: "",
   collection: "",
   collectionSlug: "",
   subcategory: "",
@@ -147,6 +155,8 @@ export function ProductForm({
         initial?.compareAtEUR != null && initial.compareAtEUR !== ""
           ? parseMoneyValue(initial.compareAtEUR)
           : undefined,
+      priceUSD: initial?.priceUSD != null ? Number(initial.priceUSD) : undefined,
+      priceIDR: initial?.priceIDR != null ? Number(initial.priceIDR) : undefined,
       variants: variantsFromProduct(initial),
       images,
       imageFocals,
@@ -157,6 +167,7 @@ export function ProductForm({
       videoUrl: initial?.videoUrl ?? "",
       seoTitle: initial?.seoTitle ?? "",
       metaDescription: initial?.metaDescription ?? "",
+      referenceCode: initial?.referenceCode ?? suggestProductCode(initial?.name || ""),
     };
   });
   const [uploading, setUploading] = useState(false);
@@ -416,7 +427,19 @@ export function ProductForm({
           <MoneyInput
             id="price"
             value={values.priceEUR > 0 ? values.priceEUR : undefined}
-            onChange={(n) => set("priceEUR", n ?? 0)}
+            onChange={(n) => {
+              const priceEUR = n ?? 0;
+              const sell =
+                values.compareAtEUR != null && values.compareAtEUR < priceEUR
+                  ? values.compareAtEUR
+                  : priceEUR;
+              setValues((v) => ({
+                ...v,
+                priceEUR,
+                priceUSD: Math.round(sell * EUR_TO_USD * 100) / 100,
+                priceIDR: Math.round(sell * EUR_TO_IDR),
+              }));
+            }}
           />
         </div>
         <div className="space-y-2">
@@ -425,14 +448,69 @@ export function ProductForm({
             id="compare"
             value={values.compareAtEUR}
             allowEmpty
-            onChange={(n) => set("compareAtEUR", n)}
+            onChange={(n) => {
+              const compareAtEUR = n;
+              const sell =
+                compareAtEUR != null && compareAtEUR < values.priceEUR
+                  ? compareAtEUR
+                  : values.priceEUR;
+              setValues((v) => ({
+                ...v,
+                compareAtEUR,
+                priceUSD: Math.round(sell * EUR_TO_USD * 100) / 100,
+                priceIDR: Math.round(sell * EUR_TO_IDR),
+              }));
+            }}
             placeholder="Optionnel — inférieur au prix catalogue"
           />
           <p className="text-xs text-muted-foreground">
             If set below the list price, the piece appears under <strong>Sales</strong> in the menu with a
-            crossed-out original price.
+            crossed-out original price. No extra “sale button” needed.
           </p>
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="priceUsd">Price (USD)</Label>
+          <MoneyInput
+            id="priceUsd"
+            value={values.priceUSD}
+            allowEmpty
+            onChange={(n) => set("priceUSD", n)}
+            placeholder={`Auto × ${EUR_TO_USD}`}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="priceIdr">Price (IDR)</Label>
+          <Input
+            id="priceIdr"
+            type="number"
+            min={0}
+            step={1000}
+            value={values.priceIDR ?? ""}
+            onChange={(e) =>
+              set("priceIDR", e.target.value === "" ? undefined : Math.round(Number(e.target.value)))
+            }
+            placeholder={`Auto × ${EUR_TO_IDR.toLocaleString("en-US")}`}
+          />
+          <p className="text-xs text-muted-foreground">
+            Default rate: 1 € = Rp {EUR_TO_IDR.toLocaleString("en-US")}. Override per product if needed.
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-2 max-w-xs">
+        <Label htmlFor="referenceCode">Product reference</Label>
+        <Input
+          id="referenceCode"
+          value={values.referenceCode}
+          onChange={(e) =>
+            set("referenceCode", e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 12))
+          }
+          placeholder={suggestProductCode(values.name || "REF")}
+        />
+        <p className="text-xs text-muted-foreground">
+          Packing code used in orders, e.g. <strong>RSP</strong> → sizes become <strong>RSP-M</strong>,{" "}
+          <strong>RSP-L</strong>. Leave blank to auto-suggest from the name.
+        </p>
       </div>
 
       <div className="space-y-4 border border-border p-5">
