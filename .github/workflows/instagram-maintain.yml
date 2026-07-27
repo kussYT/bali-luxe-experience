@@ -131,5 +131,8 @@ jobs:
             git push
           fi
 
-      - name: Deploy to Cloudflare
-        run: npm run deploy
+      # Do NOT deploy the Worker here.
+      # This workflow runs on the default branch (main), which can lag behind
+      # production feature work and would overwrite a manual/feature deploy.
+      # After syncing assets, deploy from the branch that currently runs production
+      # (e.g. npm run deploy on design/premium-lifestyle).
