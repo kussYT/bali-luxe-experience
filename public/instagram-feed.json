@@ -7,6 +7,13 @@
   },
   "posts": [
     {
+      "id": "18402389215083273",
+      "image": "/instagram/18402389215083273.jpg",
+      "alt": "Straight from the ocean our single shell earrings are a must have for your summer wardrobe, perfect for everyday wear an",
+      "caption": "Straight from the ocean our single shell earrings are a must have for your summer wardrobe, perfect for everyday wear and special event.",
+      "permalink": "https://www.instagram.com/p/DbSQG1TNsHv/"
+    },
+    {
       "id": "18099433439252786",
       "image": "/instagram/18099433439252786.jpg",
       "alt": "The finishing touch that makes every summer outfit feel complete. Discover your favorite.\nDressed by @katsika_tinos ❤️",
@@ -40,15 +47,12 @@
       "alt": "Our favorite summer piece. \nThe Bingin Diaries Shell Earring, handcrafted, inspired by the sea and made for long days un",
       "caption": "Our favorite summer piece. \nThe Bingin Diaries Shell Earring, handcrafted, inspired by the sea and made for long days under the sun.",
       "permalink": "https://www.instagram.com/p/Da42XY6jaov/"
-    },
-    {
-      "id": "18071858978381182",
-      "image": "/instagram/18071858978381182.jpg",
-      "alt": "Whatever the destination you can take a piece of Bingin Diaries with you :)\nAvailable in select stores and online with w",
-      "caption": "Whatever the destination you can take a piece of Bingin Diaries with you :)\nAvailable in select stores and online with worldwide shipping.",
-      "permalink": "https://www.instagram.com/reel/DazgwyVtIPK/"
     }
   ],
-  "syncedAt": "2026-07-26T06:30:06.087Z",
-  "source": "graph-api-local"
+  "syncedAt": "2026-07-28T06:32:23.559Z",
+  "source": "graph-api-local",
+  "meta": {
+    "rawCount": 18,
+    "mappedCount": 18
+  }
 }
