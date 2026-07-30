@@ -7,6 +7,13 @@
   },
   "posts": [
     {
+      "id": "18334559776280129",
+      "image": "/instagram/18334559776280129.jpg",
+      "alt": "Made responsibly from soft cotton and designed for long days under the sun. Find your perfect shade for summer.",
+      "caption": "Made responsibly from soft cotton and designed for long days under the sun. Find your perfect shade for summer.",
+      "permalink": "https://www.instagram.com/p/DbYE4A-tSYN/"
+    },
+    {
       "id": "18402389215083273",
       "image": "/instagram/18402389215083273.jpg",
       "alt": "Straight from the ocean our single shell earrings are a must have for your summer wardrobe, perfect for everyday wear an",
@@ -40,16 +47,9 @@
       "alt": "@roam.homeware is a curated concept store celebrating local artists, thoughtful design, and timeless homeware. Every pie",
       "caption": "@roam.homeware is a curated concept store celebrating local artists, thoughtful design, and timeless homeware. Every piece tells a story and brings warmth to your home and wardrobe !\nA fine selection of our bestsellers are available in store and on their website !",
       "permalink": "https://www.instagram.com/p/DbAtSXhtSrD/"
-    },
-    {
-      "id": "17936910255313554",
-      "image": "/instagram/17936910255313554.webp",
-      "alt": "Our favorite summer piece. \nThe Bingin Diaries Shell Earring, handcrafted, inspired by the sea and made for long days un",
-      "caption": "Our favorite summer piece. \nThe Bingin Diaries Shell Earring, handcrafted, inspired by the sea and made for long days under the sun.",
-      "permalink": "https://www.instagram.com/p/Da42XY6jaov/"
     }
   ],
-  "syncedAt": "2026-07-29T06:37:01.861Z",
+  "syncedAt": "2026-07-30T06:33:30.464Z",
   "source": "graph-api-local",
   "meta": {
     "rawCount": 18,
