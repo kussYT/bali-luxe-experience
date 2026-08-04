@@ -7,6 +7,13 @@
   },
   "posts": [
     {
+      "id": "17902004904472449",
+      "image": "/instagram/17902004904472449.jpg",
+      "alt": "Match perfectly with your summer wardrobe !\n@roam.homeware",
+      "caption": "Match perfectly with your summer wardrobe !\n@roam.homeware",
+      "permalink": "https://www.instagram.com/p/Dbkg5xpNuzG/"
+    },
+    {
       "id": "18071340443707894",
       "image": "/instagram/18071340443707894.jpg",
       "alt": "Bingin Diaries on Instagram",
@@ -39,16 +46,9 @@
       "alt": "At Bingin Diaries, choosing the right materials is important, so you know when you buy your product that is made to last",
       "caption": "At Bingin Diaries, choosing the right materials is important, so you know when you buy your product that is made to last.",
       "permalink": "https://www.instagram.com/p/DbIMTyYDd75/"
-    },
-    {
-      "id": "17900122398473237",
-      "image": "/instagram/17900122398473237.jpg",
-      "alt": "The 90s Fisherman has a timeless and unique style. Available in different colours so you can find the one that suits YOU",
-      "caption": "The 90s Fisherman has a timeless and unique style. Available in different colours so you can find the one that suits YOU the most :)",
-      "permalink": "https://www.instagram.com/p/DbF9Xy6N564/"
     }
   ],
-  "syncedAt": "2026-08-03T07:36:05.897Z",
+  "syncedAt": "2026-08-04T06:32:34.082Z",
   "source": "graph-api-local",
   "meta": {
     "rawCount": 18,
