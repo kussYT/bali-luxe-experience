@@ -7,6 +7,13 @@
   },
   "posts": [
     {
+      "id": "18126710812672432",
+      "image": "/instagram/18126710812672432.jpg",
+      "alt": "August started : holiday mood activated !",
+      "caption": "August started : holiday mood activated !",
+      "permalink": "https://www.instagram.com/p/DbpnRwhtRwy/"
+    },
+    {
       "id": "17902004904472449",
       "image": "/instagram/17902004904472449.jpg",
       "alt": "Match perfectly with your summer wardrobe !\n@roam.homeware",
@@ -39,16 +46,9 @@
       "alt": "The finishing touch that makes every summer outfit feel complete. Discover your favorite.\nDressed by @katsika_tinos ❤️",
       "caption": "The finishing touch that makes every summer outfit feel complete. Discover your favorite.\nDressed by @katsika_tinos ❤️",
       "permalink": "https://www.instagram.com/p/DbK5DP4tDHh/"
-    },
-    {
-      "id": "18078631472326194",
-      "image": "/instagram/18078631472326194.jpg",
-      "alt": "At Bingin Diaries, choosing the right materials is important, so you know when you buy your product that is made to last",
-      "caption": "At Bingin Diaries, choosing the right materials is important, so you know when you buy your product that is made to last.",
-      "permalink": "https://www.instagram.com/p/DbIMTyYDd75/"
     }
   ],
-  "syncedAt": "2026-08-05T06:33:27.857Z",
+  "syncedAt": "2026-08-06T06:36:37.394Z",
   "source": "graph-api-local",
   "meta": {
     "rawCount": 18,
