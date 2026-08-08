@@ -7,6 +7,13 @@
   },
   "posts": [
     {
+      "id": "18099443249338115",
+      "image": "/instagram/18099443249338115.jpg",
+      "alt": "The finishing touch that makes every summer outfit feel complete. Discover your favorite.",
+      "caption": "The finishing touch that makes every summer outfit feel complete. Discover your favorite.",
+      "permalink": "https://www.instagram.com/p/DbvKywGNDdc/"
+    },
+    {
       "id": "18126710812672432",
       "image": "/instagram/18126710812672432.jpg",
       "alt": "August started : holiday mood activated !",
@@ -39,16 +46,9 @@
       "alt": "Straight from the ocean our single shell earrings are a must have for your summer wardrobe, perfect for everyday wear an",
       "caption": "Straight from the ocean our single shell earrings are a must have for your summer wardrobe, perfect for everyday wear and special event.",
       "permalink": "https://www.instagram.com/p/DbSQG1TNsHv/"
-    },
-    {
-      "id": "18099433439252786",
-      "image": "/instagram/18099433439252786.jpg",
-      "alt": "The finishing touch that makes every summer outfit feel complete. Discover your favorite.\nDressed by @katsika_tinos ❤️",
-      "caption": "The finishing touch that makes every summer outfit feel complete. Discover your favorite.\nDressed by @katsika_tinos ❤️",
-      "permalink": "https://www.instagram.com/p/DbK5DP4tDHh/"
     }
   ],
-  "syncedAt": "2026-08-07T05:44:50.781Z",
+  "syncedAt": "2026-08-08T05:03:42.290Z",
   "source": "graph-api-local",
   "meta": {
     "rawCount": 18,
