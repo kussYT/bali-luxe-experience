@@ -7,6 +7,13 @@
   },
   "posts": [
     {
+      "id": "18403829557085420",
+      "image": "/instagram/18403829557085420.jpg",
+      "alt": "Mi Paradisio Cabas",
+      "caption": "Mi Paradisio Cabas",
+      "permalink": "https://www.instagram.com/p/Db2jGlBjfpW/"
+    },
+    {
       "id": "18099443249338115",
       "image": "/instagram/18099443249338115.jpg",
       "alt": "The finishing touch that makes every summer outfit feel complete. Discover your favorite.",
@@ -39,16 +46,9 @@
       "alt": "Made responsibly from soft cotton and designed for long days under the sun. Find your perfect shade for summer.",
       "caption": "Made responsibly from soft cotton and designed for long days under the sun. Find your perfect shade for summer.",
       "permalink": "https://www.instagram.com/p/DbYE4A-tSYN/"
-    },
-    {
-      "id": "18402389215083273",
-      "image": "/instagram/18402389215083273.jpg",
-      "alt": "Straight from the ocean our single shell earrings are a must have for your summer wardrobe, perfect for everyday wear an",
-      "caption": "Straight from the ocean our single shell earrings are a must have for your summer wardrobe, perfect for everyday wear and special event.",
-      "permalink": "https://www.instagram.com/p/DbSQG1TNsHv/"
     }
   ],
-  "syncedAt": "2026-08-10T05:38:14.758Z",
+  "syncedAt": "2026-08-11T05:15:10.533Z",
   "source": "graph-api-local",
   "meta": {
     "rawCount": 18,
