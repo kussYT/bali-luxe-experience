@@ -7,6 +7,13 @@
   },
   "posts": [
     {
+      "id": "17887962195605542",
+      "image": "/instagram/17887962195605542.jpg",
+      "alt": "The Sixtine Béret in summer 💛",
+      "caption": "The Sixtine Béret in summer 💛",
+      "permalink": "https://www.instagram.com/p/DcArDLNjXTg/"
+    },
+    {
       "id": "18403829557085420",
       "image": "/instagram/18403829557085420.jpg",
       "alt": "Mi Paradisio Cabas",
@@ -39,16 +46,9 @@
       "image": "/instagram/18071340443707894.jpg",
       "alt": "Bingin Diaries on Instagram",
       "permalink": "https://www.instagram.com/reel/DbcwGQONqX7/"
-    },
-    {
-      "id": "18334559776280129",
-      "image": "/instagram/18334559776280129.jpg",
-      "alt": "Made responsibly from soft cotton and designed for long days under the sun. Find your perfect shade for summer.",
-      "caption": "Made responsibly from soft cotton and designed for long days under the sun. Find your perfect shade for summer.",
-      "permalink": "https://www.instagram.com/p/DbYE4A-tSYN/"
     }
   ],
-  "syncedAt": "2026-08-14T05:41:27.240Z",
+  "syncedAt": "2026-08-15T04:36:57.201Z",
   "source": "graph-api-local",
   "meta": {
     "rawCount": 18,
