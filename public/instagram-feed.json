@@ -7,6 +7,13 @@
   },
   "posts": [
     {
+      "id": "18096193445120529",
+      "image": "/instagram/18096193445120529.jpg",
+      "alt": "Eternal summer accessory ☀️",
+      "caption": "Eternal summer accessory ☀️",
+      "permalink": "https://www.instagram.com/p/Dc0ZRDKNxiy/"
+    },
+    {
       "id": "18100935020207958",
       "image": "/instagram/18100935020207958.jpg",
       "alt": "In San Diego, Roam Homeware.",
@@ -40,16 +47,9 @@
       "alt": "The Sixtine Béret in summer 💛",
       "caption": "The Sixtine Béret in summer 💛",
       "permalink": "https://www.instagram.com/p/DcArDLNjXTg/"
-    },
-    {
-      "id": "18403829557085420",
-      "image": "/instagram/18403829557085420.jpg",
-      "alt": "Mi Paradisio Cabas",
-      "caption": "Mi Paradisio Cabas",
-      "permalink": "https://www.instagram.com/p/Db2jGlBjfpW/"
     }
   ],
-  "syncedAt": "2026-09-02T08:40:21.598Z",
+  "syncedAt": "2026-09-03T08:48:59.166Z",
   "source": "graph-api-local",
   "meta": {
     "rawCount": 18,
