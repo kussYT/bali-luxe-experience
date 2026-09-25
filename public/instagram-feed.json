@@ -7,6 +7,13 @@
   },
   "posts": [
     {
+      "id": "18021601166927666",
+      "image": "/instagram/18021601166927666.jpg",
+      "alt": "Pre-fall collection loading",
+      "caption": "Pre-fall collection loading",
+      "permalink": "https://www.instagram.com/reel/Ddqy_5Ntylb/"
+    },
+    {
       "id": "18439420696132103",
       "image": "/instagram/18439420696132103.jpg",
       "alt": "Fall is here, but we’re not quite ready to let summer go. Chasing sunlight, wherever we can find it.",
@@ -40,16 +47,9 @@
       "alt": "Un mois d’août rempli d’amour et de bienveillance 🫰🏽🩵",
       "caption": "Un mois d’août rempli d’amour et de bienveillance 🫰🏽🩵",
       "permalink": "https://www.instagram.com/reel/Dca1Mn2NLjn/"
-    },
-    {
-      "id": "18097802636368363",
-      "image": "/instagram/18097802636368363.jpg",
-      "alt": "Love creating :)\nLimited quantities left on hair pins and hat pins !",
-      "caption": "Love creating :)\nLimited quantities left on hair pins and hat pins !",
-      "permalink": "https://www.instagram.com/p/DcLZFEQDS8y/"
     }
   ],
-  "syncedAt": "2026-09-24T09:10:44.175Z",
+  "syncedAt": "2026-09-25T09:30:30.249Z",
   "source": "graph-api-local",
   "meta": {
     "rawCount": 18,
