@@ -7,6 +7,13 @@
   },
   "posts": [
     {
+      "id": "17993585631018959",
+      "image": "/instagram/17993585631018959.jpg",
+      "alt": "The color that goes with all your outfits this fall!",
+      "caption": "The color that goes with all your outfits this fall!",
+      "permalink": "https://www.instagram.com/p/DeJK2BKtSVd/"
+    },
+    {
       "id": "18037269446844996",
       "image": "/instagram/18037269446844996.jpg",
       "alt": "Our color palette nowadays ✨\n\nWe love Biarritz, there’s something so inspiring about living by the ocean, capturing mome",
@@ -39,16 +46,9 @@
       "alt": "Fall is here, but we’re not quite ready to let summer go. Chasing sunlight, wherever we can find it.",
       "caption": "Fall is here, but we’re not quite ready to let summer go. Chasing sunlight, wherever we can find it.",
       "permalink": "https://www.instagram.com/p/Ddn2uv6NUtU/"
-    },
-    {
-      "id": "18141650806594499",
-      "image": "/instagram/18141650806594499.jpg",
-      "alt": "Plot twist : pop up season still going ☀️ \n25-27.09 exclusive pop up at @alor.ulu \n(Some unique pieces and exclusive col",
-      "caption": "Plot twist : pop up season still going ☀️ \n25-27.09 exclusive pop up at @alor.ulu \n(Some unique pieces and exclusive collection available for 2 weeks in store)",
-      "permalink": "https://www.instagram.com/p/Ddi-lwGtbD4/"
     }
   ],
-  "syncedAt": "2026-10-05T11:19:06.499Z",
+  "syncedAt": "2026-10-06T11:08:43.346Z",
   "source": "graph-api-local",
   "meta": {
     "rawCount": 18,
