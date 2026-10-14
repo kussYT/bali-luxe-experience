@@ -7,6 +7,12 @@
   },
   "posts": [
     {
+      "id": "18074423180494653",
+      "image": "/instagram/18074423180494653.jpg",
+      "alt": "Bingin Diaries on Instagram",
+      "permalink": "https://www.instagram.com/reel/Ded6sbiNyfL/"
+    },
+    {
       "id": "17979983469088556",
       "image": "/instagram/17979983469088556.jpg",
       "alt": "Our treasure box :)",
@@ -39,16 +45,9 @@
       "image": "/instagram/18189112600404434.jpg",
       "alt": "Bingin Diaries on Instagram",
       "permalink": "https://www.instagram.com/p/Dd1KQvgthT9/"
-    },
-    {
-      "id": "18021601166927666",
-      "image": "/instagram/18021601166927666.jpg",
-      "alt": "Pre-fall collection loading",
-      "caption": "Pre-fall collection loading",
-      "permalink": "https://www.instagram.com/reel/Ddqy_5Ntylb/"
     }
   ],
-  "syncedAt": "2026-10-13T11:35:45.508Z",
+  "syncedAt": "2026-10-14T09:24:04.297Z",
   "source": "graph-api-local",
   "meta": {
     "rawCount": 18,
