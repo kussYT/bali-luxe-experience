@@ -7,6 +7,12 @@
   },
   "posts": [
     {
+      "id": "18124358308718742",
+      "image": "/instagram/18124358308718742.jpg",
+      "alt": "Bingin Diaries on Instagram",
+      "permalink": "https://www.instagram.com/p/DeuCA3ytEsc/"
+    },
+    {
       "id": "18074423180494653",
       "image": "/instagram/18074423180494653.jpg",
       "alt": "Bingin Diaries on Instagram",
@@ -39,15 +45,9 @@
       "alt": "Processus de fabrication d’une pièce Bingin Diaries : \n\n1. Avoir une idée géniale !\n2. Dessiner, decouper, choix des mat",
       "caption": "Processus de fabrication d’une pièce Bingin Diaries : \n\n1. Avoir une idée géniale !\n2. Dessiner, decouper, choix des matieres\n3. Essayer\n4. Recommencer\n5. Tout defaire\n6. .... encore\n7. .... encore\n8. De retour au fournisseur\n9. Demander l’avis du public \n10. Recommencer differement\n11. Etre satisfait \n12. NEXT PRODUCT",
       "permalink": "https://www.instagram.com/p/Dd5-7KpDY-r/"
-    },
-    {
-      "id": "18189112600404434",
-      "image": "/instagram/18189112600404434.jpg",
-      "alt": "Bingin Diaries on Instagram",
-      "permalink": "https://www.instagram.com/p/Dd1KQvgthT9/"
     }
   ],
-  "syncedAt": "2026-10-20T09:18:27.379Z",
+  "syncedAt": "2026-10-21T09:15:15.262Z",
   "source": "graph-api-local",
   "meta": {
     "rawCount": 18,
