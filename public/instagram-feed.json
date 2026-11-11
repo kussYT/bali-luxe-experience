@@ -7,6 +7,13 @@
   },
   "posts": [
     {
+      "id": "17885846571522888",
+      "image": "/instagram/17885846571522888.jpg",
+      "alt": "Cosy accessory for the everyday life :)",
+      "caption": "Cosy accessory for the everyday life :)",
+      "permalink": "https://www.instagram.com/p/DfkE9oJt20R/"
+    },
+    {
       "id": "18131830096748298",
       "image": "/instagram/18131830096748298.jpg",
       "alt": "Sampling :)",
@@ -38,16 +45,9 @@
       "alt": "The color that goes with all your outfits this fall!",
       "caption": "The color that goes with all your outfits this fall!",
       "permalink": "https://www.instagram.com/p/DeJK2BKtSVd/"
-    },
-    {
-      "id": "18037269446844996",
-      "image": "/instagram/18037269446844996.jpg",
-      "alt": "Our color palette nowadays ✨\n\nWe love Biarritz, there’s something so inspiring about living by the ocean, capturing mome",
-      "caption": "Our color palette nowadays ✨\n\nWe love Biarritz, there’s something so inspiring about living by the ocean, capturing moments of simplicity, slowing down, and experiencing a kind of creativity that feels completely different from life in a big city.",
-      "permalink": "https://www.instagram.com/p/DeGkxOKtUnI/"
     }
   ],
-  "syncedAt": "2026-11-10T12:22:46.459Z",
+  "syncedAt": "2026-11-11T11:46:14.447Z",
   "source": "graph-api-local",
   "meta": {
     "rawCount": 18,
