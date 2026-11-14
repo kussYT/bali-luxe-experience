@@ -7,6 +7,13 @@
   },
   "posts": [
     {
+      "id": "18033579623863706",
+      "image": "/instagram/18033579623863706.jpg",
+      "alt": "Never not creating",
+      "caption": "Never not creating",
+      "permalink": "https://www.instagram.com/reel/Dfr9ER3NR46/"
+    },
+    {
       "id": "17885846571522888",
       "image": "/instagram/17885846571522888.jpg",
       "alt": "Cosy accessory for the everyday life :)",
@@ -38,16 +45,9 @@
       "alt": "Our treasure box :)",
       "caption": "Our treasure box :)",
       "permalink": "https://www.instagram.com/p/DeOeyMnNG21/"
-    },
-    {
-      "id": "17993585631018959",
-      "image": "/instagram/17993585631018959.jpg",
-      "alt": "The color that goes with all your outfits this fall!",
-      "caption": "The color that goes with all your outfits this fall!",
-      "permalink": "https://www.instagram.com/p/DeJK2BKtSVd/"
     }
   ],
-  "syncedAt": "2026-11-13T12:00:40.629Z",
+  "syncedAt": "2026-11-14T11:19:31.743Z",
   "source": "graph-api-local",
   "meta": {
     "rawCount": 18,
