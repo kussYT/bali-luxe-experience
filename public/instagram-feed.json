@@ -7,6 +7,13 @@
   },
   "posts": [
     {
+      "id": "18499014796107822",
+      "image": "/instagram/18499014796107822.jpg",
+      "alt": "Your must have accessories",
+      "caption": "Your must have accessories",
+      "permalink": "https://www.instagram.com/p/Dfznzj_NoMe/"
+    },
+    {
       "id": "18033579623863706",
       "image": "/instagram/18033579623863706.jpg",
       "alt": "Never not creating",
@@ -38,16 +45,9 @@
       "image": "/instagram/18074423180494653.jpg",
       "alt": "Bingin Diaries on Instagram",
       "permalink": "https://www.instagram.com/reel/Ded6sbiNyfL/"
-    },
-    {
-      "id": "17979983469088556",
-      "image": "/instagram/17979983469088556.jpg",
-      "alt": "Our treasure box :)",
-      "caption": "Our treasure box :)",
-      "permalink": "https://www.instagram.com/p/DeOeyMnNG21/"
     }
   ],
-  "syncedAt": "2026-11-16T12:34:22.012Z",
+  "syncedAt": "2026-11-17T12:58:19.897Z",
   "source": "graph-api-local",
   "meta": {
     "rawCount": 18,
