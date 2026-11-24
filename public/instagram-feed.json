@@ -7,6 +7,13 @@
   },
   "posts": [
     {
+      "id": "18360072304268472",
+      "image": "/instagram/18360072304268472.jpg",
+      "alt": "Justine, a friend, muse, model and photographer.\nShe embodies the spirit of intemporality. Her vision and presence have ",
+      "caption": "Justine, a friend, muse, model and photographer.\nShe embodies the spirit of intemporality. Her vision and presence have long inspired our world of nature, creativity and timelessness.\n\nThe boater, in its classic form or customised with rivets, remains one of our signature pieces. An original, a constant, and part of our story since day one.",
+      "permalink": "https://www.instagram.com/p/DgGRPDUtSIQ/"
+    },
+    {
       "id": "18431939473150060",
       "image": "/instagram/18431939473150060.jpg",
       "alt": "We are excited to present our collection to Australian and NZ markets through @watson.agency at their Sydney Showroom ne",
@@ -40,16 +47,9 @@
       "alt": "Cosy accessory for the everyday life :)",
       "caption": "Cosy accessory for the everyday life :)",
       "permalink": "https://www.instagram.com/p/DfkE9oJt20R/"
-    },
-    {
-      "id": "18131830096748298",
-      "image": "/instagram/18131830096748298.jpg",
-      "alt": "Sampling :)",
-      "caption": "Sampling :)",
-      "permalink": "https://www.instagram.com/p/De8q2t7N2iN/"
     }
   ],
-  "syncedAt": "2026-11-23T14:16:04.787Z",
+  "syncedAt": "2026-11-24T14:42:24.175Z",
   "source": "graph-api-local",
   "meta": {
     "rawCount": 18,
