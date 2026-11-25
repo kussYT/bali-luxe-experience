@@ -7,6 +7,13 @@
   },
   "posts": [
     {
+      "id": "18213068338317413",
+      "image": "/instagram/18213068338317413.jpg",
+      "alt": "Ever blue 🌀🌀",
+      "caption": "Ever blue 🌀🌀",
+      "permalink": "https://www.instagram.com/p/DgJ5FALtI5i/"
+    },
+    {
       "id": "18360072304268472",
       "image": "/instagram/18360072304268472.jpg",
       "alt": "Justine, a friend, muse, model and photographer.\nShe embodies the spirit of intemporality. Her vision and presence have ",
@@ -40,16 +47,9 @@
       "alt": "Never not creating",
       "caption": "Never not creating",
       "permalink": "https://www.instagram.com/reel/Dfr9ER3NR46/"
-    },
-    {
-      "id": "17885846571522888",
-      "image": "/instagram/17885846571522888.jpg",
-      "alt": "Cosy accessory for the everyday life :)",
-      "caption": "Cosy accessory for the everyday life :)",
-      "permalink": "https://www.instagram.com/p/DfkE9oJt20R/"
     }
   ],
-  "syncedAt": "2026-11-24T14:42:24.175Z",
+  "syncedAt": "2026-11-25T14:04:02.368Z",
   "source": "graph-api-local",
   "meta": {
     "rawCount": 18,
